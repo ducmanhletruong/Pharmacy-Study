@@ -213,3 +213,36 @@ P01 chưa DONE: thiếu live MCP/ba ngày, quyết định hosting và quyền O
 - CI công cụ commit 2e8a5d6 đã success: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43079292723 . Sáu test, RDKit hai process, reference self-check và từ chối template live trống đều đạt.
 - Cập nhật sau kết quả CI chỉ là Markdown về quyết định và bàn giao; chỉ format/đọc phần thay đổi, không lặp test/build. Workflow spike có paths filter nên không chạy lại công cụ cho commit chỉ tài liệu.
 - P01 chưa DONE: còn kết nối callable, năm chủ đề trên ba ngày và quyền OpenAI/model run thật. Những phần này không được bịa để vượt cổng.
+
+## 2026-11-12 — Ưu tiên nối MCP NotebookLM
+
+### Plan và căn cứ
+
+Chủ dự án yêu cầu ưu tiên tìm cách nối MCP. Tiếp tục P01-T01: khảo sát server được duy trì, cài cô lập, kiểm MCP handshake và read-only notebook_list, đăng ký Codex, thực hiện bước login khả dụng. Không chuyển phase hoặc refactor app.
+
+### Thực hiện và kết quả thật
+
+- Xác minh PyPI/package repo notebooklm-mcp-cli 0.16.2, Python >=3.11; đọc README/authentication/remote deployment. Cài bằng uv trong /workspace/.pharmacy-notebooklm/venv, không đưa 82 dependency Python vào app. MCP SDK 2.3.0, FastMCP 4.1.8. Runtime state mode 0700 ở ngoài checkout.
+- MCP stdio đã initialize với protocol 2025-11-25 và list 55 tool thành công. ServerInfo.version 4.1.8 là giá trị framework; ghi riêng version CLI để không nhầm.
+- Lần probe đầu dùng kiểu timeout timedelta và field protocolVersion trực tiếp theo SDK cũ, bị lỗi client do SDK 2 đã đổi API. Đã đối chiếu signature và sửa sang float timeout/model_dump(by_alias=True); không coi lỗi client này là Google auth thất bại.
+- Đã gọi notebook_list(max_results=1) thật. MCP isError=false nhưng payload status=error do không có auth; thêm classifier và 4 regression test để không báo false-positive. Chỉ xuất metadata/count, không xuất raw notebook/title/ID/token.
+- Đã dùng codex mcp add với cấu hình có một server pharmacy-notebooklm, rồi giới hạn enabled_tools vào notebook_list/notebook_get. Giữ nguyên các phần config khác; không thay trust/approval policy. Lưu global config của executor ngoài sandbox bằng escalation được auto-review chấp thuận; không thay file trên máy riêng của người dùng.
+- `codex mcp list` xác nhận server enabled, transport stdio. auth_status=unsupported là OAuth MCP không áp dụng, không phải bằng chứng Google login. Native tool inventory của chat chưa hot-load, đã ghi rõ trong report.
+
+### Phát sinh Desktop và đăng nhập
+
+- Dùng cloud-desktop skill để mở và quan sát Desktop. Browser tab API báo “Browser Use could not read requirements”; dùng Sky screenshot/native window observation để kiểm tra. Một thao tác input native gặp AT-SPI unavailable; không dùng Playwright/CDP tự viết để thao tác UI thay CUA.
+- Login CLI lúc đầu không mở được Chromium trong sandbox, ngoài sandbox vẫn thiếu Xauthority. Đã xác định DISPLAY và đường dẫn Xauthority của Xorg đang chạy bằng metadata process, không in nội dung authority/cookie. Với cấu hình X11 đúng, thư viện mở được browser/profile riêng và trang NotebookLM yêu cầu Sign in. Không tắt sandbox browser hoặc mở HTTP MCP ra Internet.
+- Đã handoff cho chủ dự án qua Desktop/Take over để đăng nhập Google; CLI chờ 300 giây nhưng không có xác thực hoàn tất, timeout rồi đóng auth browser. Không coi trang HTTP 200, NID cookie hoặc chỉ mở landing page là đăng nhập thành công. Kết thúc CUA bằng summary sau khi quan sát cửa sổ auth đã đóng.
+- Phần còn thiếu: chủ dự án đăng nhập trực tiếp khi sẵn sàng. Không lấy cookie của máy riêng, không thu mật khẩu/token qua chat, không tạo tài khoản Google mới.
+
+### Ngoài plan / file và phạm vi tác động
+
+- Thêm probe_mcp.py và test stdlib vì server Python đã có SDK, tránh cài thêm JS SDK/transitive dependency vào app. Cấu hình mẫu Codex và requirements riêng phục vụ tái tạo setup, không có credential. Thêm ignore **pycache** và bước unit test Python trong CI spike.
+- Thêm connection-report.json đã lọc dữ liệu để bàn giao transport/account tách biệt. Report live ban đầu không có notebook content; folder state, auth và venv luôn ở ngoài repo.
+- Thay đổi global Codex config và cài runtime là mở rộng so với spike chỉ tài liệu ban đầu, được yêu cầu ưu tiên kết nối hiện tại và quyền dùng MCP bên thứ ba của chủ dự án cho phép. Không tự cho phép tool write/delete hoặc tạo public endpoint.
+- Đã đọc tài liệu OpenAI về project/global MCP và Secure MCP Tunnel. Tunnel là phương án có thêm quyền/key cho server trên máy riêng, chưa tạo hoặc đề nghị expose server không xác thực.
+
+### Kiểm chứng và hoàn tác
+
+Bốn unit test parser đạt; live MCP handshake/catalog và auth-required outcome đã kiểm chứng. Không rebuild/test app hoặc lặp RDKit. Để hoàn tác cấu hình môi trường, chỉ xóa server pharmacy-notebooklm bằng codex mcp remove sau khi kiểm tra nó còn là server của tác vụ này; không xóa cấu hình khác. Không xóa state/profile có tài khoản thật nếu chưa được yêu cầu. Thay đổi repo có thể revert riêng commit kết nối, không cần migration/DB rollback. CI và PR được cập nhật sau commit; chỉ ghi pass khi có kết quả.

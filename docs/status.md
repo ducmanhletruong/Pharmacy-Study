@@ -58,12 +58,12 @@ Không chạy browser e2e, migration, auth, pipeline AI hoặc test nghiệp v�
 
 Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục. Không bắt đầu P02 hoặc sửa code sản phẩm trong lượt này.
 
-| Task    | Trạng thái                | Bằng chứng / còn thiếu                                                                                                           |
-| ------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| P01-T01 | PREPARED / BLOCKED LIVE   | Runbook, template và validator đã có; xác nhận cho MCP bên thứ ba; Cloud chưa callable, 0 observation thật và chưa có ba ngày    |
-| P01-T02 | DONE                      | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                  |
-| P01-T03 | DONE — CURRENT STAGE      | ADR-0011 Accepted: tiếp tục local; production hosting hoãn, ADR-0006 vẫn OPEN                                                    |
-| P01-T04 | PREPARED / WAITING ACCESS | OpenAI/Pro đã được chọn về nhà cung cấp; ADR-0010, prompt/evaluator và fixture đã có; chưa có API/plan grant hoặc model run thật |
+| Task    | Trạng thái                    | Bằng chứng / còn thiếu                                                                                                           |
+| ------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| P01-T01 | MCP CONNECTED / AUTH REQUIRED | Codex đã có server, stdio initialize/tools/list pass; notebook_list thật còn thiếu Google auth, chưa có dữ liệu ba ngày          |
+| P01-T02 | DONE                          | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                  |
+| P01-T03 | DONE — CURRENT STAGE          | ADR-0011 Accepted: tiếp tục local; production hosting hoãn, ADR-0006 vẫn OPEN                                                    |
+| P01-T04 | PREPARED / WAITING ACCESS     | OpenAI/Pro đã được chọn về nhà cung cấp; ADR-0010, prompt/evaluator và fixture đã có; chưa có API/plan grant hoặc model run thật |
 
 ### Kiểm chứng P01
 
@@ -99,3 +99,9 @@ PR nháp #2: https://github.com/ducmanhletruong/Pharmacy-Study/pull/2 . CI spike
 Chủ dự án chọn tiếp tục local, chưa triển khai production: ADR-0011 Accepted, không cấp tài nguyên mới. T03 hoàn thành hồ sơ và quyết định cho giai đoạn hiện tại; không tự coi ADR-0006 production đã Accepted. P01 tổng thể vẫn PARTIAL/BLOCKED.
 
 CI công cụ trên commit `2e8a5d61d1589edda392988143fcf602ba40497d` đã **success**, gồm 6 test, RDKit hai process, reference self-check và từ chối template trống: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43079292723 . Bổ sung sau commit này chỉ là tài liệu quyết định local, không đổi công cụ/app/dependency.
+
+### Ưu tiên nối MCP NotebookLM
+
+Đã cài MCP CLI 0.16.2 cô lập ngoài repo và đăng ký `pharmacy-notebooklm` vào Codex của executor, chỉ bật notebook_list/notebook_get. Bắt tay MCP thật và catalog 55 tool đạt; probe read-only tới notebook_list trả thiếu xác thực, dù isError=false. Bốn test classifier ngăn false-positive đã pass; báo cáo metadata trong spikes/notebooklm/connection-report.json.
+
+Phiên browser auth đã mở nhờ DISPLAY/XAUTHORITY đúng của Desktop; chưa được đăng nhập trong 300 giây và đã timeout/đóng. Cần chủ dự án đăng nhập Google khi sẵn sàng. Không có credential, notebook title/ID hoặc nguồn riêng được commit. CLI registration không tự chứng minh native tools đã hot-load vào chat hiện tại. P01 vẫn chưa đạt live gate.

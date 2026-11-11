@@ -8,11 +8,11 @@ Repo GitHub ban đầu chỉ có một commit README thay vì rỗng hoàn toàn
 
 ## P01 hiện tại
 
-| ID            | Điều còn thiếu                                                            | Ảnh hưởng                   | Cách gỡ                                                                                                                                    |
-| ------------- | ------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| MCP-CLOUD     | Không có tool NotebookLM hoặc server MCP trong executor hiện tại          | P01-T01 live verification   | Dùng kết nối hiện có ở nơi nó callable, hoặc cấu hình MCP cho chat Cloud; chỉ cần tên/transport/version để kiểm metadata, không gửi secret |
-| MCP-3DAYS     | Chưa có observation thật                                                  | Cổng P01-T01                | Chạy năm chủ đề cùng nguồn trên ít nhất ba ngày khác nhau; runbook/validator đã sẵn sàng                                                   |
-| OPENAI-ACCESS | Chưa có entitlement/credit grant/OAuth token được cấp cho app trong Cloud | P01-T04 xác minh model thật | Chọn luồng hỗ trợ chính thức theo ADR-0010; cấu hình qua settings, không gửi token/key trong chat                                          |
+| ID              | Điều còn thiếu                                                            | Ảnh hưởng                   | Cách gỡ                                                                                           |
+| --------------- | ------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------- |
+| MCP-GOOGLE-AUTH | Server đã nối/đăng ký; notebook_list thật trả chưa xác thực Google        | P01-T01 live access         | Mở lại nlm login và hoàn tất đăng nhập trực tiếp trên Desktop Cloud; không gửi cookie/password    |
+| MCP-3DAYS       | Chưa có observation thật                                                  | Cổng P01-T01                | Chạy năm chủ đề cùng nguồn trên ít nhất ba ngày khác nhau; runbook/validator đã sẵn sàng          |
+| OPENAI-ACCESS   | Chưa có entitlement/credit grant/OAuth token được cấp cho app trong Cloud | P01-T04 xác minh model thật | Chọn luồng hỗ trợ chính thức theo ADR-0010; cấu hình qua settings, không gửi token/key trong chat |
 
 Q1 phần cho phép MCP bên thứ ba đã xác nhận, tài khoản cá nhân. Người dùng nói đã nối NotebookLM, nhưng điều đó chưa tạo tool callable trong chat Cloud này. Không coi dữ liệu unit test hoặc reference benchmark là bằng chứng đã truy cập account.
 
@@ -35,3 +35,7 @@ Q4 mặc định A-03 (responsive, online); Q7 hạn thi/MVP chưa chặn. Khôn
 
 - HOSTING-Q5 cho giai đoạn hiện tại: chủ dự án đã chọn tiếp tục local, chưa production; ADR-0011 Accepted. Không cần chọn paid/preview hosting ở thời điểm này. Quyết định provider/budget production vẫn hoãn, chỉ cần xử lý khi chuẩn bị triển khai theo phạm vi mới.
 - Nhà cung cấp AI đã chọn OpenAI/ChatGPT Pro; còn đường cấp quyền/hạn mức, không còn câu hỏi chọn provider thay thế.
+
+### Trạng thái kết nối mới
+
+Snapshot “0 server” phía trên chỉ mô tả trước khi cấu hình. Hiện Codex CLI của Cloud đã có pharmacy-notebooklm, stdio đã initialize và list 55 tool thành công; chỉ bật hai tool đọc. Blocker hiện tại là đăng nhập Google, không còn thiếu cài đặt MCP. Phiên login thử timeout sau 300 giây, chưa đọc được notebook. Tích hợp native vào tool inventory của chat đang chạy chưa được xác minh.

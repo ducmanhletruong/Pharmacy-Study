@@ -1,23 +1,62 @@
 # P01-T01 — Kiểm chứng kết nối NotebookLM
 
-- Trạng thái: **PREPARED; live verification BLOCKED**.
+- Trạng thái: **MCP CONNECTED; Google authentication REQUIRED; live knowledge verification BLOCKED**.
 - Ngày: 2026-11-12 (Asia/Saigon).
 - Chủ dự án xác nhận cho dùng MCP bên thứ ba và NotebookLM là tài khoản cá nhân. Người dùng báo đã kết nối Codex với NotebookLM; chưa có tên/transport/version server thực tế trong bằng chứng hiện tại.
 
-## Quan sát thực tế trong chat Cloud
+## Quan sát mới nhất trong Cloud
 
-1. Danh sách công cụ được cấp cho chat không có NotebookLM.
-2. Plugin Management tìm `NotebookLM` trả về danh sách rỗng. Điều này chỉ mô tả tìm kiếm hiện tại, không chứng minh không có custom MCP hoặc plugin khác trong directory.
-3. CLI `codex mcp list --json` trong executor hiện tại trả 0 server. Chỉ kiểm metadata, không in cấu hình hoặc credential.
-4. Không có binding secret cho NotebookLM trong environment status. Kết nối ở Codex Desktop của chủ dự án có thể không được chuyển sang Cloud; chưa xác nhận nơi kết nối nên không coi suy luận này là sự thật đã kiểm chứng.
+- Đã cài `notebooklm-mcp-cli==0.16.2` từ PyPI trong venv riêng `/workspace/.pharmacy-notebooklm/venv`. Không đưa runtime/dependency hoặc credential vào Git hay app Next.js.
+- Đã đăng ký `pharmacy-notebooklm` trong cấu hình Codex của executor. Chỉ bật `notebook_list` và `notebook_get`; giữ nguyên các thiết lập Codex khác.
+- MCP stdio initialize và tools/list đã đạt: protocol `2025-11-25`, server `gemini-notebook-mcp`, 55 tool được server cung cấp. Trường serverInfo.version báo `4.1.8` là giá trị framework FastMCP; không nhầm với distribution CLI `0.16.2`.
+- Đã gọi thật notebook_list(max_results=1). Server trả business error “No authentication found” dù MCP isError=false. Không coi HTTP/MCP success hoặc catalog tool là bằng chứng đã đăng nhập.
+- `nlm login` đã mở được trang Google Notebook bằng Chromium và profile riêng; chưa hoàn tất đăng nhập trong 300 giây nên phiên chờ timeout và browser auth đã đóng. Chưa đọc được notebook, không có dữ liệu năm chủ đề hoặc chứng cứ ba ngày.
+- Config CLI đã có server không có nghĩa tool mới tự xuất hiện trong ngữ cảnh chat đang chạy. Probe dùng SDK trực tiếp; native chat có thể cần reload/new session. Không khẳng định hot-load đã xảy ra.
 
-Không kết luận người dùng chưa kết nối. Kết luận hẹp: **kết nối chưa callable trong chat/executor Cloud hiện tại**. Chưa gọi notebook thật, chưa lấy đoạn kiến thức hoặc source locator, chưa có bằng chứng ba ngày.
+Báo cáo đã lọc metadata: `spikes/notebooklm/connection-report.json`. Lần kiểm tra trước có 0 server chỉ là snapshot trước khi cấu hình; không còn là trạng thái CLI hiện tại.
+
+## Hoàn tất đăng nhập ở Cloud
+
+Runtime hiện có ở ngoài repo, thư mục state mode 0700. Chạy `nlm login` từ đúng môi trường có Desktop/X11; với CLI exec của Cloud cần DISPLAY và XAUTHORITY của Desktop hiện tại, và chạy ngoài sandbox nếu Chromium không khởi tạo được. XAUTHORITY là đường dẫn runtime thay đổi theo lần khởi động, không ghi cứng vào cấu hình Git.
+
+```bash
+NOTEBOOKLM_MCP_CLI_PATH=/workspace/.pharmacy-notebooklm/state NLM_BROWSER=chromium /workspace/.pharmacy-notebooklm/venv/bin/nlm login --profile pharmacy-personal --storage file
+```
+
+Agent đã xác định và dùng cấu hình X11 thật để mở cửa sổ. Khi chủ dự án sẵn sàng, mở lại phiên login rồi dùng Desktop → Take over để đăng nhập Google trong cửa sổ NotebookLM; Return control khi xong. Không gửi cookie/password qua chat. File mode là lựa chọn cho runtime Cloud hiện tại; state giữ ngoài repo, thư mục 0700 và file credential do thư viện quản lý. Không sao chép auth.json hoặc Google cookie từ Codex Desktop sang Cloud.
+
+Sau khi đăng nhập:
+
+```bash
+/workspace/.pharmacy-notebooklm/venv/bin/python spikes/notebooklm/probe_mcp.py   --state-dir /workspace/.pharmacy-notebooklm/state   --profile pharmacy-personal
+```
+
+Exit 0: notebook_list thật thành công; exit 2: transport đã nối nhưng account/data chưa xác minh; exit 3: lỗi transport/client. Report không có title, notebook ID, nội dung nguồn hoặc token. Probe chỉ gọi notebook_list với max_results=1.
+
+`codex mcp list` có thể báo auth_status=unsupported cho stdio: đây là không dùng OAuth MCP, không phải kết luận Google login thành công/thất bại. Server này đăng nhập bằng `nlm login`; không dùng `codex mcp login` để thay thế phiên Google.
+
+## Nếu muốn dùng kết nối đã có ở Desktop
+
+Giữ MCP và Google profile trên cùng máy. Mẫu cấu hình hai tool đọc ở `spikes/notebooklm/codex.example.toml`; merge vào config thay vì ghi đè các entry có sẵn. Cấu hình mẫu dùng uvx với version ghim; profile Google vẫn ở máy đó. Theo [tài liệu Codex](https://learn.chatgpt.com/docs/extend/mcp?surface=cli), config Desktop/CLI được chia sẻ, project config chỉ được load khi project được trust. Config trên máy riêng không tự chuyển thành kết nối trong executor Cloud.
+
+Nếu thật sự cần nối MCP ở máy riêng vào Cloud, [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels) là đường được OpenAI hỗ trợ: tunnel-client chạy ở nơi MCP reachable, cần tunnel identity, quyền Platform/workspace và runtime key. Đây là phương án dự phòng có thêm bước cấp quyền, chưa tạo tunnel hoặc đòi key trong chat. Không mở thẳng HTTP MCP không có xác thực ra Internet; tài liệu [Remote MCP](https://github.com/jacob-bd/gemini-notebook-mcp-cli/blob/main/docs/REMOTE_MCP.md) xác nhận server hiện chưa cung cấp auth cho endpoint HTTP.
+
+## Cài lại công cụ trên máy khác
+
+```bash
+uv venv /path/outside-repo/nlm-venv
+uv pip install --python /path/outside-repo/nlm-venv/bin/python -r spikes/notebooklm/requirements-mcp.txt
+```
+
+Dependency MCP được cô lập khỏi `spikes/package.json` và monorepo ứng dụng. Package từ PyPI: [notebooklm-mcp-cli](https://pypi.org/project/notebooklm-mcp-cli/0.16.2/); source [jacob-bd/gemini-notebook-mcp-cli](https://github.com/jacob-bd/gemini-notebook-mcp-cli). Đã đọc hướng dẫn authentication và remote deployment của đúng dự án, không cài fork bất kỳ.
 
 ## Công cụ đã chuẩn bị
 
 - `spikes/notebooklm/capture.template.json`: mẫu hồ sơ metadata, mặc định chưa xác nhận nguồn và chưa có observation.
 - `spikes/notebooklm/validate.mjs`: kiểm tra năm chủ đề, trích đoạn có hash/độ dài, citation có vị trí nguồn, kiểm chứng grounding bởi người duyệt, timestamp và năm chủ đề đủ trên ít nhất ba ngày lịch khác nhau theo giờ Việt Nam.
 - `spikes/notebooklm/validate.test.mjs`: có ca một ngày lặp lại không được coi là ba ngày, citation thiếu, thời gian tương lai, quyền nguồn chưa xác nhận và cờ synthetic.
+- `spikes/notebooklm/probe_mcp.py`: probe live, phân biệt giao thức với xác thực account, không ghi raw notebook data.
+- `spikes/notebooklm/test_probe_mcp.py`: 4 test stdlib, đặc biệt business error có isError=false không được báo access success.
 
 Validator chỉ kiểm hồ sơ do người chạy cung cấp; không tự chứng minh citation đúng hoặc kết nối tồn tại. Không dùng fixture unit test để báo live gate đạt.
 
@@ -42,7 +81,7 @@ Giữ phiên MCP trên máy admin/credential store của kết nối hiện có.
 
 Nguồn chính thức được đọc ngày 2026-11-12: [Privacy and Terms of Use](https://support.google.com/gemininotebook/answer/17004255?hl=en) và [FAQ về trích dẫn](https://support.google.com/gemininotebook/answer/16269187?hl=en). Các trang hiện dùng tên Gemini Notebook. Điều khoản của Google và quyền dùng tài liệu vẫn áp dụng; việc có quyền gọi MCP không tự xác nhận quyền phân phối nguồn. Không coi việc đọc điều khoản là kết luận pháp lý MCP bên thứ ba được Google hỗ trợ.
 
-Khảo sát repo cho thấy `PleasePrompto/notebooklm-mcp` đã archived; URL `jacob-bd/notebooklm-mcp-cli` chuyển đến repo có tên mới. Vì đã có kết nối của chủ dự án, không cài thêm hoặc tự thay server bằng repo chưa xác minh. Cần tên/version server thật để đánh giá đúng adapter.
+Khảo sát repo cho thấy `PleasePrompto/notebooklm-mcp` đã archived; URL `jacob-bd/notebooklm-mcp-cli` chuyển đến repo có tên mới. Ưu tiên mới của chủ dự án cho phép tiếp tục tìm và cấu hình đường nối trong Cloud. Đã xác minh package PyPI chính thức của repo được duy trì và cài cô lập trong runtime; không thay cấu hình MCP trên máy riêng của chủ dự án.
 
 ## Nếu không truy cập ổn định
 

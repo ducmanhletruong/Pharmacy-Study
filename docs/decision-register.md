@@ -35,3 +35,7 @@ Ngày dùng múi giờ Asia/Saigon. Không coi ASSUMPTION/PROPOSED là quyết �
 - Không có inference API ở spike; reference self-check 5/5 không phải kết quả mô hình. Không đánh dấu đạt cổng P01 khi thiếu bằng chứng NotebookLM năm chủ đề qua ba ngày.
 
 - **CHAT-06 / ADR-0011 — CONFIRMED / Accepted:** chủ dự án chọn “Tiếp tục local, chưa triển khai hosting production (đề xuất)”. Phần lựa chọn môi trường hiện tại của ADR-0009 được thay bằng ADR-0011; production ADR-0006 và ngân sách production vẫn hoãn, không tự chọn Render/Neon. T03 không còn chờ quyết định cho phạm vi local.
+
+- **CHAT-07 — CONFIRMED:** chủ dự án ưu tiên tìm cách nối MCP với NotebookLM. Được tiếp tục cấu hình/thử nghiệm MCP trong môi trường hiện tại; không thay kết nối đã có trên máy riêng.
+- **MCP-TRANSPORT — VERIFIED:** đã cài notebooklm-mcp-cli 0.16.2 ở runtime riêng, đăng ký pharmacy-notebooklm với hai tool đọc, MCP initialize/tools/list thực tế đạt (55 tool). Google account chưa xác thực: notebook_list trả lỗi nghiệp vụ dù isError=false. Profile/browser state ở ngoài repo, không có notebook data được commit.
+- **MCP-LOGIN — WAITING USER:** browser auth đã mở được trong Cloud; chưa hoàn tất trước timeout 300 giây. Native chat tool hot-load và dữ liệu ba ngày chưa được xác minh. Không nâng trạng thái P01 thành DONE.

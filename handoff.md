@@ -22,11 +22,16 @@
 - LLM evaluator offline: 5 fixture tổng hợp có nhãn năm môn, prompt export, kiểm đáp án/citation và 2 test các ca từ chối. Reference self-check 5/5 không phải model evaluation.
 - Workflow kiểm thử riêng công cụ P01; không rebuild Next.js vì không đổi code sản phẩm.
 
-## Kết nối NotebookLM — phạm vi quan sát
+## Kết nối NotebookLM — cập nhật mới nhất
 
-Chat Cloud hiện không được cấp tool NotebookLM; plugin search rỗng; `codex mcp list --json` trong executor trả 0 server. Không kết luận kết nối của chủ dự án không tồn tại; chưa biết nó nằm ở máy/transport nào. Không đọc hoặc chuyển credential từ máy của người dùng.
+- Codex CLI trong Cloud đã được đăng ký server `pharmacy-notebooklm`; chỉ bật notebook_list/notebook_get. Cấu hình global hiện tại được giữ nguyên các mục khác; không sửa config trên máy riêng của người dùng.
+- CLI package 0.16.2 ở `/workspace/.pharmacy-notebooklm/venv`; state riêng ở `/workspace/.pharmacy-notebooklm/state` (0700), profile pharmacy-personal. Không nằm trong Git.
+- MCP initialize và list 55 tool thành công. Server reported version 4.1.8 là framework, không phải CLI package version.
+- Lệnh notebook_list thật trả chưa có Google auth. Browser auth đã mở đúng trang NotebookLM nhưng timeout sau 300 giây, cửa sổ auth đã đóng; chưa có account session đã xác minh.
+- Bước tiếp: khi chủ dự án sẵn sàng, mở lại nlm login với DISPLAY/XAUTHORITY của Desktop hiện tại, người dùng Take over để đăng nhập Google, rồi chạy probe_mcp.py kiểm notebook_list. Không thu cookie/mật khẩu qua chat hoặc copy credential Desktop.
+- Cấu hình global CLI không tự hot-load tool vào chat hiện tại; probe SDK chạy trực tiếp là đường kiểm chứng đang dùng. Tài liệu đường Desktop/Secure MCP Tunnel trong docs/spikes/notebooklm-access.md.
 
-Bước thực tế tiếp theo: chạy `docs/spikes/notebooklm-access.md` tại nơi MCP đã callable, hoặc cấp kết nối cho Cloud qua settings. Cần năm chủ đề với nguồn/vị trí thật trên ba ngày. Không thể thay ba ngày bằng nhiều lần chạy trong một ngày.
+Report đã lọc: spikes/notebooklm/connection-report.json. Không coi transport/catalog hoặc isError=false là xác thực account thành công. Cần dữ liệu năm chủ đề thật qua ba ngày sau khi đăng nhập.
 
 ## Lệnh chạy spike
 
@@ -59,3 +64,7 @@ PR nháp P01: https://github.com/ducmanhletruong/Pharmacy-Study/pull/2, base pha
 Chủ dự án chọn tiếp tục local, chưa triển khai production; ADR-0011 Accepted và không cấp tài nguyên hosting. P01 vẫn chờ live NotebookLM/ba ngày và quyền OpenAI/model run; không dùng quyết định local để tự tuyên bố production hosting đã chốt.
 
 CI cuối cho code công cụ `2e8a5d6` đã success: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43079292723 . Tổng cộng 6 test (4 NotebookLM + 2 evaluator); RDKit, self-check và template-rejection cũng pass. Những thay đổi sau chỉ là tài liệu quyết định này, không cần chạy lại test/build. PR #2 còn draft; không tự merge.
+
+## Kiểm chứng bổ sung cho kết nối MCP
+
+Bốn test classifier Python đạt, gồm auth business error với isError=false, list rỗng hợp lệ, JSON text fallback và loại raw private data khỏi report. Probe live đã trả transport_connected=true, notebook_access_verified=false, reason=authentication_required. Không cần build/test lại Next.js. User login là phần còn thiếu thực tế; thư viện đã cài và Codex đã được cấu hình.
