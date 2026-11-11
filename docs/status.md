@@ -86,3 +86,4 @@ Chỉ P01. Tiếp tục bước còn thiếu khi có thông tin/credential đư�
 ## Ranh giới commit P01
 
 - P01-T01: công cụ và runbook đã chuẩn bị; phần live vẫn blocked.
+- P01-T02: RDKit Node/WASM đã kiểm chứng 10 cấu trúc, report và dependency cô lập.

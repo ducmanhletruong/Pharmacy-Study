@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "synthetic": true,
+  "observed_at": "2026-11-11T18:21:58.016Z",
+  "environment": {
+    "node": "v24.22.1",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "rdkit_version": "2026.09.2",
+  "license": "BSD-3-Clause",
+  "run_count": 2,
+  "independent_processes": true,
+  "molecule_count": 10,
+  "identical_svg_count": 10,
+  "invalid_smiles_rejected": true,
+  "initialization_ms": [490.124, 479.344],
+  "results": [
+    {
+      "id": "ethanol",
+      "smiles": "CCO",
+      "canonical_smiles": "CCO",
+      "svg_sha256": "136bd46477e901d884d43147b2d97952c4fa10080d9fbd3cc1757f86ae794b06",
+      "bytes": 1990,
+      "render_ms": 126.06,
+      "repeat_render_ms": 169.446
+    },
+    {
+      "id": "ethanoic-acid",
+      "smiles": "CC(=O)O",
+      "canonical_smiles": "CC(=O)O",
+      "svg_sha256": "200f077bfed452d9c3ba5f0835063d487dd53381363672ce558cbf68c6c08210",
+      "bytes": 3258,
+      "render_ms": 3.562,
+      "repeat_render_ms": 5.508
+    },
+    {
+      "id": "ethyl-acetate",
+      "smiles": "CCOC(C)=O",
+      "canonical_smiles": "CCOC(C)=O",
+      "svg_sha256": "b02160cbc1c02f34152f377f105ae48188bf4ddbf39a728ddf5f67c7f1973da0",
+      "bytes": 3818,
+      "render_ms": 1.771,
+      "repeat_render_ms": 2.215
+    },
+    {
+      "id": "acetone",
+      "smiles": "CC(=O)C",
+      "canonical_smiles": "CC(C)=O",
+      "svg_sha256": "4cbea4ae5754550d302658277f8f3b268f9e646968e7c2208c6d51d8c62c1d45",
+      "bytes": 2331,
+      "render_ms": 4.438,
+      "repeat_render_ms": 2.54
+    },
+    {
+      "id": "benzene",
+      "smiles": "c1ccccc1",
+      "canonical_smiles": "c1ccccc1",
+      "svg_sha256": "4eff2ca59cf89ccd60ecd1d47c6233674685494a2a1ce07cb2c8424c54e07a9f",
+      "bytes": 3384,
+      "render_ms": 9.892,
+      "repeat_render_ms": 9.662
+    },
+    {
+      "id": "phenol",
+      "smiles": "Oc1ccccc1",
+      "canonical_smiles": "Oc1ccccc1",
+      "svg_sha256": "467d8b6e13daf1bdd9f9808df49690e5705b685000332efb6a362247834a8c36",
+      "bytes": 4310,
+      "render_ms": 1.643,
+      "repeat_render_ms": 1.599
+    },
+    {
+      "id": "aniline",
+      "smiles": "Nc1ccccc1",
+      "canonical_smiles": "Nc1ccccc1",
+      "svg_sha256": "60bff96eea91c7ee22f2c894c3e7c9de9448edcfc0b276555b75a24e6b0b56b4",
+      "bytes": 4590,
+      "render_ms": 1.889,
+      "repeat_render_ms": 1.726
+    },
+    {
+      "id": "cyclohexane",
+      "smiles": "C1CCCCC1",
+      "canonical_smiles": "C1CCCCC1",
+      "svg_sha256": "f2c1cd20edac861a2cfb96d945c05c8297e68bf4558fc4f0ca28e224e741bdcd",
+      "bytes": 2790,
+      "render_ms": 1.014,
+      "repeat_render_ms": 0.833
+    },
+    {
+      "id": "ammonium",
+      "smiles": "[NH4+]",
+      "canonical_smiles": "[NH4+]",
+      "svg_sha256": "ace0b772af8e66723a16825f73a2c792c60a2124123c6fd3a8770addd0a2dd0f",
+      "bytes": 1493,
+      "render_ms": 1.172,
+      "repeat_render_ms": 1.091
+    },
+    {
+      "id": "stereo-example",
+      "smiles": "C[C@H](O)C(=O)O",
+      "canonical_smiles": "C[C@H](O)C(=O)O",
+      "svg_sha256": "f4b63781c31b511c19d93ab749d84cf7d3648bfce2a4b13234b07eeb8944cb9f",
+      "bytes": 10604,
+      "render_ms": 7.83,
+      "repeat_render_ms": 5.539
+    }
+  ],
+  "limitations": [
+    "Node/WASM feasibility only; no browser, product sanitizer, nomenclature grading, or medical-content validation.",
+    "Safety assertions inspect only these generated samples; they are not an SVG sanitizer.",
+    "Timings apply to this executor; no p95 claim for other hardware or production."
+  ]
+}

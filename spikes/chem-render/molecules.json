@@ -1,0 +1,12 @@
+[
+  { "id": "ethanol", "smiles": "CCO" },
+  { "id": "ethanoic-acid", "smiles": "CC(=O)O" },
+  { "id": "ethyl-acetate", "smiles": "CCOC(C)=O" },
+  { "id": "acetone", "smiles": "CC(=O)C" },
+  { "id": "benzene", "smiles": "c1ccccc1" },
+  { "id": "phenol", "smiles": "Oc1ccccc1" },
+  { "id": "aniline", "smiles": "Nc1ccccc1" },
+  { "id": "cyclohexane", "smiles": "C1CCCCC1" },
+  { "id": "ammonium", "smiles": "[NH4+]" },
+  { "id": "stereo-example", "smiles": "C[C@H](O)C(=O)O" }
+]
