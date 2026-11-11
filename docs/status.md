@@ -2,15 +2,15 @@
 
 Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P00 — IN PROGRESS. Các phase khác chưa bắt đầu.
 
-| Task    | Trạng thái     | Bằng chứng / còn lại                                                                            |
-| ------- | -------------- | ----------------------------------------------------------------------------------------------- |
-| P00-T01 | IMPLEMENTED    | Workspace pnpm 11.25.0, dependency ghim, TypeScript strict; install thành công, chờ clean clone |
-| P00-T02 | VERIFIED LOCAL | ESLint và strict TypeScript đã pass; còn đối chiếu format/clean clone/CI                        |
-| P00-T03 | VERIFIED LOCAL | Vitest 5.1.0: 1 health-contract smoke test pass; handler health được commit cùng test           |
-| P00-T04 | VERIFIED LOCAL | PostgreSQL 17.11 image ghim digest; Compose up --wait và pg_isready healthy                     |
-| P00-T05 | VERIFIED LOCAL | Plan gốc giữ nguyên; 8 ADR, register/status/blockers/CR và quy tắc phase đã đọc lại             |
-| P00-T06 | IMPLEMENTED | CI P00 có frozen install/lint/format/types/test/build/HTTP/secrets và Postgres service; chờ GitHub Actions |
-| P00-T07 | VERIFIED LOCAL | Next.js build pass; production GET /api/v1/health đúng HTTP 200/JSON và trang tên dự án render đúng |
+| Task    | Trạng thái     | Bằng chứng / còn lại                                                                                       |
+| ------- | -------------- | ---------------------------------------------------------------------------------------------------------- |
+| P00-T01 | IMPLEMENTED    | Workspace pnpm 11.25.0, dependency ghim, TypeScript strict; install thành công, chờ clean clone            |
+| P00-T02 | VERIFIED LOCAL | ESLint và strict TypeScript đã pass; còn đối chiếu format/clean clone/CI                                   |
+| P00-T03 | VERIFIED LOCAL | Vitest 5.1.0: 1 health-contract smoke test pass; handler health được commit cùng test                      |
+| P00-T04 | VERIFIED LOCAL | PostgreSQL 17.11 image ghim digest; Compose up --wait và pg_isready healthy                                |
+| P00-T05 | VERIFIED LOCAL | Plan gốc giữ nguyên; 8 ADR, register/status/blockers/CR và quy tắc phase đã đọc lại                        |
+| P00-T06 | IMPLEMENTED    | CI P00 có frozen install/lint/format/types/test/build/HTTP/secrets và Postgres service; chờ GitHub Actions |
+| P00-T07 | VERIFIED LOCAL | Next.js build pass; production GET /api/v1/health đúng HTTP 200/JSON và trang tên dự án render đúng        |
 
 ## Bảng phase
 
@@ -32,7 +32,12 @@ Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P00 — IN PROGRESS.
 
 ## Kiểm chứng thực tế
 
-Chưa chạy kiểm chứng cho code P00. Không kế thừa kết quả kiểm tra starter Vite để báo đạt cho Next.js.
+- Local: `pnpm install` thành công; lint, strict typecheck, Vitest (1 test) và Next.js production build đã pass.
+- PostgreSQL 17.11 image ghim digest: Compose up --wait đã healthy, SQL SHOW server_version xác nhận phiên bản.
+- HTTP production: GET /api/v1/health trả HTTP 200 và JSON chính xác; homepage có tên dự án và lang=vi.
+- Gitleaks đã quét lịch sử baseline không phát hiện secret; còn quét lại sau commit P00.
+- Clean clone và GitHub Actions: đang chờ; chưa báo P00 DONE.
+- Không dùng kết quả starter Vite làm bằng chứng cho Next.js.
 
 ## Phạm vi kết thúc
 

@@ -112,3 +112,13 @@ Khi có tác vụ mới, thêm mục với các thông tin sau; không ghi đè 
 
 - Handler `/api/v1/health` của T07 được commit sớm cùng T03 để smoke test kiểm tra hợp đồng thật (HTTP status, JSON content type và body) thay vì phép kiểm tra luôn đúng. Không thêm endpoint hoặc tính năng ngoài P00.
 - Local đã đạt `pnpm lint`, `pnpm typecheck`, `pnpm test` (1 test) và `NEXT_TELEMETRY_DISABLED=1 pnpm build`. Compose ghim image đã healthy. Các cổng clean clone/CI/HTTP còn chờ; chưa báo phase DONE.
+
+### Bổ sung kiểm chứng local
+
+- `pnpm install` online cuối đã thành công, không còn cảnh báo peer ở kết quả install sau khi ghim ESLint tương thích.
+- Đã loại bỏ hai khóa workspace không được pnpm 11 nhận diện/cho phép (`stateDir`, `packageManagerStrict`); store/cache vẫn nằm trong checkout.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (1/1), `NEXT_TELEMETRY_DISABLED=1 pnpm build` đạt. Next.js build đủ route `/` và `/api/v1/health`.
+- `docker compose ... up -d --wait` đạt sau khi ghim image/digest, PostgreSQL báo 17.11.
+- Đã chạy production server tạm thời, kiểm tra HTTP status/body health và HTML trang chủ bằng curl, rồi dừng bằng Ctrl+C.
+- Tạo clone local độc lập ở `/tmp/pharmacy-study-p00-clean`, không mang theo node_modules hoặc .next. Chia sẻ duy nhất pnpm package cache bằng symlink `.pnpm-store` để tiết kiệm tải mạng; dependency links và output build được tạo mới trong clone. Đây là kiểm chứng clean clone bắt buộc của P00, không phải build lặp không có mục đích.
+- Các kiểm chứng clean clone/CI còn đang chờ tại thời điểm mục bổ sung này; sẽ ghi kết quả thực tế sau.

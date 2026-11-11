@@ -9,7 +9,7 @@
 
 ## Trạng thái
 
-Khung code, tài liệu và CI đã được chuẩn bị; còn chờ kiểm chứng. Xem bảng task/phase tại `docs/status.md`, quyết định tại `docs/decision-register.md` và phát sinh tại `worked.md`.
+Khung code, tài liệu và CI đã hoàn tất. Local đã pass install, lint, typecheck, 1 smoke test, build và HTTP production health; PostgreSQL đã healthy. Còn chờ clean clone, secret scan cuối và GitHub Actions. Xem bảng task/phase tại `docs/status.md`, quyết định tại `docs/decision-register.md` và phát sinh tại `worked.md`.
 
 ## Cấu trúc mới
 
@@ -21,11 +21,11 @@ Khung code, tài liệu và CI đã được chuẩn bị; còn chờ kiểm ch�
 
 ## Cách tiếp tục
 
-Dùng Node 24 và pnpm 11.25.0. Cài bằng `pnpm install --frozen-lockfile`, chạy web bằng `pnpm dev` ở cổng 3000. Kiểm tra tiến trình trước khi khởi động thêm. Trạng thái server Next.js chưa được xác minh ở thời điểm viết mục này.
+Dùng Node 24 và pnpm 11.25.0. Cài bằng `pnpm install --frozen-lockfile`, chạy web bằng `pnpm dev` ở cổng 3000. Kiểm tra tiến trình trước khi khởi động thêm. Production server đã được chạy để kiểm tra HTTP rồi dừng; sẽ bật dev server sau khi hoàn tất.
 
 ## Kiểm chứng / phần còn lại
 
-Chờ kiểm chứng P00 local, clean clone và CI. Không coi các lượt check starter Vite trước đó là bằng chứng cho code mới. Không tự bắt đầu P01/P02; những thông tin cần chủ dự án quyết nằm trong `docs/blockers.md`.
+Local đã đạt các kiểm chứng nêu trên; còn chờ clean clone và CI. Không coi các lượt check starter Vite trước đó là bằng chứng cho code mới. Không tự bắt đầu P01/P02; những thông tin cần chủ dự án quyết nằm trong `docs/blockers.md`.
 
 ## Tham chiếu hoàn tác
 
