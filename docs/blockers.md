@@ -12,7 +12,6 @@ Repo GitHub ban đầu chỉ có một commit README thay vì rỗng hoàn toàn
 | ------------- | ------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | MCP-CLOUD     | Không có tool NotebookLM hoặc server MCP trong executor hiện tại          | P01-T01 live verification   | Dùng kết nối hiện có ở nơi nó callable, hoặc cấu hình MCP cho chat Cloud; chỉ cần tên/transport/version để kiểm metadata, không gửi secret |
 | MCP-3DAYS     | Chưa có observation thật                                                  | Cổng P01-T01                | Chạy năm chủ đề cùng nguồn trên ít nhất ba ngày khác nhau; runbook/validator đã sẵn sàng                                                   |
-| HOSTING-Q5    | Câu trả lời mới chọn Pro cho AI, chưa có ngân sách/lựa chọn hosting       | P01-T03 và ADR-0006         | Hồ sơ ADR-0009 đã chuẩn bị; chờ lựa chọn local/preview free/paid có trần                                                                   |
 | OPENAI-ACCESS | Chưa có entitlement/credit grant/OAuth token được cấp cho app trong Cloud | P01-T04 xác minh model thật | Chọn luồng hỗ trợ chính thức theo ADR-0010; cấu hình qua settings, không gửi token/key trong chat                                          |
 
 Q1 phần cho phép MCP bên thứ ba đã xác nhận, tài khoản cá nhân. Người dùng nói đã nối NotebookLM, nhưng điều đó chưa tạo tool callable trong chat Cloud này. Không coi dữ liệu unit test hoặc reference benchmark là bằng chứng đã truy cập account.
@@ -31,3 +30,8 @@ Q1 phần cho phép MCP bên thứ ba đã xác nhận, tài khoản cá nhân. 
 | ASSET-01    | Hình giải phẫu có nguồn và giấy phép rõ ràng                    | P09                                                                | OPEN           |
 
 Q4 mặc định A-03 (responsive, online); Q7 hạn thi/MVP chưa chặn. Không tự quyết thay chủ dự án; không yêu cầu secret qua chat.
+
+## Đã giải quyết trong P01
+
+- HOSTING-Q5 cho giai đoạn hiện tại: chủ dự án đã chọn tiếp tục local, chưa production; ADR-0011 Accepted. Không cần chọn paid/preview hosting ở thời điểm này. Quyết định provider/budget production vẫn hoãn, chỉ cần xử lý khi chuẩn bị triển khai theo phạm vi mới.
+- Nhà cung cấp AI đã chọn OpenAI/ChatGPT Pro; còn đường cấp quyền/hạn mức, không còn câu hỏi chọn provider thay thế.

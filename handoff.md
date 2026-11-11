@@ -11,7 +11,7 @@
 
 - Cho thực thi tiếp.
 - Cho dùng MCP bên thứ ba; NotebookLM là tài khoản cá nhân và người dùng báo đã kết nối Codex.
-- Dùng OpenAI/ChatGPT Pro của tài khoản hiện có cho AI. Chưa có thông tin ngân sách hosting hoặc quyền API/plan cụ thể của ứng dụng.
+- Dùng OpenAI/ChatGPT Pro của tài khoản hiện có cho AI. Hosting giai đoạn hiện tại đã chốt local, chưa production theo ADR-0011; còn quyền API/plan cụ thể của ứng dụng.
 
 ## Đã làm P01
 
@@ -42,7 +42,7 @@ Trong Cloud thêm `--cache /workspace/.npm-cache` cho npm ci nếu home không g
 
 ## Phần còn thiếu / giới hạn
 
-P01-T01 chờ live MCP và bằng chứng ba ngày; P01-T03 chờ hosting; P01-T04 chờ cách cấp quyền OpenAI và batch model thật. Chi tiết ở `docs/blockers.md`, `docs/status.md`, `docs/decision-register.md`.
+P01-T01 chờ live MCP và bằng chứng ba ngày; P01-T03 đã chốt local cho giai đoạn hiện tại, production hoãn; P01-T04 chờ cách cấp quyền OpenAI và batch model thật. Chi tiết ở `docs/blockers.md`, `docs/status.md`, `docs/decision-register.md`.
 
 Ưu tiên local và dùng tài khoản Pro không tự chứng minh API credits đã active hoặc token app đã được cấp. Có thể tạo prompt để chạy tại nơi được phép dùng tài khoản rồi nhập output vào evaluator; bước này chưa phải API adapter P06. Không tự claim credit, chọn model trả phí, auto-recharge hoặc tạo hosting.
 
@@ -53,3 +53,9 @@ App Next.js/DB/dependency workspace/plan gốc và AGENTS không đổi trong P0
 ## PR và bằng chứng CI P01
 
 PR nháp P01: https://github.com/ducmanhletruong/Pharmacy-Study/pull/2, base phase-00 (xếp chồng PR #1). CI công cụ spike trên commit 3c5f761 đã success: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43078944161 . Chỉnh tiếp theo chỉ nới điều kiện ngày về đúng plan; cần lấy kết quả CI của commit mới trước khi báo CI mới đạt.
+
+## Cập nhật cuối theo trả lời hosting
+
+Chủ dự án chọn tiếp tục local, chưa triển khai production; ADR-0011 Accepted và không cấp tài nguyên hosting. P01 vẫn chờ live NotebookLM/ba ngày và quyền OpenAI/model run; không dùng quyết định local để tự tuyên bố production hosting đã chốt.
+
+CI cuối cho code công cụ `2e8a5d6` đã success: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43079292723 . Tổng cộng 6 test (4 NotebookLM + 2 evaluator); RDKit, self-check và template-rejection cũng pass. Những thay đổi sau chỉ là tài liệu quyết định này, không cần chạy lại test/build. PR #2 còn draft; không tự merge.

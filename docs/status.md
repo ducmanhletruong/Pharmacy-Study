@@ -14,21 +14,21 @@ Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P01 — PARTIAL / BL
 
 ## Bảng phase
 
-| Phase | Trạng thái        | Điều kiện trước khi bắt đầu                                                      |
-| ----- | ----------------- | -------------------------------------------------------------------------------- |
-| P00   | DONE              | Local, clean clone và GitHub Actions P00 đều pass; PR #1 đang draft, chưa merge  |
-| P01   | PARTIAL / BLOCKED | RDKit đạt, hồ sơ và harness đã có; chờ MCP thật/ba ngày, hosting và quyền OpenAI |
-| P02   | NOT STARTED       | P00 xong, duyệt tài liệu; Q4 mặc định A-03                                       |
-| P03   | NOT STARTED       | P02 và Q3                                                                        |
-| P04   | NOT STARTED       | P03                                                                              |
-| P05   | NOT STARTED       | P04 và Q2                                                                        |
-| P06   | NOT STARTED       | P04, P01, Q1, Q5, Q6                                                             |
-| P07   | NOT STARTED       | P04 và Q2                                                                        |
-| P08   | NOT STARTED       | P04, P01-T02 và Q2                                                               |
-| P09   | NOT STARTED       | P04 và hình có giấy phép                                                         |
-| P10   | NOT STARTED       | P06, P07, P08, P09, Q2 và taxonomy                                               |
-| P11   | NOT STARTED       | P05 và P10                                                                       |
-| P12   | NOT STARTED       | P11, ADR-0006 và điều kiện phát hành                                             |
+| Phase | Trạng thái        | Điều kiện trước khi bắt đầu                                                     |
+| ----- | ----------------- | ------------------------------------------------------------------------------- |
+| P00   | DONE              | Local, clean clone và GitHub Actions P00 đều pass; PR #1 đang draft, chưa merge |
+| P01   | PARTIAL / BLOCKED | RDKit và quyết định local đạt; chờ MCP thật/ba ngày và quyền OpenAI/model run   |
+| P02   | NOT STARTED       | P00 xong, duyệt tài liệu; Q4 mặc định A-03                                      |
+| P03   | NOT STARTED       | P02 và Q3                                                                       |
+| P04   | NOT STARTED       | P03                                                                             |
+| P05   | NOT STARTED       | P04 và Q2                                                                       |
+| P06   | NOT STARTED       | P04, P01, Q1, Q5, Q6                                                            |
+| P07   | NOT STARTED       | P04 và Q2                                                                       |
+| P08   | NOT STARTED       | P04, P01-T02 và Q2                                                              |
+| P09   | NOT STARTED       | P04 và hình có giấy phép                                                        |
+| P10   | NOT STARTED       | P06, P07, P08, P09, Q2 và taxonomy                                              |
+| P11   | NOT STARTED       | P05 và P10                                                                      |
+| P12   | NOT STARTED       | P11, ADR-0006 và điều kiện phát hành                                            |
 
 ## Kiểm chứng thực tế
 
@@ -58,12 +58,12 @@ Không chạy browser e2e, migration, auth, pipeline AI hoặc test nghiệp v�
 
 Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục. Không bắt đầu P02 hoặc sửa code sản phẩm trong lượt này.
 
-| Task    | Trạng thái                  | Bằng chứng / còn thiếu                                                                                                           |
-| ------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| P01-T01 | PREPARED / BLOCKED LIVE     | Runbook, template và validator đã có; xác nhận cho MCP bên thứ ba; Cloud chưa callable, 0 observation thật và chưa có ba ngày    |
-| P01-T02 | DONE                        | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                  |
-| P01-T03 | PROPOSED / WAITING DECISION | ADR-0009 có phương án và nguồn chính thức; chưa có ngân sách/lựa chọn hosting                                                    |
-| P01-T04 | PREPARED / WAITING ACCESS   | OpenAI/Pro đã được chọn về nhà cung cấp; ADR-0010, prompt/evaluator và fixture đã có; chưa có API/plan grant hoặc model run thật |
+| Task    | Trạng thái                | Bằng chứng / còn thiếu                                                                                                           |
+| ------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| P01-T01 | PREPARED / BLOCKED LIVE   | Runbook, template và validator đã có; xác nhận cho MCP bên thứ ba; Cloud chưa callable, 0 observation thật và chưa có ba ngày    |
+| P01-T02 | DONE                      | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                  |
+| P01-T03 | DONE — CURRENT STAGE      | ADR-0011 Accepted: tiếp tục local; production hosting hoãn, ADR-0006 vẫn OPEN                                                    |
+| P01-T04 | PREPARED / WAITING ACCESS | OpenAI/Pro đã được chọn về nhà cung cấp; ADR-0010, prompt/evaluator và fixture đã có; chưa có API/plan grant hoặc model run thật |
 
 ### Kiểm chứng P01
 
@@ -77,7 +77,7 @@ Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục.
 
 ### Cổng chưa đạt
 
-Thiếu kết nối NotebookLM callable tại nơi chạy và hồ sơ năm chủ đề trên ba ngày; hosting và đường truy cập OpenAI cần chốt/thiết lập thực tế. P01 chưa DONE. ADR-0006/0007 chưa chuyển Accepted; các hồ sơ bổ sung không tự thay thế quyết định của chủ dự án.
+Thiếu kết nối NotebookLM callable tại nơi chạy và hồ sơ năm chủ đề trên ba ngày; đường truy cập OpenAI cần chốt/thiết lập thực tế; hosting giai đoạn hiện tại đã chọn local theo ADR-0011, production còn hoãn. P01 chưa DONE. ADR-0006/0007 chưa chuyển Accepted; các hồ sơ bổ sung không tự thay thế quyết định của chủ dự án.
 
 ## Phạm vi kết thúc
 
@@ -87,9 +87,15 @@ Chỉ P01. Tiếp tục bước còn thiếu khi có thông tin/credential đư�
 
 - P01-T01: công cụ và runbook đã chuẩn bị; phần live vẫn blocked.
 - P01-T02: RDKit Node/WASM đã kiểm chứng 10 cấu trúc, report và dependency cô lập.
-- P01-T03: hồ sơ hosting đã có, chờ lựa chọn/budget của chủ dự án.
+- P01-T03: hồ sơ và quyết định tiếp tục local đã có; production được hoãn theo lựa chọn chủ dự án.
 - P01-T04: hồ sơ OpenAI/Pro và evaluator offline đã có; chưa có model run thật.
 
 ### Bổ sung rà soát P01
 
 PR nháp #2: https://github.com/ducmanhletruong/Pharmacy-Study/pull/2 . CI spike đã success trên commit 3c5f761, run 43078944161. Điều kiện live vẫn blocked. Rà lại P01-T01 cho thấy plan chỉ yêu cầu ổn định qua ba ngày, không bắt buộc liên tiếp; đã sửa validator/runbook để nhận ba ngày khác nhau và thêm test cho khoảng cách ngày. Không tự thêm điều kiện sản phẩm.
+
+### Quyết định local và CI cuối
+
+Chủ dự án chọn tiếp tục local, chưa triển khai production: ADR-0011 Accepted, không cấp tài nguyên mới. T03 hoàn thành hồ sơ và quyết định cho giai đoạn hiện tại; không tự coi ADR-0006 production đã Accepted. P01 tổng thể vẫn PARTIAL/BLOCKED.
+
+CI công cụ trên commit `2e8a5d61d1589edda392988143fcf602ba40497d` đã **success**, gồm 6 test, RDKit hai process, reference self-check và từ chối template trống: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43079292723 . Bổ sung sau commit này chỉ là tài liệu quyết định local, không đổi công cụ/app/dependency.

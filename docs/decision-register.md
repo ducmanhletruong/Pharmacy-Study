@@ -33,3 +33,5 @@ Ngày dùng múi giờ Asia/Saigon. Không coi ASSUMPTION/PROPOSED là quyết �
 - Q1 phần cho phép MCP đã giải quyết. Quyền dùng từng nguồn vẫn theo A-07 và phải kiểm tra khi đưa nguồn thật vào hồ sơ. Không suy ra quyền phân phối nguồn từ tài khoản cá nhân.
 - ADR-0009 và ADR-0010 bổ sung hồ sơ hosting/OpenAI; PROPOSED về cách tích hợp, không sửa các ADR gốc hoặc tự gán Accepted. Q5 hosting và đường cấp quyền AI đang chờ quyết định/thiết lập thực tế.
 - Không có inference API ở spike; reference self-check 5/5 không phải kết quả mô hình. Không đánh dấu đạt cổng P01 khi thiếu bằng chứng NotebookLM năm chủ đề qua ba ngày.
+
+- **CHAT-06 / ADR-0011 — CONFIRMED / Accepted:** chủ dự án chọn “Tiếp tục local, chưa triển khai hosting production (đề xuất)”. Phần lựa chọn môi trường hiện tại của ADR-0009 được thay bằng ADR-0011; production ADR-0006 và ngân sách production vẫn hoãn, không tự chọn Render/Neon. T03 không còn chờ quyết định cho phạm vi local.

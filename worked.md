@@ -205,3 +205,11 @@ P01 chưa DONE: thiếu live MCP/ba ngày, quyết định hosting và quyền O
 - Gitleaks quét 17 commit, không phát hiện secret; Prettier cho toàn bộ file P01 đã đạt.
 - Rà plan phát hiện validator/runbook đã thêm điều kiện “ba ngày liên tiếp” quá chặt so với “ổn định qua 3 ngày” của P01-T01. Đã sửa về ít nhất ba ngày lịch khác nhau, giữ yêu cầu năm chủ đề đủ mỗi ngày và không chấp nhận lặp một ngày/future timestamp; bổ sung ca test ngày có khoảng trống. Bốn test NotebookLM hiện tại thay cho ba test ban đầu. Đây là sửa sai lệch do triển khai, không phải thay đổi yêu cầu của chủ dự án.
 - Chỉ chạy lại lint và test của validator bị sửa, không chạy lại RDKit hoặc app local đã đạt; CI sẽ tự kiểm công cụ trên commit mới. Không báo CI của SHA mới pass khi chưa có kết quả.
+
+### Quyết định hosting và CI cuối P01
+
+- Chủ dự án trả lời chọn tiếp tục local, chưa triển khai hosting production. Đã ghi ADR-0011 Accepted, supersedes phần môi trường hiện tại của đề xuất ADR-0009; ADR-0006 production vẫn OPEN. Không đổi runtime hoặc cấp tài nguyên.
+- Gỡ blocker lựa chọn hosting cho giai đoạn hiện tại; không tự đặt ngân sách production hoặc coi các mục tiêu uptime/backup đã đạt.
+- CI công cụ commit 2e8a5d6 đã success: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43079292723 . Sáu test, RDKit hai process, reference self-check và từ chối template live trống đều đạt.
+- Cập nhật sau kết quả CI chỉ là Markdown về quyết định và bàn giao; chỉ format/đọc phần thay đổi, không lặp test/build. Workflow spike có paths filter nên không chạy lại công cụ cho commit chỉ tài liệu.
+- P01 chưa DONE: còn kết nối callable, năm chủ đề trên ba ngày và quyền OpenAI/model run thật. Những phần này không được bịa để vượt cổng.
