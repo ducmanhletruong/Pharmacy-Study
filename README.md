@@ -1,4 +1,4 @@
-# Web Starter
+# Pharmacy-Study
 
 Môi trường phát triển React + TypeScript + Vite. Node.js 24 LTS và npm; dependency được cố định bằng `package-lock.json`.
 
