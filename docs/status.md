@@ -87,3 +87,4 @@ Chỉ P01. Tiếp tục bước còn thiếu khi có thông tin/credential đư�
 
 - P01-T01: công cụ và runbook đã chuẩn bị; phần live vẫn blocked.
 - P01-T02: RDKit Node/WASM đã kiểm chứng 10 cấu trúc, report và dependency cô lập.
+- P01-T03: hồ sơ hosting đã có, chờ lựa chọn/budget của chủ dự án.
