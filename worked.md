@@ -127,3 +127,27 @@ Khi có tác vụ mới, thêm mục với các thông tin sau; không ghi đè 
 
 - `pnpm format:check` phát hiện một lỗi định dạng trong `infra/docker-compose.yml` (chuỗi image/digest dài). Đã format đúng file này; không đổi cấu hình Compose về mặt ngữ nghĩa và không build lại vì sửa Markdown/YAML format. Chờ lần format check xác nhận cuối.
 - Gitleaks 8.30.1 đã quét 10 commit hiện tại, không phát hiện secret. File plan gốc được kiểm bằng `cmp`, trùng byte với bản upload mới nhất.
+
+### Phát sinh 6 — Next.js tự tạo hướng dẫn cho agent
+
+- Lý do: khi `pnpm dev` chạy trong môi trường agent, Next.js 16.4.6 tự sinh `apps/web/AGENTS.md` qua tính năng agentRules. File ban đầu xuất hiện là untracked sau các commit nguồn.
+- Đã làm: đọc tài liệu agentRules và route handlers đi kèm package Next.js đúng phiên bản; giữ nguyên block do framework quản lý, thêm đoạn đầu xác nhận quy định root AGENTS vẫn áp dụng và commit file. Không tắt hoặc đổi config runtime để che file phát sinh.
+- Tác động: chỉ tài liệu hướng dẫn; không thay đổi app, dependency hoặc build config. Prettier check cho file đã đạt trước khi thêm đoạn dẫn; format lại đúng file trước khi commit.
+- Hoàn tác: không xóa block bằng tay vì next dev sẽ tạo lại. Nếu sau này muốn tắt, cần quyết định thay agentRules theo tài liệu Next.js; chưa thực hiện thay đổi đó.
+
+### Đính chính ghi nhận định dạng
+
+Mục trước ghi lỗi format Compose do chuỗi image/digest dài; diff thực tế cho thấy Prettier chỉ xuống dòng mảng `healthcheck.test`. Không có thay đổi giá trị image, healthcheck hoặc hành vi DB trong commit format `50403d8`.
+
+### Kết quả cuối của P00
+
+- Hoàn thành P00-T01…T07; mỗi task có commit riêng, bổ sung các commit baseline/nối lịch sử/bằng chứng/format cần thiết đã nêu.
+- Local đạt lint, typecheck, Vitest 1/1, build và HTTP production health/homepage. PostgreSQL 17.11 local healthy.
+- Clone sạch `/tmp/pharmacy-study-p00-clean` đạt `pnpm install --frozen-lockfile`, lint, typecheck, test, build và format:check. Không tái sử dụng node_modules/.next; chỉ chia sẻ cache lúc cài, sau đó bỏ symlink cache tạm; git status của clone sạch.
+- GitHub Actions run **43074691952** trên code commit **50403d8f7898a8de48c827f3521f172077584cb3** hoàn tất **success**. Frozen install, lint, format, typecheck, test, build, HTTP health và gitleaks đều thành công; Postgres service healthy.
+- PR nháp: https://github.com/ducmanhletruong/Pharmacy-Study/pull/1. Đã attach PR vào chat; không merge, không deploy production.
+- Gitleaks local quét lịch sử 10 commit không phát hiện secret; CI quét toàn bộ lịch sử PR cũng đạt. Plan gốc trùng byte với upload mới nhất.
+- Dev server Next.js chạy ở cổng 3000 và health endpoint đã phản hồi đúng. Server production thử nghiệm còn tiến trình con sau Ctrl+C ở pnpm; đã xác định đúng next-server PID 4636 và gửi TERM, rồi mới mở dev server, không chạy hai server trên cùng cổng.
+- Bổ sung sau code commit chỉ là tài liệu và file agent do framework sinh, không cần build/test code lại theo AGENTS. Workflow GitHub có thể tự kiểm chứng commit tài liệu cuối khi push; không dùng kết quả chưa chạy để khẳng định CI của SHA mới.
+- Không thực hiện phase khác, không thêm nội dung môn học, schema/migration, auth, AI/NotebookLM hoặc tài nguyên hosting trả phí. Chưa có nội dung để chứng minh AC-1…AC-8 của toàn MVP.
+- Dừng ở cổng P00 theo mục 10.1 của plan. P01 còn chờ chủ dự án duyệt tài liệu và trả lời Q1/Q5; không tự quyết các OPEN hoặc giả định bản quyền.

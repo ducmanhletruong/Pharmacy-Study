@@ -2,9 +2,9 @@
 
 ## P00
 
-Không có quyết định sản phẩm OPEN chặn chuẩn bị P00. Stack đã được người dùng chốt Next.js + pnpm; repo GitHub đã được cung cấp và kiểm tra quyền truy cập. CI, clean clone và PostgreSQL healthcheck đang chờ kiểm chứng, chưa coi là đạt.
+Không còn blocker triển khai P00. Stack đã được chủ dự án chốt Next.js + pnpm; repo GitHub đã nối, lịch sử được giữ nguyên. Local, clone sạch và CI run 43074691952 đều đạt cổng P00. PR #1 đang draft và chưa merge; không tự merge hoặc deploy.
 
-Repo GitHub có một commit README thay vì rỗng hoàn toàn. Đã bảo toàn lịch sử remote và starter local, giải quyết xung đột README chỉ có tên repo; ghi chi tiết vào `worked.md`.
+Repo GitHub ban đầu chỉ có một commit README thay vì rỗng hoàn toàn; starter Vite và lịch sử remote đã được bảo toàn. Mọi điều chỉnh được ghi trong `worked.md`.
 
 ## Các phase sau (chưa triển khai)
 
