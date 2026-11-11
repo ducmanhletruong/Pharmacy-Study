@@ -10,7 +10,7 @@ Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P00 — IN PROGRESS.
 | P00-T04 | VERIFIED LOCAL | PostgreSQL 17.11 image ghim digest; Compose up --wait và pg_isready healthy                     |
 | P00-T05 | VERIFIED LOCAL | Plan gốc giữ nguyên; 8 ADR, register/status/blockers/CR và quy tắc phase đã đọc lại             |
 | P00-T06 | IMPLEMENTED | CI P00 có frozen install/lint/format/types/test/build/HTTP/secrets và Postgres service; chờ GitHub Actions |
-| P00-T07 | IN PROGRESS    | App chỉ có tên dự án, GET /api/v1/health; chờ build và HTTP check                               |
+| P00-T07 | VERIFIED LOCAL | Next.js build pass; production GET /api/v1/health đúng HTTP 200/JSON và trang tên dự án render đúng |
 
 ## Bảng phase
 
