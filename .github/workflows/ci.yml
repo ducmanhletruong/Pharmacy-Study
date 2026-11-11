@@ -1,0 +1,76 @@
+name: Phase 00
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p00-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: P00 quality gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    services:
+      postgres:
+        image: postgres:17.11-alpine@sha256:e5d2edd28b1f8d40a0a6c0c9cdc545b19b56a0d5d88f94bc11a97d970d4700d0
+        env:
+          POSTGRES_DB: pharmacy_study
+          POSTGRES_USER: pharmacy_dev
+          POSTGRES_PASSWORD: local-dev-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pharmacy_dev -d pharmacy_study"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - name: Set up pnpm
+        uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - name: Check production health endpoint
+        shell: bash
+        run: |
+          pnpm start > "$RUNNER_TEMP/pharmacy-next.log" 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          curl --fail --silent --show-error --retry 20 --retry-delay 1 --retry-connrefused --max-time 5 \
+            http://127.0.0.1:3000/api/v1/health -o "$RUNNER_TEMP/pharmacy-health.json"
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import { deepStrictEqual } from "node:assert";
+            deepStrictEqual(JSON.parse(readFileSync(process.env.RUNNER_TEMP + "/pharmacy-health.json", "utf8")), { status: "ok" });
+          '
+      - name: Scan Git history for secrets
+        shell: bash
+        run: |
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum --check -
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" git . --redact --no-banner --log-opts=--all
