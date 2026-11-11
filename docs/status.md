@@ -1,6 +1,6 @@
 # Trạng thái triển khai
 
-Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P00 — DONE. Các phase khác chưa bắt đầu.
+Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P01 — PARTIAL / BLOCKED tại cổng tích hợp. P00 đã DONE; các phase sau P01 chưa bắt đầu.
 
 | Task    | Trạng thái | Bằng chứng / còn lại                                                               |
 | ------- | ---------- | ---------------------------------------------------------------------------------- |
@@ -14,21 +14,21 @@ Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P00 — DONE. Các p
 
 ## Bảng phase
 
-| Phase | Trạng thái  | Điều kiện trước khi bắt đầu                                                     |
-| ----- | ----------- | ------------------------------------------------------------------------------- |
-| P00   | DONE        | Local, clean clone và GitHub Actions P00 đều pass; PR #1 đang draft, chưa merge |
-| P01   | NOT STARTED | P00 xong, duyệt tài liệu, Q1 và Q5                                              |
-| P02   | NOT STARTED | P00 xong, duyệt tài liệu; Q4 mặc định A-03                                      |
-| P03   | NOT STARTED | P02 và Q3                                                                       |
-| P04   | NOT STARTED | P03                                                                             |
-| P05   | NOT STARTED | P04 và Q2                                                                       |
-| P06   | NOT STARTED | P04, P01, Q1, Q5, Q6                                                            |
-| P07   | NOT STARTED | P04 và Q2                                                                       |
-| P08   | NOT STARTED | P04, P01-T02 và Q2                                                              |
-| P09   | NOT STARTED | P04 và hình có giấy phép                                                        |
-| P10   | NOT STARTED | P06, P07, P08, P09, Q2 và taxonomy                                              |
-| P11   | NOT STARTED | P05 và P10                                                                      |
-| P12   | NOT STARTED | P11, ADR-0006 và điều kiện phát hành                                            |
+| Phase | Trạng thái        | Điều kiện trước khi bắt đầu                                                      |
+| ----- | ----------------- | -------------------------------------------------------------------------------- |
+| P00   | DONE              | Local, clean clone và GitHub Actions P00 đều pass; PR #1 đang draft, chưa merge  |
+| P01   | PARTIAL / BLOCKED | RDKit đạt, hồ sơ và harness đã có; chờ MCP thật/ba ngày, hosting và quyền OpenAI |
+| P02   | NOT STARTED       | P00 xong, duyệt tài liệu; Q4 mặc định A-03                                       |
+| P03   | NOT STARTED       | P02 và Q3                                                                        |
+| P04   | NOT STARTED       | P03                                                                              |
+| P05   | NOT STARTED       | P04 và Q2                                                                        |
+| P06   | NOT STARTED       | P04, P01, Q1, Q5, Q6                                                             |
+| P07   | NOT STARTED       | P04 và Q2                                                                        |
+| P08   | NOT STARTED       | P04, P01-T02 và Q2                                                               |
+| P09   | NOT STARTED       | P04 và hình có giấy phép                                                         |
+| P10   | NOT STARTED       | P06, P07, P08, P09, Q2 và taxonomy                                               |
+| P11   | NOT STARTED       | P05 và P10                                                                       |
+| P12   | NOT STARTED       | P11, ADR-0006 và điều kiện phát hành                                             |
 
 ## Kiểm chứng thực tế
 
@@ -54,6 +54,35 @@ Lượt format check đầu phát hiện cách xuống dòng mảng healthcheck 
 
 Không chạy browser e2e, migration, auth, pipeline AI hoặc test nghiệp vụ ở P00 vì chúng chưa được thiết lập; không báo đạt các cổng MVP chưa tồn tại. Không triển khai production hoặc tự merge PR.
 
+## P01 — Khảo sát khả thi
+
+Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục. Không bắt đầu P02 hoặc sửa code sản phẩm trong lượt này.
+
+| Task    | Trạng thái                  | Bằng chứng / còn thiếu                                                                                                           |
+| ------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| P01-T01 | PREPARED / BLOCKED LIVE     | Runbook, template và validator đã có; xác nhận cho MCP bên thứ ba; Cloud chưa callable, 0 observation thật và chưa có ba ngày    |
+| P01-T02 | DONE                        | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                  |
+| P01-T03 | PROPOSED / WAITING DECISION | ADR-0009 có phương án và nguồn chính thức; chưa có ngân sách/lựa chọn hosting                                                    |
+| P01-T04 | PREPARED / WAITING ACCESS   | OpenAI/Pro đã được chọn về nhà cung cấp; ADR-0010, prompt/evaluator và fixture đã có; chưa có API/plan grant hoặc model run thật |
+
+### Kiểm chứng P01
+
+- RDKit spike đã chạy thành công bằng dependency chính thức, ghim version/integrity trong lockfile riêng.
+- Validator NotebookLM: 3 unit test đạt, gồm các ca thiếu citation, lặp một ngày, tương lai và quyền nguồn chưa xác nhận.
+- Evaluator LLM: 2 unit test đạt; reference self-check đạt 5/5, có nhãn không phải inference. Bổ sung từ chối citation giả thêm vào danh sách và kiểm lại evaluator.
+- Template NotebookLM trống bị từ chối với exit 2 như mong đợi; không báo kết nối thành công.
+- ESLint chỉ trên spikes đạt. Chỉ format file mới/thay đổi, không format toàn repo.
+- Workflow `phase-01.yml` kiểm công cụ spike với Node/native tests và npm lockfile riêng. CI của spike chỉ chứng minh công cụ chạy được, không chứng minh live NotebookLM, quyền nguồn, chất lượng model hay provider entitlement. Kết quả CI thực tế ghi trong PR khi có.
+- Không build/test lại Next.js: không có thay đổi app, dependency workspace, DB schema hoặc build config của sản phẩm.
+
+### Cổng chưa đạt
+
+Thiếu kết nối NotebookLM callable tại nơi chạy và hồ sơ năm chủ đề trên ba ngày; hosting và đường truy cập OpenAI cần chốt/thiết lập thực tế. P01 chưa DONE. ADR-0006/0007 chưa chuyển Accepted; các hồ sơ bổ sung không tự thay thế quyết định của chủ dự án.
+
 ## Phạm vi kết thúc
 
-Dừng ở cổng P00 theo mục 10.1. Không tự bắt đầu P01/P02. Cập nhật bằng chứng sau khi chạy, kể cả phần thất bại hoặc chưa xác minh.
+Chỉ P01. Tiếp tục bước còn thiếu khi có thông tin/credential được cấu hình qua settings hoặc hồ sơ chạy local. Không tự vượt sang phase sản phẩm hoặc dùng dữ liệu mẫu để làm giả bằng chứng live.
+
+## Ranh giới commit P01
+
+- P01-T01: công cụ và runbook đã chuẩn bị; phần live vẫn blocked.

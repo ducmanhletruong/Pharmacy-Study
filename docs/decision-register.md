@@ -23,3 +23,13 @@ Ngày dùng múi giờ Asia/Saigon. Không coi ASSUMPTION/PROPOSED là quyết �
 - Q7: ngày thi và hạn MVP, chưa chặn P00.
 - A-01…A-09, D-01, X-01…X-05 chưa được tự nâng thành CONFIRMED.
 - Ngưỡng coverage ở mục 9.4 còn PROPOSED; P00 mới có smoke test, không báo đạt coverage cho module chưa tồn tại.
+
+## Bổ sung P01 — 2026-11-12
+
+- **CHAT-03 — CONFIRMED:** chủ dự án yêu cầu “thực thi tiếp cho tôi”. Cho phép tiếp tục P01 và chuẩn bị/kiểm chứng phần độc lập; không cần xin lại quyền bắt đầu. Không coi đây là duyệt mọi lựa chọn provider hoặc câu trả lời nghiệp vụ OPEN.
+- **CHAT-04 — CONFIRMED:** cho phép MCP bên thứ ba, NotebookLM là tài khoản cá nhân. Người dùng báo đã kết nối Codex với NotebookLM. Kiểm tra trong Cloud: không có tool NotebookLM, plugin search rỗng, CLI MCP list 0 server. Chưa biết tên/version/transport server thực; chưa xác nhận kết nối callable ở Cloud.
+- **CHAT-05 — CONFIRMED:** ưu tiên dùng OpenAI/ChatGPT Pro của tài khoản hiện có cho AI. Chưa xác minh entitlement, API credit grant, OAuth plan token, model hoặc hạn mức; câu trả lời này không đưa ra ngân sách hosting.
+- **P01-T02 — VERIFIED:** RDKit JS/WASM 2026.09.2, 10/10 SVG giống hash giữa hai tiến trình, invalid SMILES bị từ chối; báo cáo thật trong `spikes/chem-render/report.json`. Đây là kết quả spike, không phải duyệt toàn bộ P08.
+- Q1 phần cho phép MCP đã giải quyết. Quyền dùng từng nguồn vẫn theo A-07 và phải kiểm tra khi đưa nguồn thật vào hồ sơ. Không suy ra quyền phân phối nguồn từ tài khoản cá nhân.
+- ADR-0009 và ADR-0010 bổ sung hồ sơ hosting/OpenAI; PROPOSED về cách tích hợp, không sửa các ADR gốc hoặc tự gán Accepted. Q5 hosting và đường cấp quyền AI đang chờ quyết định/thiết lập thực tế.
+- Không có inference API ở spike; reference self-check 5/5 không phải kết quả mô hình. Không đánh dấu đạt cổng P01 khi thiếu bằng chứng NotebookLM năm chủ đề qua ba ngày.
