@@ -122,3 +122,8 @@ Khi có tác vụ mới, thêm mục với các thông tin sau; không ghi đè 
 - Đã chạy production server tạm thời, kiểm tra HTTP status/body health và HTML trang chủ bằng curl, rồi dừng bằng Ctrl+C.
 - Tạo clone local độc lập ở `/tmp/pharmacy-study-p00-clean`, không mang theo node_modules hoặc .next. Chia sẻ duy nhất pnpm package cache bằng symlink `.pnpm-store` để tiết kiệm tải mạng; dependency links và output build được tạo mới trong clone. Đây là kiểm chứng clean clone bắt buộc của P00, không phải build lặp không có mục đích.
 - Các kiểm chứng clean clone/CI còn đang chờ tại thời điểm mục bổ sung này; sẽ ghi kết quả thực tế sau.
+
+### Bổ sung kiểm tra định dạng và secret
+
+- `pnpm format:check` phát hiện một lỗi định dạng trong `infra/docker-compose.yml` (chuỗi image/digest dài). Đã format đúng file này; không đổi cấu hình Compose về mặt ngữ nghĩa và không build lại vì sửa Markdown/YAML format. Chờ lần format check xác nhận cuối.
+- Gitleaks 8.30.1 đã quét 10 commit hiện tại, không phát hiện secret. File plan gốc được kiểm bằng `cmp`, trùng byte với bản upload mới nhất.
