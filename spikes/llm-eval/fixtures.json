@@ -1,0 +1,52 @@
+[
+  {
+    "id": "SYN-PT1",
+    "subject": "Hóa phân tích 1",
+    "source_id": "synthetic-pt1",
+    "source_location": "fixture đoạn 1",
+    "source_text": "Dữ liệu kiểm tra tổng hợp, không phải đề thi: trong mô phỏng này, mẫu PT-A có thể tích 25 mL; mẫu PT-B có thể tích 50 mL. Không dùng dữ liệu này làm tài liệu học chính thức.",
+    "task": "Tạo một câu A/B/C/D hỏi mẫu nào có thể tích 25 mL theo nguồn mô phỏng.",
+    "expected_answer": "PT-A",
+    "distractors": ["PT-B", "PT-C", "PT-D"]
+  },
+  {
+    "id": "SYN-HC2",
+    "subject": "Hóa hữu cơ 2",
+    "source_id": "synthetic-hc2",
+    "source_location": "fixture đoạn 1",
+    "source_text": "Dữ liệu kiểm tra tổng hợp: trong fixture cấu trúc, mã HC-A được gắn với chuỗi SMILES CCO; mã HC-B được gắn với CC(=O)O. Đây là mã kiểm thử, không phải quy tắc danh pháp.",
+    "task": "Tạo một câu A/B/C/D hỏi mã nào được gắn với CCO trong fixture.",
+    "expected_answer": "HC-A",
+    "distractors": ["HC-B", "HC-C", "HC-D"]
+  },
+  {
+    "id": "SYN-GP",
+    "subject": "Giải phẫu sinh lý",
+    "source_id": "synthetic-gp",
+    "source_location": "fixture đoạn 1",
+    "source_text": "Dữ liệu kiểm tra tổng hợp: ảnh giả lập A có vùng đánh dấu GP-1 ở tọa độ (20, 30); ảnh giả lập B có vùng GP-2 ở (70, 80). Các vùng không đại diện cấu trúc giải phẫu thật.",
+    "task": "Tạo một câu A/B/C/D hỏi nhãn vùng nào nằm ở tọa độ (20, 30) trong mô phỏng.",
+    "expected_answer": "GP-1",
+    "distractors": ["GP-2", "GP-3", "GP-4"]
+  },
+  {
+    "id": "SYN-KT",
+    "subject": "Kinh tế chính trị",
+    "source_id": "synthetic-kt",
+    "source_location": "fixture đoạn 1",
+    "source_text": "Dữ liệu kiểm tra tổng hợp: trong bảng mô phỏng, nhóm KT-A được gán mã chủ đề T1; nhóm KT-B được gán T2. Không suy diễn các mã thành khái niệm kinh tế thật.",
+    "task": "Tạo một câu A/B/C/D hỏi nhóm nào được gán mã chủ đề T1 trong bảng mô phỏng.",
+    "expected_answer": "KT-A",
+    "distractors": ["KT-B", "KT-C", "KT-D"]
+  },
+  {
+    "id": "SYN-VS",
+    "subject": "Vi sinh ký sinh 1",
+    "source_id": "synthetic-vs",
+    "source_location": "fixture đoạn 1",
+    "source_text": "Dữ liệu kiểm tra tổng hợp: hộp mẫu giả định VS-A có nhãn kiểm tra màu xanh; VS-B có nhãn màu đỏ. Đây là nhãn quản lý fixture, không phải đặc điểm vi sinh vật.",
+    "task": "Tạo một câu A/B/C/D hỏi hộp mẫu nào có nhãn màu xanh trong dữ liệu giả định.",
+    "expected_answer": "VS-A",
+    "distractors": ["VS-B", "VS-C", "VS-D"]
+  }
+]
