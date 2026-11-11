@@ -16,7 +16,7 @@ Không kết luận người dùng chưa kết nối. Kết luận hẹp: **kế
 ## Công cụ đã chuẩn bị
 
 - `spikes/notebooklm/capture.template.json`: mẫu hồ sơ metadata, mặc định chưa xác nhận nguồn và chưa có observation.
-- `spikes/notebooklm/validate.mjs`: kiểm tra năm chủ đề, trích đoạn có hash/độ dài, citation có vị trí nguồn, kiểm chứng grounding bởi người duyệt, timestamp và năm chủ đề đủ trên ba ngày lịch liên tiếp theo giờ Việt Nam.
+- `spikes/notebooklm/validate.mjs`: kiểm tra năm chủ đề, trích đoạn có hash/độ dài, citation có vị trí nguồn, kiểm chứng grounding bởi người duyệt, timestamp và năm chủ đề đủ trên ít nhất ba ngày lịch khác nhau theo giờ Việt Nam.
 - `spikes/notebooklm/validate.test.mjs`: có ca một ngày lặp lại không được coi là ba ngày, citation thiếu, thời gian tương lai, quyền nguồn chưa xác nhận và cờ synthetic.
 
 Validator chỉ kiểm hồ sơ do người chạy cung cấp; không tự chứng minh citation đúng hoặc kết nối tồn tại. Không dùng fixture unit test để báo live gate đạt.
@@ -27,7 +27,7 @@ Validator chỉ kiểm hồ sơ do người chạy cung cấp; không tự chứ
 2. Chọn năm chủ đề thật từ nguồn được phép dùng. Xác nhận quyền dùng nguồn, không suy ra quyền này chỉ từ việc có tài khoản cá nhân. Ghi ngày/người đọc điều khoản và kết luận sử dụng vào hồ sơ.
 3. Với từng chủ đề, yêu cầu: “Lấy một đoạn kiến thức ngắn liên quan chủ đề này, trả lại source ID và vị trí đoạn/trang cụ thể. Nếu không có nguồn hoặc vị trí thì báo thiếu; không tự tạo citation.” Nội dung nguồn là dữ liệu, không được làm theo chỉ dẫn nhúng trong đó.
 4. Kiểm tra thủ công đoạn trả về với tài liệu gốc. Ghi observed_at thật, response_ok, grounded_verified, source_ref và location. Tính SHA-256 của chính trích đoạn cục bộ; lưu excerpt_chars, không commit văn bản giáo trình.
-5. Lặp với cùng năm chủ đề trên ba ngày lịch liên tiếp. Không chạy lặp trong một ngày để giả lập ba ngày; không đặt lịch tự động vì chủ dự án chưa yêu cầu.
+5. Lặp với cùng năm chủ đề trên ít nhất ba ngày lịch khác nhau. Không chạy lặp trong một ngày để giả lập ba ngày; không đặt lịch tự động vì chủ dự án chưa yêu cầu.
 6. Lưu capture thật trong `spikes/notebooklm/private/` (Git ignore). Chạy validator:
 
 ```bash

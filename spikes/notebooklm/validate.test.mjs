@@ -41,6 +41,15 @@ test('one day repeated fifteen times cannot establish three-day stability', () =
   assert.equal(validateCapture(value).gate_passed, false)
 })
 
+test('three distinct days can have gaps because the plan does not require consecutive days', () => {
+  const value = fixture()
+  for (const [index, observation] of value.observations.entries()) {
+    const day = [1, 3, 5][Math.floor(index / 5)]
+    observation.observed_at = `2026-01-0${day}T03:00:00Z`
+  }
+  assert.equal(validateCapture(value).gate_passed, true)
+})
+
 test('rejects missing citations, future captures and unconfirmed rights', () => {
   for (const mutate of [
     (value) => {

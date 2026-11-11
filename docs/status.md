@@ -68,7 +68,7 @@ Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục.
 ### Kiểm chứng P01
 
 - RDKit spike đã chạy thành công bằng dependency chính thức, ghim version/integrity trong lockfile riêng.
-- Validator NotebookLM: 3 unit test đạt, gồm các ca thiếu citation, lặp một ngày, tương lai và quyền nguồn chưa xác nhận.
+- Validator NotebookLM: 4 unit test đạt, gồm các ca thiếu citation, lặp một ngày, tương lai và quyền nguồn chưa xác nhận.
 - Evaluator LLM: 2 unit test đạt; reference self-check đạt 5/5, có nhãn không phải inference. Bổ sung từ chối citation giả thêm vào danh sách và kiểm lại evaluator.
 - Template NotebookLM trống bị từ chối với exit 2 như mong đợi; không báo kết nối thành công.
 - ESLint chỉ trên spikes đạt. Chỉ format file mới/thay đổi, không format toàn repo.
@@ -89,3 +89,7 @@ Chỉ P01. Tiếp tục bước còn thiếu khi có thông tin/credential đư�
 - P01-T02: RDKit Node/WASM đã kiểm chứng 10 cấu trúc, report và dependency cô lập.
 - P01-T03: hồ sơ hosting đã có, chờ lựa chọn/budget của chủ dự án.
 - P01-T04: hồ sơ OpenAI/Pro và evaluator offline đã có; chưa có model run thật.
+
+### Bổ sung rà soát P01
+
+PR nháp #2: https://github.com/ducmanhletruong/Pharmacy-Study/pull/2 . CI spike đã success trên commit 3c5f761, run 43078944161. Điều kiện live vẫn blocked. Rà lại P01-T01 cho thấy plan chỉ yêu cầu ổn định qua ba ngày, không bắt buộc liên tiếp; đã sửa validator/runbook để nhận ba ngày khác nhau và thêm test cho khoảng cách ngày. Không tự thêm điều kiện sản phẩm.

@@ -197,3 +197,11 @@ Chủ dự án cho thực thi tiếp, xác nhận MCP bên thứ ba/tài khoản
 ### Giới hạn và bàn giao
 
 P01 chưa DONE: thiếu live MCP/ba ngày, quyết định hosting và quyền OpenAI/model run thật. Ghi cụ thể trong blockers và handoff; không tự chuyển P02, không tạo hosting hoặc thêm câu hỏi thật. Không có tài liệu có bản quyền/secret được đưa vào repo.
+
+### Bổ sung kết quả và đính chính P01
+
+- PR nháp https://github.com/ducmanhletruong/Pharmacy-Study/pull/2 được tạo và attach vào chat, base phase-00; không merge PR nào.
+- CI spike commit 3c5f761 success, run https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43078944161 . CI này không gọi NotebookLM hoặc model, không chứng minh cổng live.
+- Gitleaks quét 17 commit, không phát hiện secret; Prettier cho toàn bộ file P01 đã đạt.
+- Rà plan phát hiện validator/runbook đã thêm điều kiện “ba ngày liên tiếp” quá chặt so với “ổn định qua 3 ngày” của P01-T01. Đã sửa về ít nhất ba ngày lịch khác nhau, giữ yêu cầu năm chủ đề đủ mỗi ngày và không chấp nhận lặp một ngày/future timestamp; bổ sung ca test ngày có khoảng trống. Bốn test NotebookLM hiện tại thay cho ba test ban đầu. Đây là sửa sai lệch do triển khai, không phải thay đổi yêu cầu của chủ dự án.
+- Chỉ chạy lại lint và test của validator bị sửa, không chạy lại RDKit hoặc app local đã đạt; CI sẽ tự kiểm công cụ trên commit mới. Không báo CI của SHA mới pass khi chưa có kết quả.

@@ -91,16 +91,10 @@ export function validateCapture(capture, now = Date.now()) {
     .filter(([, observedTopics]) => observedTopics.size === 5)
     .map(([day]) => day)
     .sort()
-  const consecutive = completeDays.some((day, index) =>
-    [1, 2].every(
-      (offset) =>
-        Date.parse(`${completeDays[index + offset]}T00:00:00Z`) -
-          Date.parse(`${day}T00:00:00Z`) ===
-        offset * 86_400_000,
-    ),
-  )
-  if (!consecutive)
-    errors.push('Need five topics on each of three consecutive observed days')
+  if (completeDays.length < 3)
+    errors.push(
+      'Need five topics on each of at least three distinct observed days',
+    )
   return {
     gate_passed: errors.length === 0,
     observation_count: observations.length,
