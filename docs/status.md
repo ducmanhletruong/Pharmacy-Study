@@ -6,7 +6,7 @@ Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P00 — IN PROGRESS.
 | ------- | ----------- | ------------------------------------------------------------------------------------- |
 | P00-T01 | IMPLEMENTED | Workspace pnpm 11.25.0, dependency ghim, TypeScript strict; install thành công, chờ clean clone |
 | P00-T02 | VERIFIED LOCAL | ESLint và strict TypeScript đã pass; còn đối chiếu format/clean clone/CI |
-| P00-T03 | IN PROGRESS | Vitest và smoke test health contract; chờ chạy                                        |
+| P00-T03 | VERIFIED LOCAL | Vitest 5.1.0: 1 health-contract smoke test pass; handler health được commit cùng test |
 | P00-T04 | IMPLEMENTED | PostgreSQL 17.11 local đã healthy; đang xác minh lại cấu hình image ghim digest       |
 | P00-T05 | IMPLEMENTED | Plan gốc, 8 ADR, decision register, blockers, status, mẫu CR và quy định agent đã tạo |
 | P00-T06 | IMPLEMENTED | Workflow đã tạo; chờ PR và lần chạy GitHub Actions                                    |
