@@ -1,51 +1,51 @@
 # Bàn giao
 
-## Kết quả gần nhất
+## Trạng thái mới nhất
 
 - Ngày: 2026-11-12 (Asia/Saigon).
-- Hoàn thành **P00-T01…T07**, dừng tại cổng P00 của `IMPLEMENTATION_PLAN.md`.
-- Chủ dự án đã chọn Next.js + TypeScript trong pnpm monorepo và cung cấp repo GitHub.
-- Local: `/workspace/web-starter`; nhánh `phase-00`.
-- PR nháp: https://github.com/ducmanhletruong/Pharmacy-Study/pull/1 — chưa merge.
-- CI đã đạt: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43074691952, code commit `50403d8`.
-- Phần bổ sung sau code commit chỉ là tài liệu/AGENTS, không đổi hành vi ứng dụng.
+- Dự án local: `/workspace/web-starter`; nhánh hiện tại `phase-01`, dựa trên `phase-00`.
+- P00 đã hoàn thành; CI cuối P00 trên commit `44848b1` thành công: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43075284113 . PR #1 còn draft, không tự merge.
+- **P01 đã triển khai phần độc lập nhưng chưa đạt cổng toàn phase.** P02 và phase khác chưa bắt đầu.
 
-## Đã có
+## Quyết định mới từ chủ dự án
 
-- `apps/web`: Next.js App Router, trang tên dự án, GET `/api/v1/health` trả `200 {"status":"ok"}`.
-- `packages/core`: khung TypeScript strict và Vitest smoke test health contract.
-- `infra/docker-compose.yml`: PostgreSQL 17.11 local, ghim digest, chỉ publish DB trên loopback.
-- Công cụ lint/format/typecheck/build và CI P00; dependency ghim bằng pnpm lockfile.
-- Plan upload mới nhất được lưu nguyên văn; 8 ADR, decision register, status, blockers, mẫu CR.
-- Root AGENTS giữ yêu cầu sửa tối thiểu và tiết kiệm usage; `apps/web/AGENTS.md` bổ sung hướng dẫn Next.js đúng phiên bản.
+- Cho thực thi tiếp.
+- Cho dùng MCP bên thứ ba; NotebookLM là tài khoản cá nhân và người dùng báo đã kết nối Codex.
+- Dùng OpenAI/ChatGPT Pro của tài khoản hiện có cho AI. Chưa có thông tin ngân sách hosting hoặc quyền API/plan cụ thể của ứng dụng.
 
-## Kiểm chứng thực tế
+## Đã làm P01
 
-- Checkout làm việc: install, lint, typecheck, test 1/1, build và production HTTP health/homepage đạt.
-- Clone sạch: frozen install, lint, typecheck, test, build và format check đạt. Chỉ dùng chung package cache lúc cài; node_modules/.next được tạo mới, sau kiểm chứng đã bỏ symlink cache tạm và git status sạch.
-- PostgreSQL local healthy; CI service cũng healthy.
-- GitHub Actions P00 success, gồm gitleaks không phát hiện secret.
-- Plan gốc được so byte với upload và không thay đổi.
-- Không dùng kết quả starter Vite để báo đạt cho Next.js. Chưa có kiểm chứng nghiệp vụ, auth, migration hay e2e ở P00.
+- RDKit JS/WASM: dựng 10 cấu trúc tổng hợp; SVG giống hash qua hai tiến trình, đo thời gian/kích thước và xử lý SMILES lỗi. Report thật ở `spikes/chem-render/report.json`.
+- NotebookLM: runbook kết nối, mẫu hồ sơ riêng tư, validator năm chủ đề qua ba ngày; 3 test của validator đạt. Template trống bị từ chối đúng exit 2.
+- Hosting: ADR-0009 so sánh local, Render + Neon preview free và paid; nguồn chính thức, hạn chế cold start/backup và phần chưa quyết định.
+- OpenAI: ADR-0010 phân biệt dùng tài khoản hiện có, SIWC/plan usage và API credits Pro nếu đủ điều kiện; chưa gọi API hoặc thay billing.
+- LLM evaluator offline: 5 fixture tổng hợp có nhãn năm môn, prompt export, kiểm đáp án/citation và 2 test các ca từ chối. Reference self-check 5/5 không phải model evaluation.
+- Workflow kiểm thử riêng công cụ P01; không rebuild Next.js vì không đổi code sản phẩm.
 
-## Chạy và tiếp tục code
+## Kết nối NotebookLM — phạm vi quan sát
 
-Dev server đã chạy và kiểm tra tại cổng **3000**. Trong môi trường hiện tại, mở preview cổng 3000 hoặc http://localhost:3000. PostgreSQL local cũng đang chạy. Kiểm tra tiến trình trước khi khởi động thêm.
+Chat Cloud hiện không được cấp tool NotebookLM; plugin search rỗng; `codex mcp list --json` trong executor trả 0 server. Không kết luận kết nối của chủ dự án không tồn tại; chưa biết nó nằm ở máy/transport nào. Không đọc hoặc chuyển credential từ máy của người dùng.
+
+Bước thực tế tiếp theo: chạy `docs/spikes/notebooklm-access.md` tại nơi MCP đã callable, hoặc cấp kết nối cho Cloud qua settings. Cần năm chủ đề với nguồn/vị trí thật trên ba ngày. Không thể thay ba ngày bằng nhiều lần chạy trong một ngày.
+
+## Lệnh chạy spike
 
 ```bash
-cd /workspace/web-starter
-pnpm install --frozen-lockfile
-pnpm dev
+npm --prefix spikes ci --ignore-scripts --no-audit --no-fund
+npm --prefix spikes run chem:render
+node --test spikes/notebooklm/validate.test.mjs spikes/llm-eval/evaluate.test.mjs
+node spikes/llm-eval/run.mjs
+node spikes/llm-eval/run.mjs --prompts
 ```
 
-Dùng Node 24 và pnpm 11.25.0. Hướng dẫn Compose, env và từng lệnh ở README. App P00 chưa đọc database; chưa có câu hỏi, tài khoản hoặc provider AI.
+Trong Cloud thêm `--cache /workspace/.npm-cache` cho npm ci nếu home không ghi được. Dependency spike tách khỏi app. Report RDKit có timestamp/timing thực, chạy lại cập nhật file này; SVG output bị Git ignore. Không commit source riêng, model output, cookie hoặc token.
 
-## Việc còn lại
+## Phần còn thiếu / giới hạn
 
-Không còn phần implementation P00. PR đang nháp để chủ dự án xem xét; agent không tự merge. **Chưa bắt đầu P01 hoặc phase nào sau P00.**
+P01-T01 chờ live MCP và bằng chứng ba ngày; P01-T03 chờ hosting; P01-T04 chờ cách cấp quyền OpenAI và batch model thật. Chi tiết ở `docs/blockers.md`, `docs/status.md`, `docs/decision-register.md`.
 
-Theo mục 10.1 và 18 của plan, trước phase sau cần duyệt tài liệu và các thông tin liên quan. P01 cần Q1 (MCP NotebookLM/quyền dùng nguồn) và Q5 (ngân sách hosting/AI, provider ưu tiên). Danh sách đầy đủ ở `docs/blockers.md`. Các quyết định OPEN/PROPOSED khác chưa được tự nâng thành Accepted.
+Ưu tiên local và dùng tài khoản Pro không tự chứng minh API credits đã active hoặc token app đã được cấp. Có thể tạo prompt để chạy tại nơi được phép dùng tài khoản rồi nhập output vào evaluator; bước này chưa phải API adapter P06. Không tự claim credit, chọn model trả phí, auto-recharge hoặc tạo hosting.
 
-## Hoàn tác / phát sinh
+## Bảo toàn và phát sinh
 
-Starter Vite ở commit `39ffc0b`, nhánh local `baseline-vite`; lịch sử GitHub README được giữ qua merge `c830ffe`. Không reset đè thay đổi hoặc xóa volume DB nếu cần giữ dữ liệu. Nhật ký đầy đủ các phần lệch giả định ban đầu và lỗi đã xử lý nằm trong `worked.md`.
+App Next.js/DB/dependency workspace/plan gốc và AGENTS không đổi trong P01. Giữ server/DB đang có; không restart hoặc mở thêm. Starter Vite vẫn tham chiếu được qua `39ffc0b`/`baseline-vite`. P01 không merge mã sản phẩm; lịch sử phát sinh trong `worked.md`.

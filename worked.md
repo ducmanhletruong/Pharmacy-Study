@@ -151,3 +151,49 @@ Mục trước ghi lỗi format Compose do chuỗi image/digest dài; diff thự
 - Bổ sung sau code commit chỉ là tài liệu và file agent do framework sinh, không cần build/test code lại theo AGENTS. Workflow GitHub có thể tự kiểm chứng commit tài liệu cuối khi push; không dùng kết quả chưa chạy để khẳng định CI của SHA mới.
 - Không thực hiện phase khác, không thêm nội dung môn học, schema/migration, auth, AI/NotebookLM hoặc tài nguyên hosting trả phí. Chưa có nội dung để chứng minh AC-1…AC-8 của toàn MVP.
 - Dừng ở cổng P00 theo mục 10.1 của plan. P01 còn chờ chủ dự án duyệt tài liệu và trả lời Q1/Q5; không tự quyết các OPEN hoặc giả định bản quyền.
+
+## 2026-11-12 — P01: khảo sát khả thi sau lệnh tiếp tục
+
+### Plan ban đầu
+
+Thực hiện duy nhất P01-T01…T04: bộ kiểm tra NotebookLM, spike RDKit, hồ sơ hosting và hồ sơ/eval LLM. Theo AGENTS, làm phần độc lập khi còn thiếu thông tin; không tự vượt qua cổng bằng giả định.
+
+### Căn cứ và kết quả
+
+Chủ dự án cho thực thi tiếp, xác nhận MCP bên thứ ba/tài khoản cá nhân và chọn OpenAI/ChatGPT Pro. Đã ghi quyết định và giới hạn trong decision register. P00 cuối đã CI success trên `44848b1`; PR #1 chưa merge.
+
+- T01: chuẩn bị runbook/template/validator; 3 test đạt và template trống bị từ chối. Cloud không có NotebookLM tools/MCP server; chưa gọi notebook thật, chưa có observation ba ngày. Không giả lập cổng live.
+- T02: package chính thức RDKit 2026.9.2, BSD-3-Clause; 10/10 SVG tái lập qua hai process, invalid SMILES bị từ chối; report có số đo thật. Không clone/build toàn RDKit khi binary chính thức đủ dùng.
+- T03: hồ sơ đề xuất ADR-0009 có phương án, nguồn, chi phí cần chốt, rủi ro cold start và phương án khi thất bại; chưa chọn hosting thay chủ dự án.
+- T04: ADR-0010 ghi lựa chọn OpenAI và phân biệt quyền lợi Pro/API; tạo prompt/evaluator 5 fixture tổng hợp, reference 5/5, 2 test đạt. Sau khi bổ sung kiểm tra citation giả ở danh sách, chạy lại đúng evaluator liên quan và đạt. Không gọi API hoặc mô hình ngoài chat, không đếm reference self-check thành model run.
+- Lint chỉ trên spikes đã pass; format chỉ file mới/thay đổi. Không test/build lại Next.js vì app, root lockfile và config runtime không đổi.
+
+### Phát sinh 1 — Kết nối người dùng chưa callable trong Cloud
+
+- Người dùng báo đã nối NotebookLM với Codex, nhưng tool inventory hiện tại không có NotebookLM, Plugin Management tìm NotebookLM trả danh sách rỗng, CLI MCP list trong executor có 0 server. Không in raw config, env hoặc credential.
+- Dùng skill plugin-management để kiểm tra trước khi đề xuất cách thao tác thủ công; không tìm thấy plugin để sử dụng trong chat này. Không cài MCP bên thứ ba mới hoặc yêu cầu Google login khi đã có kết nối riêng của người dùng.
+- Kết quả: chỉ chốt khả năng quan sát của Cloud; không kết luận kết nối trên máy người dùng bị lỗi. Chuẩn bị bộ kiểm tra tại nơi có kết nối và ghi blocker thật.
+- Không có thay đổi cần hoàn tác đối với account/MCP của chủ dự án.
+
+### Phát sinh 2 — ChatGPT Pro và quyền API hiện hành
+
+- Tra tài liệu OpenAI chính thức thay vì dựa vào giả định cũ rằng thuê bao luôn không có quyền lợi API. Tài liệu hiện có SIWC/plan usage cho tích hợp hỗ trợ và API credits với Pro đủ điều kiện, vẫn có cơ chế cấp quyền và account/billing riêng.
+- Chưa kiểm được entitlement/grant/số dư cụ thể của tài khoản này trong Cloud, nên chỉ chuẩn bị hồ sơ/evaluator offline. Không lấy token Codex Desktop, không tự activate billing hoặc chạy thêm agent/LLM để tạo kết quả giả.
+- Lời chọn Pro cho AI không được suy rộng thành ngân sách hosting.
+
+### Phát sinh 3 — Cô lập mã thử và lưu lịch sử ADR
+
+- Dùng `spikes/package.json`/npm lockfile riêng với duy nhất dependency RDKit, chạy Node ESM trực tiếp để không kéo WASM hoặc toolchain vào app/pnpm workspace. Script .mjs là mã thử/công cụ, chưa phải module TypeScript sản phẩm. Không thêm compile step cho spike.
+- Theo quy tắc ADR không sửa lịch sử, viết ADR-0009/0010 bổ sung hồ sơ cho các placeholder 0006/0007 thay vì sửa tại chỗ. Chưa đánh dấu phương án triển khai là Accepted.
+- Tác động chỉ spikes và docs; loại bỏ spikes khỏi sản phẩm không cần DB rollback, có thể revert commit của phase sau khi kiểm tra thay đổi người dùng.
+
+### Phát sinh 4 — CI riêng cho công cụ spike và PR xếp chồng
+
+- P00 PR còn draft; làm trên nhánh phase-01 dựa phase-00 để không merge thay người dùng và giữ diff P01 riêng.
+- Bổ sung workflow phase-01 cho PR vào main/phase-00, chỉ khi spikes/workflow thay đổi. Native tests, npm ci ghim và WASM sample; không rebuild app hoặc gọi NotebookLM/LLM trong CI. Đây là bổ sung kiểm chứng mã spike, không tính là phase sản phẩm mới.
+- Snapshot CI tự kiểm template trống bị từ chối để tránh báo false-positive kết nối. CI pass chỉ nói công cụ hoạt động, không gỡ blocker live ba ngày.
+- Kết quả CI thực tế và URL PR sẽ được ghi sau khi push; không báo đạt trước khi chạy.
+
+### Giới hạn và bàn giao
+
+P01 chưa DONE: thiếu live MCP/ba ngày, quyết định hosting và quyền OpenAI/model run thật. Ghi cụ thể trong blockers và handoff; không tự chuyển P02, không tạo hosting hoặc thêm câu hỏi thật. Không có tài liệu có bản quyền/secret được đưa vào repo.
