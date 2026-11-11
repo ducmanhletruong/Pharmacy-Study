@@ -2,15 +2,15 @@
 
 Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P00 — IN PROGRESS. Các phase khác chưa bắt đầu.
 
-| Task    | Trạng thái  | Bằng chứng / còn lại                                                                  |
-| ------- | ----------- | ------------------------------------------------------------------------------------- |
-| P00-T01 | IMPLEMENTED | Workspace pnpm 11.25.0, dependency ghim, TypeScript strict; install thành công, chờ clean clone |
-| P00-T02 | VERIFIED LOCAL | ESLint và strict TypeScript đã pass; còn đối chiếu format/clean clone/CI |
-| P00-T03 | VERIFIED LOCAL | Vitest 5.1.0: 1 health-contract smoke test pass; handler health được commit cùng test |
-| P00-T04 | VERIFIED LOCAL | PostgreSQL 17.11 image ghim digest; Compose up --wait và pg_isready healthy |
-| P00-T05 | IMPLEMENTED | Plan gốc, 8 ADR, decision register, blockers, status, mẫu CR và quy định agent đã tạo |
-| P00-T06 | IMPLEMENTED | Workflow đã tạo; chờ PR và lần chạy GitHub Actions                                    |
-| P00-T07 | IN PROGRESS | App chỉ có tên dự án, GET /api/v1/health; chờ build và HTTP check                     |
+| Task    | Trạng thái     | Bằng chứng / còn lại                                                                            |
+| ------- | -------------- | ----------------------------------------------------------------------------------------------- |
+| P00-T01 | IMPLEMENTED    | Workspace pnpm 11.25.0, dependency ghim, TypeScript strict; install thành công, chờ clean clone |
+| P00-T02 | VERIFIED LOCAL | ESLint và strict TypeScript đã pass; còn đối chiếu format/clean clone/CI                        |
+| P00-T03 | VERIFIED LOCAL | Vitest 5.1.0: 1 health-contract smoke test pass; handler health được commit cùng test           |
+| P00-T04 | VERIFIED LOCAL | PostgreSQL 17.11 image ghim digest; Compose up --wait và pg_isready healthy                     |
+| P00-T05 | VERIFIED LOCAL | Plan gốc giữ nguyên; 8 ADR, register/status/blockers/CR và quy tắc phase đã đọc lại             |
+| P00-T06 | IMPLEMENTED    | Workflow đã tạo; chờ PR và lần chạy GitHub Actions                                              |
+| P00-T07 | IN PROGRESS    | App chỉ có tên dự án, GET /api/v1/health; chờ build và HTTP check                               |
 
 ## Bảng phase
 

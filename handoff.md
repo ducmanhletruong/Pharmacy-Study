@@ -1,34 +1,32 @@
 # Bàn giao
 
-## Tác vụ gần nhất
+## Tác vụ hiện tại
 
 - Ngày: 2026-11-12 (Asia/Saigon).
-- Yêu cầu: tạo quy định sửa code, build/test, giới hạn refactor, ưu tiên thay đổi tối thiểu và tiết kiệm usage/credits; bổ sung bàn giao và báo cáo ngoài plan.
-- Kết quả: đã tạo `AGENTS.md`, `handoff.md`, `worked.md` trong thư mục dự án.
-- Quy ước tên: dùng `AGENTS.md` viết hoa để agent tự nhận chỉ dẫn, tương ứng file `Agents.md` người dùng yêu cầu.
-- Ngoài plan: không có.
+- Mục tiêu: thực hiện P00 của `IMPLEMENTATION_PLAN.md` upload mới nhất, chưa bắt đầu phase khác.
+- Chủ dự án đã chọn Next.js + TypeScript trong pnpm monorepo và cung cấp repo GitHub `ducmanhletruong/Pharmacy-Study`.
+- Đường dẫn local: `/workspace/web-starter`; nhánh `phase-00`; remote GitHub đã nối và bảo toàn lịch sử.
 
-## Trạng thái dự án
+## Trạng thái
 
-- Đường dẫn: `/workspace/web-starter`.
-- Stack: React + TypeScript + Vite; Node.js 24; npm.
-- Có ESLint, Prettier, TypeScript strict và cấu hình VS Code.
-- Chưa cấu hình backend, database hoặc bộ test tự động.
-- Không thay đổi code ứng dụng, dependency hoặc cấu hình runtime trong tác vụ tài liệu này.
+Khung code, tài liệu và CI đã được chuẩn bị; còn chờ kiểm chứng. Xem bảng task/phase tại `docs/status.md`, quyết định tại `docs/decision-register.md` và phát sinh tại `worked.md`.
 
-## Kiểm tra
+## Cấu trúc mới
 
-- Tác vụ hiện tại: kiểm tra nội dung và sự tồn tại của ba file; không chạy test/build vì chỉ thay đổi tài liệu.
-- Tham chiếu lần setup trước: typecheck, ESLint, Prettier, build và smoke test Chromium đã đạt. Đây là kết quả trước tác vụ này, không phải lượt chạy mới.
+- `apps/web`: Next.js App Router, trang tên dự án, `GET /api/v1/health`.
+- `packages/core`: TypeScript strict và smoke test.
+- `infra/docker-compose.yml`: PostgreSQL local, chưa có schema/migration.
+- `.github/workflows/ci.yml`: cổng P00.
+- `docs/adr`: 8 ADR; chỉ ADR-0004 đã Accepted theo lựa chọn thực tế của chủ dự án.
 
-## Tiếp tục công việc
+## Cách tiếp tục
 
-1. Đọc `AGENTS.md`, sau đó nhận yêu cầu tính năng cụ thể từ người dùng.
-2. Đọc code liên quan và nêu plan ngắn trước khi sửa.
-3. Chọn kiểm tra theo mức ảnh hưởng; cập nhật bàn giao và nhật ký khi hoàn tất.
+Dùng Node 24 và pnpm 11.25.0. Cài bằng `pnpm install --frozen-lockfile`, chạy web bằng `pnpm dev` ở cổng 3000. Kiểm tra tiến trình trước khi khởi động thêm. Trạng thái server Next.js chưa được xác minh ở thời điểm viết mục này.
 
-Lệnh phát triển: `cd /workspace/web-starter && npm run dev`, cổng 5173. Kiểm tra tiến trình/cổng trước khi chạy thêm; trạng thái server chưa được xác minh lại trong tác vụ tài liệu này.
+## Kiểm chứng / phần còn lại
 
-## Việc còn lại / blocker
+Chờ kiểm chứng P00 local, clean clone và CI. Không coi các lượt check starter Vite trước đó là bằng chứng cho code mới. Không tự bắt đầu P01/P02; những thông tin cần chủ dự án quyết nằm trong `docs/blockers.md`.
 
-Không có phần còn lại của yêu cầu tạo ba file. Chưa có yêu cầu tính năng tiếp theo.
+## Tham chiếu hoàn tác
+
+Starter Vite ở commit `39ffc0b`, nhánh local `baseline-vite`. Lịch sử GitHub README được giữ qua commit merge `c830ffe`. Không reset đè thay đổi hiện tại hoặc xóa volume DB nếu có dữ liệu cần giữ.

@@ -60,3 +60,14 @@ Với logic, xử lý dữ liệu hoặc lỗi có nguy cơ tái phát, chọn k
 - Nếu phát sinh chưa được làm, ghi rõ là đề xuất/chưa thực hiện; không mô tả như đã hoàn thành.
 - Nếu không có phát sinh, ghi một dòng xác nhận trong mục tác vụ. Không tạo việc ngoài plan chỉ để điền báo cáo.
 - Không ghi secret, token, mật khẩu hoặc nội dung `.env` thật vào hai file báo cáo.
+
+## 7. Thực hiện IMPLEMENTATION_PLAN.md theo phase
+
+- Mỗi lần giao việc chỉ thực hiện một phase. Đọc `IMPLEMENTATION_PLAN.md`, `AGENTS.md`, `docs/decision-register.md` và `docs/status.md` trước khi bắt đầu.
+- Kiểm tra tiên quyết. Nếu thiếu, ghi chính xác task/phase bị chặn trong `docs/blockers.md`; tiếp tục phần độc lập đã được cho phép. Không vượt qua cổng bằng giả định.
+- Làm task theo phụ thuộc; chạy kiểm chứng bắt buộc của phase. Các kiểm chứng đó là ngoại lệ có căn cứ cho mặc định tiết kiệm build/test ở trên. Không thêm lượt chạy ngoài nhu cầu xác minh.
+- Cập nhật `docs/status.md` trong cùng commit với thay đổi task; phản ánh bảng phase ở mục 16 của plan, không báo DONE khi cổng chưa đạt. Bản upload v0.1 được giữ nguyên làm nguồn tham chiếu; trạng thái thực thi mới nhất ở `docs/status.md`.
+- Dừng ở cổng phase; không tự bắt đầu phase kế tiếp. Không tự bịa cấu trúc đề, quy tắc nghiệp vụ, tên nhà cung cấp hoặc câu trả lời OPEN.
+- ADR PROPOSED/OPEN chưa được coi là Accepted. Chỉ ghi Accepted khi có quyết định thực tế của chủ dự án.
+- Không commit tài liệu có bản quyền, tài khoản, phiên đăng nhập hoặc secret thật. Dữ liệu mẫu phải là tổng hợp và ghi nhãn.
+- Các lệnh chưa được thiết lập phải ghi “to be established”; không chạy rồi coi như đã pass. Chỉ thêm test mới và cổng CI theo phase hiện hành.

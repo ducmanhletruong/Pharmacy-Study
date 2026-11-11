@@ -1,0 +1,25 @@
+# Sổ quyết định
+
+Ngày dùng múi giờ Asia/Saigon. Không coi ASSUMPTION/PROPOSED là quyết định đã duyệt. Bản plan upload mới nhất được lưu nguyên văn tại `IMPLEMENTATION_PLAN.md`, v0.1 DRAFT; không tự sửa các xác nhận lịch sử của tài liệu.
+
+| ID                 | Trạng thái                          | Nội dung / căn cứ                                                                                                                                                                            | Người quyết                    | Ngày       |
+| ------------------ | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ---------- |
+| CHAT-01 / ADR-0004 | CONFIRMED / Accepted                | Chuyển starter sang Next.js + TypeScript trong pnpm monorepo; trả lời trực tiếp câu hỏi lựa chọn stack trong chat                                                                            | Chủ dự án                      | 2026-11-12 |
+| CHAT-02            | CONFIRMED                           | Repo dự án: https://github.com/ducmanhletruong/Pharmacy-Study; được phép tận dụng tài nguyên và tải repo cần thiết. Việc này không tự chốt ngân sách AI/hosting                              | Chủ dự án                      | 2026-11-12 |
+| PLAN-P00           | Theo phạm vi tài liệu               | Mục 18 cho phép bắt đầu P00; các phase sau còn cần duyệt chính thức và thông tin tương ứng. P00 local/CI, chưa deploy production                                                             | Plan v0.1 + ngữ cảnh giao việc | 2026-11-12 |
+| C-01…C-08          | CONFIRMED trong plan                | Năm môn và yêu cầu nghiệp vụ như mục 2.1 của bản upload. Chưa triển khai nghiệp vụ trong P00                                                                                                 | Tài liệu đầu vào               | 2026-11-12 |
+| C-09               | HISTORICAL / cần phân biệt ngữ cảnh | Bản draft ghi “giai đoạn này chỉ lập kế hoạch”. Ngữ cảnh chat hiện tại giao plan để triển khai và đã chọn stack cho P00; không dùng câu lịch sử này để tự kết luận toàn bộ PRD đã được duyệt | Tài liệu + chat                | 2026-11-12 |
+
+## Quyết định chưa chốt
+
+- ADR-0001, ADR-0002 (D-01), ADR-0003, ADR-0005, ADR-0008: PROPOSED.
+- ADR-0006, ADR-0007: OPEN, chờ Q5 và Q6 ở P01.
+- Q1: MCP NotebookLM không chính thức và quyền sử dụng nguồn.
+- Q2: cấu trúc đề, đề cương, quy tắc làm tròn và danh pháp.
+- Q3: phạm vi người dùng.
+- Q4: thiết bị chính; dùng A-03 responsive/online cho đến khi có thông tin mới.
+- Q5: ngân sách hosting/AI và nhà cung cấp ưu tiên.
+- Q6: sinh trước rồi duyệt hay sinh trực tiếp, chính sách nguồn web/hình.
+- Q7: ngày thi và hạn MVP, chưa chặn P00.
+- A-01…A-09, D-01, X-01…X-05 chưa được tự nâng thành CONFIRMED.
+- Ngưỡng coverage ở mục 9.4 còn PROPOSED; P00 mới có smoke test, không báo đạt coverage cho module chưa tồn tại.
