@@ -1,6 +1,6 @@
 # P01-T01 — Kiểm chứng kết nối NotebookLM
 
-- Trạng thái: **Windows notebook_list thành công theo báo cáo chủ dự án (47 notebook); kiểm chứng kiến thức/ba ngày CHƯA ĐẠT**. Cloud chưa xác thực riêng.
+- Trạng thái: **Windows đã query 5/5 chủ đề ở lượt đầu; 3 observation đã được agent đối chiếu, 2 pending citation; 0/3 ngày hoàn tất, admin review PENDING**. Cloud chưa xác thực riêng.
 - Ngày: 2026-11-12 (Asia/Saigon).
 - Chủ dự án xác nhận cho dùng MCP bên thứ ba và NotebookLM là tài khoản cá nhân. Quyền dùng nguồn của năm notebook cho học tập cá nhân, không công khai giáo trình, được xác nhận trực tiếp ngày 2026-11-12. Server Windows là gemini-notebook-mcp theo lịch sử call; version/transport tại Windows vẫn cần ghi thực tế khi thu capture.
 
@@ -8,7 +8,9 @@
 
 Chủ dự án cung cấp kết quả notebook_list thành công, tài khoản có 47 notebook, chỉ đọc dữ liệu. Đã đối chiếu turn mới nhất của chat local: có call notebook_list trên gemini-notebook-mcp hoàn thành và kết luận 47 notebook; không phải call trực tiếp của chat Cloud. Tiếp tục P01-T01 bằng tay tại chat local “Kết nối Codex với NotebookLM”, theo [handoff Windows](notebooklm-windows-handoff.md) đã chuẩn bị. Không yêu cầu đăng nhập Cloud lại hoặc sao chép cookie/profile giữa hai máy.
 
-List notebook chưa chứng minh truy vấn kiến thức/citation hoặc độ ổn định ba ngày. Bước tiếp là xác định notebook và năm chủ đề thật, xác nhận quyền dùng nguồn trước khi lấy trích đoạn, rồi lưu capture riêng. Không tạo observation cho ngày chưa chạy.
+Lượt đầu tại clone Windows c50fda9 đã có 5/5 query thành công. Hóa hữu cơ 2, KTCT, Vi sinh: recorder lưu 3 observation được agent đối chiếu trích đoạn/nguồn/vị trí. Hóa phân tích và Giải phẫu sinh lý: pending citation metadata. Validator exit 2, 0/3 ngày đủ năm chủ đề. Nguồn, output và capture giữ riêng trên Windows; Cloud chỉ đối chiếu lịch sử call/final, không tự xác minh nội dung private. Admin chưa review grounding và hồ sơ điều khoản do agent đọc.
+
+Xem mục tiếp tục sau lượt đầu trong handoff Windows. Kiểm phản hồi đã lưu trước khi query lại hai chủ đề thiếu; không đổi timestamp/ngày, không tự coi ba observation là một ngày đạt. `grounded_verified` và exit code của công cụ không thay thế admin review.
 
 ## Quan sát riêng trong Cloud (không thay thế kết quả Windows)
 

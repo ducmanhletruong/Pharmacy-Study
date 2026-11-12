@@ -58,12 +58,12 @@ Không chạy browser e2e, migration, auth, pipeline AI hoặc test nghiệp v�
 
 Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục. Không bắt đầu P02 hoặc sửa code sản phẩm trong lượt này.
 
-| Task    | Trạng thái                        | Bằng chứng / còn thiếu                                                                                                                  |
-| ------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| P01-T01 | WINDOWS LIST OK / CAPTURE PENDING | Chủ dự án xác nhận 47 notebook và quyền dùng cá nhân; recorder/handoff Windows đã có; chưa có kiến thức/citation ba ngày                |
-| P01-T02 | DONE                              | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                         |
-| P01-T03 | DONE — CURRENT STAGE              | ADR-0011 Accepted: tiếp tục local; production hosting hoãn, ADR-0006 vẫn OPEN                                                           |
-| P01-T04 | EXPLORATORY OUTPUT EVALUATED      | 5 output Codex trong chat đạt kiểm tra cơ học trên nguồn tổng hợp; model/version, API/plan grant và chất lượng chuyên môn chưa xác minh |
+| Task    | Trạng thái                         | Bằng chứng / còn thiếu                                                                                                                  |
+| ------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| P01-T01 | FIRST RUN PARTIAL / REVIEW PENDING | Windows: 5/5 query thành công, 3 observation đã đối chiếu bởi agent, 2 thiếu citation; 0/3 ngày đủ năm chủ đề; admin review pending     |
+| P01-T02 | DONE                               | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                         |
+| P01-T03 | DONE — CURRENT STAGE               | ADR-0011 Accepted: tiếp tục local; production hosting hoãn, ADR-0006 vẫn OPEN                                                           |
+| P01-T04 | EXPLORATORY OUTPUT EVALUATED       | 5 output Codex trong chat đạt kiểm tra cơ học trên nguồn tổng hợp; model/version, API/plan grant và chất lượng chuyên môn chưa xác minh |
 
 ### Kiểm chứng P01
 
@@ -77,7 +77,9 @@ Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục.
 
 ### Kết quả Windows — 2026-11-12
 
-Chủ dự án cung cấp kết quả notebook_list thành công (47 notebook, chỉ đọc) tại Windows; đã đối chiếu lịch sử call của chat local. Quyền nguồn năm notebook cho cá nhân, không công khai giáo trình, đã được xác nhận. Có recorder tự tính hash/lưu lịch sử và handoff Windows sẵn để chạy; chưa có observation kiến thức thật. Không sửa report Cloud thành pass. Còn thiếu kiến thức/citation cho cùng năm chủ đề trên ba ngày; P01 vẫn PARTIAL / BLOCKED.
+Chủ dự án cung cấp kết quả notebook_list thành công (47 notebook, chỉ đọc) tại Windows; đã đối chiếu lịch sử call của chat local. Quyền nguồn năm notebook cho cá nhân, không công khai giáo trình, đã được xác nhận. Lượt kiến thức đầu tiên đã chạy ở clone riêng `work/Pharmacy-Study` tại `c50fda9`: 5/5 query thành công; Hóa hữu cơ 2, KTCT và Vi sinh có 3 observation đã được agent đối chiếu nguồn; Hóa phân tích và Giải phẫu sinh lý pending vì thiếu citation metadata. Recorder đã lưu 3 observation; validator exit 2, **0/3 ngày đủ cả năm chủ đề**. Đối chiếu nguồn và đọc điều khoản do agent thực hiện, **chưa có admin review**. Ghi nhận theo báo cáo chủ dự án và final của chat Windows, không phải Cloud đọc capture private hoặc tự gọi MCP.
+
+Tài liệu public trên Windows có thay đổi chưa commit/push; capture/nguồn/output nằm trong private bị Git ignore. Không ghi đè checkout Windows để đồng bộ hồ sơ Cloud. Các ngày sau giữ cùng năm chủ đề; kiểm tra hai phản hồi pending đã lưu trước khi tốn thêm lượt query. Không đổi ngày cũ hoặc coi ba observation là một ngày hoàn tất.
 
 Code spike ở commit `0dc5d96fbf774c764abd0b0063503b5dcd796f42` đã qua CI [run 43157607324](https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43157607324): 11 test Node (4 validator, 5 recorder, 2 evaluator), 4 test Python, RDKit hai process, reference self-check và từ chối template trống. Không gọi tài khoản NotebookLM hoặc API AI trong CI. Bổ sung sau commit này chỉ là tài liệu ghi kết quả/hướng dẫn, không thay đổi code đã kiểm.
 

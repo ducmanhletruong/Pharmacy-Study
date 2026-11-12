@@ -6,6 +6,7 @@
 - Dự án local: `/workspace/web-starter`; nhánh hiện tại `phase-01`, dựa trên `phase-00`.
 - P00 đã hoàn thành; CI cuối P00 trên commit `44848b1` thành công: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43075284113 . PR #1 còn draft, không tự merge.
 - **P01 đã triển khai phần độc lập nhưng chưa đạt cổng toàn phase.** P02 và phase khác chưa bắt đầu.
+- Lượt kiến thức đầu tiên tại Windows đã chạy: 5/5 query thành công, 3 observation được agent đối chiếu và lưu, 2 pending citation metadata; validator exit 2, **0/3 ngày đủ cả năm chủ đề**. Admin chưa review grounding/điều khoản. Cloud đã đối chiếu lịch sử call/final, không đọc raw capture riêng.
 - Code spike mới nhất đã kiểm tại `0dc5d96fbf774c764abd0b0063503b5dcd796f42`: CI success, https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43157607324 . Hai commit mới là `a1e7cf4` (recorder/handoff Windows) và `0dc5d96` (output Codex tổng hợp); đã push phase-01, PR #2 giữ draft. Các ghi chú CI sau đó chỉ đổi Markdown.
 
 ## Quyết định mới từ chủ dự án
@@ -18,7 +19,7 @@
 
 - RDKit JS/WASM: dựng 10 cấu trúc tổng hợp; SVG giống hash qua hai tiến trình, đo thời gian/kích thước và xử lý SMILES lỗi. Report thật ở `spikes/chem-render/report.json`.
 - NotebookLM: runbook kết nối, mẫu hồ sơ riêng tư, validator năm chủ đề qua ba ngày; 4 test của validator đạt. Template trống bị từ chối đúng exit 2.
-- Đã thêm recorder nối observation/hash và [handoff Windows](docs/spikes/notebooklm-windows-handoff.md) chứa nội dung gửi vào chat local; script không gọi MCP hoặc tự đặt grounding. Chưa chạy batch kiến thức thật. Không tự gửi việc sang agent khác.
+- Đã thêm recorder nối observation/hash và [handoff Windows](docs/spikes/notebooklm-windows-handoff.md); Windows đã chạy lượt đầu trên clone riêng tại c50fda9. Ba observation của Hóa hữu cơ 2, KTCT, Vi sinh có nguồn/vị trí/trích đoạn được agent đối chiếu; Hóa phân tích và Giải phẫu sinh lý pending metadata. Năm topic/mapping và output thật giữ trong private tại Windows. Không tự gửi việc sang agent khác.
 - Hosting: ADR-0009 so sánh local, Render + Neon preview free và paid; nguồn chính thức, hạn chế cold start/backup và phần chưa quyết định.
 - OpenAI: ADR-0010 phân biệt dùng tài khoản hiện có, SIWC/plan usage và API credits Pro nếu đủ điều kiện; chưa gọi API hoặc thay billing.
 - LLM evaluator offline: 5 fixture tổng hợp, prompt export, kiểm đáp án/citation và 2 test các ca từ chối. Ngoài reference self-check, đã nhập năm output do phiên Codex này sinh: 5/5 đạt trên nguồn tổng hợp. Report/candidates ở spikes/llm-eval/codex-session-*.json; đánh giá không mù, không phải kiểm kiến thức chuyên môn hoặc API entitlement. Model/version, usage/cost chưa xác minh, giữ null.
@@ -31,7 +32,7 @@
 - CLI package 0.16.2 ở `/workspace/.pharmacy-notebooklm/venv`; state riêng ở `/workspace/.pharmacy-notebooklm/state` (0700), profile pharmacy-personal. Không nằm trong Git.
 - MCP initialize và list 55 tool thành công. Server reported version 4.1.8 là framework, không phải CLI package version.
 - Lệnh notebook_list thật trả chưa có Google auth. Browser auth đã mở đúng trang NotebookLM nhưng timeout sau 300 giây, cửa sổ auth đã đóng; chưa có account session đã xác minh.
-- Bước tiếp tại Windows: chủ dự án gửi đoạn giao việc trong docs/spikes/notebooklm-windows-handoff.md ở chat local đang có MCP. Xác định notebook/năm chủ đề thật, dùng căn cứ quyền nguồn đã xác nhận rồi lấy trích đoạn kèm vị trí nguồn; đối chiếu thật và dùng record.mjs nối capture riêng. Lặp cùng năm chủ đề trên ba ngày khác nhau. Cloud auth là phương án riêng chưa hoàn tất, không cần lặp lại hoặc copy credential Desktop.
+- Bước tiếp tại Windows: giữ nguyên năm topic và checkout có thay đổi chưa commit/push. Kiểm citations/references và source snapshot đã lưu của hai mục pending trước khi query mới; không tự gán citation hoặc ngày cũ. Không nhập lại ba observation đã có. Các ngày khác giữ cùng năm chủ đề, ghi thời gian thật. Admin cần review grounding/hồ sơ điều khoản; không coi việc agent đối chiếu là chủ dự án đã duyệt. Xem mục “Kết quả lượt đầu và việc tiếp theo” trong handoff Windows. Không cần đăng nhập Cloud lại.
 - Cấu hình global CLI không tự hot-load tool vào chat hiện tại; probe SDK chạy trực tiếp là đường kiểm chứng đang dùng. Tài liệu đường Desktop/Secure MCP Tunnel trong docs/spikes/notebooklm-access.md.
 
 Report đã lọc: spikes/notebooklm/connection-report.json. Không coi transport/catalog hoặc isError=false là xác thực account thành công. Cần dữ liệu năm chủ đề thật qua ba ngày sau khi đăng nhập.
@@ -50,7 +51,7 @@ Trong Cloud thêm `--cache /workspace/.npm-cache` cho npm ci nếu home không g
 
 ## Phần còn thiếu / giới hạn
 
-P01-T01 đã có kết quả list Windows do chủ dự án cung cấp, còn chờ kiến thức/citation và bằng chứng ba ngày; P01-T03 đã chốt local cho giai đoạn hiện tại, production hoãn; P01-T04 đã có output thăm dò trong chat nhưng còn cách cấp quyền OpenAI, model định danh và đánh giá chuyên môn. Chi tiết ở `docs/blockers.md`, `docs/status.md`, `docs/decision-register.md`.
+P01-T01 đã có lượt query thật và ba observation, còn thiếu citation của hai chủ đề, admin review và ba ngày đủ năm chủ đề (hiện 0/3). Tài liệu local Windows chưa commit/push, chưa hợp nhất vào Cloud; không ghi đè chúng. P01-T03 đã chốt local, production hoãn; P01-T04 còn cách cấp quyền OpenAI, model định danh và đánh giá chuyên môn. Chi tiết ở docs/blockers.md và docs/status.md.
 
 Ưu tiên local và dùng tài khoản Pro không tự chứng minh API credits đã active hoặc token app đã được cấp. Có thể tạo prompt để chạy tại nơi được phép dùng tài khoản rồi nhập output vào evaluator; bước này chưa phải API adapter P06. Không tự claim credit, chọn model trả phí, auto-recharge hoặc tạo hosting.
 

@@ -8,17 +8,19 @@ Repo GitHub ban đầu chỉ có một commit README thay vì rỗng hoàn toàn
 
 ## P01 hiện tại
 
-| ID               | Điều còn thiếu                                                              | Ảnh hưởng                   | Cách gỡ                                                                                           |
-| ---------------- | --------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------- |
-| MCP-CLOUD-ACCESS | Cloud chưa xác thực; Windows list thành công theo chủ dự án (47 notebook)   | Chỉ gọi trực tiếp từ Cloud  | Tiếp tục kiểm chứng P01 bằng tay tại Windows; không cần đăng nhập Cloud lại                       |
-| MCP-3DAYS        | Chưa có observation kiến thức/citation thật; quyền dùng cá nhân đã xác nhận | Cổng P01-T01                | Chạy tại Windows theo docs/spikes/notebooklm-windows-handoff.md; recorder/validator đã có         |
-| OPENAI-ACCESS    | Chưa có entitlement/credit grant/OAuth token được cấp cho app trong Cloud   | P01-T04 xác minh model thật | Chọn luồng hỗ trợ chính thức theo ADR-0010; cấu hình qua settings, không gửi token/key trong chat |
+| ID               | Điều còn thiếu                                                                 | Ảnh hưởng                   | Cách gỡ                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------ | --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| MCP-CLOUD-ACCESS | Cloud chưa xác thực; Windows list thành công theo chủ dự án (47 notebook)      | Chỉ gọi trực tiếp từ Cloud  | Tiếp tục kiểm chứng P01 bằng tay tại Windows; không cần đăng nhập Cloud lại                                       |
+| MCP-CITATION-2   | Hóa phân tích và Giải phẫu sinh lý thiếu citation metadata ở lượt đầu          | P01-T01 đủ năm chủ đề       | Kiểm citations/references của output private đã lưu; chưa đủ thì giữ pending, không tự gán nguồn                  |
+| MCP-ADMIN-REVIEW | Ba observation và việc đọc điều khoản do agent đối chiếu; chưa có admin review | Cổng P01-T01                | Admin kiểm nguồn/vị trí/trích đoạn và hồ sơ điều khoản trên Windows; ghi kết luận thực tế, không tự xác nhận thay |
+| MCP-3DAYS        | Đã lưu 3 observation, validator exit 2; hiện 0/3 ngày đủ cả năm chủ đề         | Cổng P01-T01                | Giữ cùng năm chủ đề, thu đủ các ngày thật; không đổi timestamp hoặc nhập lại ba mục đã có                         |
+| OPENAI-ACCESS    | Chưa có entitlement/credit grant/OAuth token được cấp cho app trong Cloud      | P01-T04 xác minh model thật | Chọn luồng hỗ trợ chính thức theo ADR-0010; cấu hình qua settings, không gửi token/key trong chat                 |
 
 Q1 phần cho phép MCP bên thứ ba đã xác nhận, tài khoản cá nhân. Người dùng nói đã nối NotebookLM, nhưng điều đó chưa tạo tool callable trong chat Cloud này. Không coi dữ liệu unit test hoặc reference benchmark là bằng chứng đã truy cập account.
 
 ### Cập nhật Windows — 2026-11-12
 
-Chủ dự án cung cấp kết quả notebook_list thành công trên Windows, tài khoản có 47 notebook, chỉ đọc; đã đối chiếu lịch sử call chat local. Quyền dùng nguồn năm notebook cho học tập cá nhân, không công khai giáo trình, đã xác nhận trực tiếp. Còn thiếu kiến thức/citation và ba ngày. Các mô tả Cloud timeout dưới đây là lịch sử riêng của Cloud, không yêu cầu đăng nhập lặp lại. Cloud không phải điều kiện bắt buộc cho kiểm chứng bằng tay P01-T01. Tiếp tục theo handoff Windows; chưa tự chạy hoặc gửi việc sang agent local.
+Windows đã chạy lượt kiến thức đầu tiên: 5/5 query thành công, 3 observation có citation/vị trí/trích đoạn được agent đối chiếu, 2 chủ đề còn pending metadata. Đã đối chiếu lịch sử chat local có năm notebook_query hoàn thành; chưa đọc capture private từ Cloud. Quyền dùng nguồn năm notebook cho học tập cá nhân đã xác nhận; admin review kết quả/điều khoản và bằng chứng ba ngày vẫn thiếu. Cloud không phải điều kiện bắt buộc của kiểm chứng này; không yêu cầu đăng nhập lại. Handoff có hướng kiểm tra riêng hai chủ đề pending, không retry cả batch hoặc đổi topic để né lỗi.
 
 ## Các phase sau P01 (chưa triển khai)
 
