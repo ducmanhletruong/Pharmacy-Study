@@ -1,0 +1,8 @@
+# Merge this table into your Codex config; preserve unrelated settings.
+# Keep Google credentials in NLM's profile store on the same machine.
+[mcp_servers.pharmacy-notebooklm]
+command = "uvx"
+args = ["--from", "notebooklm-mcp-cli==0.16.2", "notebooklm-mcp"]
+enabled_tools = ["notebook_list", "notebook_get"]
+startup_timeout_sec = 30
+tool_timeout_sec = 45

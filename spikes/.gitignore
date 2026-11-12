@@ -1,0 +1,5 @@
+**/artifacts/
+**/private/
+**/*.capture.json
+**/model-outputs*.jsonl
+**/__pycache__/

@@ -1,0 +1,3 @@
+notebooklm-mcp-cli==0.16.2
+mcp==2.3.0
+fastmcp==4.1.8
