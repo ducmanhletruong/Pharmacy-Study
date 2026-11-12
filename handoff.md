@@ -20,7 +20,7 @@
 - Đã thêm recorder nối observation/hash và [handoff Windows](docs/spikes/notebooklm-windows-handoff.md) chứa nội dung gửi vào chat local; script không gọi MCP hoặc tự đặt grounding. Chưa chạy batch kiến thức thật. Không tự gửi việc sang agent khác.
 - Hosting: ADR-0009 so sánh local, Render + Neon preview free và paid; nguồn chính thức, hạn chế cold start/backup và phần chưa quyết định.
 - OpenAI: ADR-0010 phân biệt dùng tài khoản hiện có, SIWC/plan usage và API credits Pro nếu đủ điều kiện; chưa gọi API hoặc thay billing.
-- LLM evaluator offline: 5 fixture tổng hợp có nhãn năm môn, prompt export, kiểm đáp án/citation và 2 test các ca từ chối. Reference self-check 5/5 không phải model evaluation.
+- LLM evaluator offline: 5 fixture tổng hợp, prompt export, kiểm đáp án/citation và 2 test các ca từ chối. Ngoài reference self-check, đã nhập năm output do phiên Codex này sinh: 5/5 đạt trên nguồn tổng hợp. Report/candidates ở spikes/llm-eval/codex-session-*.json; đánh giá không mù, không phải kiểm kiến thức chuyên môn hoặc API entitlement. Model/version, usage/cost chưa xác minh, giữ null.
 - Workflow kiểm thử riêng công cụ P01; không rebuild Next.js vì không đổi code sản phẩm.
 
 ## Kết nối NotebookLM — cập nhật mới nhất
@@ -49,7 +49,7 @@ Trong Cloud thêm `--cache /workspace/.npm-cache` cho npm ci nếu home không g
 
 ## Phần còn thiếu / giới hạn
 
-P01-T01 đã có kết quả list Windows do chủ dự án cung cấp, còn chờ kiến thức/citation và bằng chứng ba ngày; P01-T03 đã chốt local cho giai đoạn hiện tại, production hoãn; P01-T04 chờ cách cấp quyền OpenAI và batch model thật. Chi tiết ở `docs/blockers.md`, `docs/status.md`, `docs/decision-register.md`.
+P01-T01 đã có kết quả list Windows do chủ dự án cung cấp, còn chờ kiến thức/citation và bằng chứng ba ngày; P01-T03 đã chốt local cho giai đoạn hiện tại, production hoãn; P01-T04 đã có output thăm dò trong chat nhưng còn cách cấp quyền OpenAI, model định danh và đánh giá chuyên môn. Chi tiết ở `docs/blockers.md`, `docs/status.md`, `docs/decision-register.md`.
 
 Ưu tiên local và dùng tài khoản Pro không tự chứng minh API credits đã active hoặc token app đã được cấp. Có thể tạo prompt để chạy tại nơi được phép dùng tài khoản rồi nhập output vào evaluator; bước này chưa phải API adapter P06. Không tự claim credit, chọn model trả phí, auto-recharge hoặc tạo hosting.
 

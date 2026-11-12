@@ -264,3 +264,12 @@ Bốn unit test parser đạt; live MCP handshake/catalog và auth-required outc
 - Cập nhật runbook, status, blockers, decision-register và handoff. Chưa có observation kiến thức/citation, chưa đủ ba ngày; không mở phase sau.
 - Ngoài plan: helper ghi metadata là phần bổ sung cần thiết cho bộ kiểm chứng P01-T01 nhằm tránh tính hash hoặc sửa lịch sử bằng tay; không đổi mã sản phẩm, DB, runtime, billing hoặc credential. Hoàn tác bằng revert riêng commit, giữ nguyên hồ sơ private thật.
 - Kiểm chứng: 5/5 test recorder đạt, gồm CLI lưu ngày chưa đủ cổng và bảo toàn file khi từ chối; ESLint hai file JS exit 0; Prettier chỉ file thay đổi và git diff --check đạt. git check-ignore xác nhận capture/batch private bị bỏ qua. Không build/test lại app, RDKit hoặc Python parser vì không có thay đổi liên quan.
+
+## 2026-11-12 — P01-T04: năm đầu ra thăm dò bằng Codex hiện tại
+
+- Căn cứ: chủ dự án yêu cầu tiếp tục, ưu tiên OpenAI/Pro và tiết kiệm usage. Xuất năm prompt tổng hợp bằng run.mjs --prompts, agent sinh năm MCQ trong chính phiên chat này, lưu codex-session-candidates.json. Không lấy đáp án bằng generator reference-self-check, không dùng tài liệu NotebookLM hoặc nguồn ngoài.
+- Nhập output bằng run.mjs --input: 5/5 đạt quy tắc cấu trúc, đáp án fixture và exact quote/source locator. Lưu codex-session-report.json với timestamp thật, hash prompt/output, nguồn tổng hợp, external_api_calls=0 và provider_access_verified=false. Việc gọi lại evaluator để lưu report là xuất bằng chứng, không phải lượt sinh model thứ hai.
+- Đánh giá không mù vì phiên đã đọc evaluator; các câu chỉ là bài đọc mã/nhãn tổng hợp và có nhiễu giả định. Không coi là benchmark chất lượng đề Dược. Model/version, usage/cost không có số xác minh nên ghi null; không giả số model hoặc giá, không claim entitlement hoặc API adapter của app.
+- Cập nhật docs/spikes/llm-eval.md, ADR-0010, status/blockers/decision-register và handoff. ADR tích hợp vẫn PROPOSED/OPEN. Không mở P02/P06 hoặc yêu cầu API key trong chat.
+- Ngoài plan: dùng output của phiên Codex hiện tại thay cho chờ API credential để có một lượt thăm dò cơ học ngay; không thay thế bài kiểm định model/API còn thiếu. Chỉ lưu dữ liệu tổng hợp được phép commit, không thêm dependency hoặc gọi API trả phí. Hoàn tác bằng revert commit báo cáo riêng.
+- Kiểm chứng: evaluator exit 0 với 5/5 mẫu; chỉ format/đọc diff và kiểm hash báo cáo sau format. Không chạy lại suite/test/build đã đạt vì không sửa logic evaluator.

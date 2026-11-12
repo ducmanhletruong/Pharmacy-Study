@@ -58,12 +58,12 @@ Không chạy browser e2e, migration, auth, pipeline AI hoặc test nghiệp v�
 
 Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục. Không bắt đầu P02 hoặc sửa code sản phẩm trong lượt này.
 
-| Task    | Trạng thái                        | Bằng chứng / còn thiếu                                                                                                           |
-| ------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| P01-T01 | WINDOWS LIST OK / CAPTURE PENDING | Chủ dự án xác nhận 47 notebook và quyền dùng cá nhân; recorder/handoff Windows đã có; chưa có kiến thức/citation ba ngày         |
-| P01-T02 | DONE                              | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                  |
-| P01-T03 | DONE — CURRENT STAGE              | ADR-0011 Accepted: tiếp tục local; production hosting hoãn, ADR-0006 vẫn OPEN                                                    |
-| P01-T04 | PREPARED / WAITING ACCESS         | OpenAI/Pro đã được chọn về nhà cung cấp; ADR-0010, prompt/evaluator và fixture đã có; chưa có API/plan grant hoặc model run thật |
+| Task    | Trạng thái                        | Bằng chứng / còn thiếu                                                                                                                  |
+| ------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| P01-T01 | WINDOWS LIST OK / CAPTURE PENDING | Chủ dự án xác nhận 47 notebook và quyền dùng cá nhân; recorder/handoff Windows đã có; chưa có kiến thức/citation ba ngày                |
+| P01-T02 | DONE                              | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                         |
+| P01-T03 | DONE — CURRENT STAGE              | ADR-0011 Accepted: tiếp tục local; production hosting hoãn, ADR-0006 vẫn OPEN                                                           |
+| P01-T04 | EXPLORATORY OUTPUT EVALUATED      | 5 output Codex trong chat đạt kiểm tra cơ học trên nguồn tổng hợp; model/version, API/plan grant và chất lượng chuyên môn chưa xác minh |
 
 ### Kiểm chứng P01
 
@@ -92,7 +92,7 @@ Chỉ P01. Tiếp tục bước còn thiếu khi có thông tin/credential đư�
 - P01-T01: công cụ và runbook đã chuẩn bị; phần live vẫn blocked.
 - P01-T02: RDKit Node/WASM đã kiểm chứng 10 cấu trúc, report và dependency cô lập.
 - P01-T03: hồ sơ và quyết định tiếp tục local đã có; production được hoãn theo lựa chọn chủ dự án.
-- P01-T04: hồ sơ OpenAI/Pro và evaluator offline đã có; chưa có model run thật.
+- P01-T04: hồ sơ OpenAI/Pro, evaluator và năm output sinh trong chat đã có; chưa xác minh model/version, API/plan grant hoặc chất lượng chuyên môn.
 
 ### Bổ sung rà soát P01
 

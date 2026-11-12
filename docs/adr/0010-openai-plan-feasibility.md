@@ -29,4 +29,6 @@ Chưa chọn model hoặc cam kết giá khi chưa biết entitlement/rate limit
 
 Năm nguồn tổng hợp tự viết có nhãn năm môn; chỉ kiểm extraction, A/B/C/D, một đáp án đúng và citation từ văn bản mẫu. Có kiểm tra đáp án theo golden fact, trùng lựa chọn, citation giả và bản ghi trùng/thiếu. Reference self-check đạt 5/5 không phải kết quả của model thật và không chứng minh độ chính xác kiến thức Dược 98%.
 
-Kết quả mô hình thật, quyền truy cập API, token/cost và review chất lượng chuyên môn: **chưa có**. Khi API/plan không dùng được hoặc chạm hạn mức, dừng batch, giữ ngân hàng đã duyệt và chuyển phương thức được chủ dự án chọn; không âm thầm dùng provider khác hoặc nguồn web khác.
+Lượt bổ sung ngày 2026-11-12: năm output sinh bằng phiên Codex hiện tại đạt evaluator 5/5, lưu trong `spikes/llm-eval/codex-session-report.json`. Đánh giá không mù, chỉ trên nhãn tổng hợp; không phải reference-self-check nhưng cũng chưa chứng minh chất lượng chuyên môn hoặc API. Không biết model/version chính xác, token/cost, quyền API hoặc OAuth app; các giá trị chưa đo để null. Chưa đủ bằng chứng để chuyển quyết định tích hợp thành Accepted.
+
+Khi API/plan không dùng được hoặc chạm hạn mức, dừng batch, giữ ngân hàng đã duyệt và chuyển phương thức được chủ dự án chọn; không âm thầm dùng provider khác hoặc nguồn web khác.

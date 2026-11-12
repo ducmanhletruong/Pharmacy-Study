@@ -1,0 +1,97 @@
+[
+  {
+    "fixture_id": "SYN-PT1",
+    "stem": "Theo dữ liệu mô phỏng, mẫu nào có thể tích 25 mL?",
+    "choices": [
+      { "key": "A", "text": "PT-B" },
+      { "key": "B", "text": "PT-A" },
+      { "key": "C", "text": "PT-C" },
+      { "key": "D", "text": "PT-D" }
+    ],
+    "correct_answer": "B",
+    "explanation": "Nguồn mô phỏng gán thể tích 25 mL cho PT-A, còn PT-B có thể tích 50 mL. PT-C và PT-D là phương án nhiễu giả định. Câu này chỉ kiểm khả năng đọc fixture, không dùng học chính thức.",
+    "citations": [
+      {
+        "source_id": "synthetic-pt1",
+        "location": "fixture đoạn 1",
+        "quote": "mẫu PT-A có thể tích 25 mL; mẫu PT-B có thể tích 50 mL."
+      }
+    ]
+  },
+  {
+    "fixture_id": "SYN-HC2",
+    "stem": "Trong fixture cấu trúc tổng hợp, mã nào được gắn với chuỗi SMILES CCO?",
+    "choices": [
+      { "key": "A", "text": "HC-B" },
+      { "key": "B", "text": "HC-C" },
+      { "key": "C", "text": "HC-D" },
+      { "key": "D", "text": "HC-A" }
+    ],
+    "correct_answer": "D",
+    "explanation": "Fixture gắn HC-A với CCO và HC-B với CC(=O)O. Các mã HC-C và HC-D chỉ là nhiễu giả định; đây là bài đọc mã kiểm thử, không phải câu hỏi danh pháp.",
+    "citations": [
+      {
+        "source_id": "synthetic-hc2",
+        "location": "fixture đoạn 1",
+        "quote": "mã HC-A được gắn với chuỗi SMILES CCO; mã HC-B được gắn với CC(=O)O."
+      }
+    ]
+  },
+  {
+    "fixture_id": "SYN-GP",
+    "stem": "Theo ảnh giả lập trong fixture, nhãn vùng nào nằm ở tọa độ (20, 30)?",
+    "choices": [
+      { "key": "A", "text": "GP-1" },
+      { "key": "B", "text": "GP-2" },
+      { "key": "C", "text": "GP-3" },
+      { "key": "D", "text": "GP-4" }
+    ],
+    "correct_answer": "A",
+    "explanation": "Nguồn đặt vùng GP-1 của ảnh A tại (20, 30). GP-2 thuộc ảnh B và tọa độ (70, 80); GP-3 và GP-4 là nhãn nhiễu. Các vùng này không phải cấu trúc giải phẫu thật.",
+    "citations": [
+      {
+        "source_id": "synthetic-gp",
+        "location": "fixture đoạn 1",
+        "quote": "ảnh giả lập A có vùng đánh dấu GP-1 ở tọa độ (20, 30)"
+      }
+    ]
+  },
+  {
+    "fixture_id": "SYN-KT",
+    "stem": "Trong bảng mô phỏng, nhóm nào được gán mã chủ đề T1?",
+    "choices": [
+      { "key": "A", "text": "KT-B" },
+      { "key": "B", "text": "KT-C" },
+      { "key": "C", "text": "KT-A" },
+      { "key": "D", "text": "KT-D" }
+    ],
+    "correct_answer": "C",
+    "explanation": "Bảng mô phỏng gán T1 cho KT-A và T2 cho KT-B. KT-C và KT-D là nhóm nhiễu giả định; không suy diễn các mã này thành khái niệm kinh tế thật.",
+    "citations": [
+      {
+        "source_id": "synthetic-kt",
+        "location": "fixture đoạn 1",
+        "quote": "nhóm KT-A được gán mã chủ đề T1; nhóm KT-B được gán T2."
+      }
+    ]
+  },
+  {
+    "fixture_id": "SYN-VS",
+    "stem": "Trong dữ liệu giả định, hộp mẫu nào mang nhãn kiểm tra màu xanh?",
+    "choices": [
+      { "key": "A", "text": "VS-B" },
+      { "key": "B", "text": "VS-A" },
+      { "key": "C", "text": "VS-C" },
+      { "key": "D", "text": "VS-D" }
+    ],
+    "correct_answer": "B",
+    "explanation": "Nguồn tổng hợp nêu VS-A có nhãn màu xanh và VS-B có nhãn màu đỏ. VS-C và VS-D là phương án nhiễu giả định. Nhãn màu chỉ quản lý fixture, không mô tả đặc điểm vi sinh vật.",
+    "citations": [
+      {
+        "source_id": "synthetic-vs",
+        "location": "fixture đoạn 1",
+        "quote": "hộp mẫu giả định VS-A có nhãn kiểm tra màu xanh; VS-B có nhãn màu đỏ."
+      }
+    ]
+  }
+]

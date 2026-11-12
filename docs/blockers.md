@@ -39,6 +39,7 @@ Q4 mặc định A-03 (responsive, online); Q7 hạn thi/MVP chưa chặn. Khôn
 
 - HOSTING-Q5 cho giai đoạn hiện tại: chủ dự án đã chọn tiếp tục local, chưa production; ADR-0011 Accepted. Không cần chọn paid/preview hosting ở thời điểm này. Quyết định provider/budget production vẫn hoãn, chỉ cần xử lý khi chuẩn bị triển khai theo phạm vi mới.
 - Nhà cung cấp AI đã chọn OpenAI/ChatGPT Pro; còn đường cấp quyền/hạn mức, không còn câu hỏi chọn provider thay thế.
+- Đã có năm output Codex trong chat đạt evaluator trên fixture tổng hợp (5/5), không gọi API và không xác minh model/version, entitlement hoặc chuyên môn. Kết quả này không gỡ OPENAI-ACCESS.
 
 ### Trạng thái kết nối mới
 
