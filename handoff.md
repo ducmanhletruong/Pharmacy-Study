@@ -6,6 +6,7 @@
 - Dự án local: `/workspace/web-starter`; nhánh hiện tại `phase-01`, dựa trên `phase-00`.
 - P00 đã hoàn thành; CI cuối P00 trên commit `44848b1` thành công: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43075284113 . PR #1 còn draft, không tự merge.
 - **P01 đã triển khai phần độc lập nhưng chưa đạt cổng toàn phase.** P02 và phase khác chưa bắt đầu.
+- Code spike mới nhất đã kiểm tại `0dc5d96fbf774c764abd0b0063503b5dcd796f42`: CI success, https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43157607324 . Hai commit mới là `a1e7cf4` (recorder/handoff Windows) và `0dc5d96` (output Codex tổng hợp); đã push phase-01, PR #2 giữ draft. Các ghi chú CI sau đó chỉ đổi Markdown.
 
 ## Quyết định mới từ chủ dự án
 
@@ -69,4 +70,4 @@ CI cuối cho code công cụ `2e8a5d6` đã success: https://github.com/ducmanh
 
 ## Kiểm chứng bổ sung cho kết nối MCP
 
-Bốn test classifier Python đã đạt, gồm auth business error với isError=false, list rỗng hợp lệ, JSON text fallback và loại raw private data khỏi report. Probe Cloud trước đó trả transport_connected=true, notebook_access_verified=false, reason=authentication_required; giữ nguyên bằng chứng này. Kết quả Windows mới không thay đổi report Cloud. Lượt tiếp tục thêm recorder: 5/5 test đạt, lint hai file JS và diff check đạt; capture/batch private được git ignore. Không build/test lại app; CI cho code mới chưa được xác nhận.
+Bốn test classifier Python đã đạt, gồm auth business error với isError=false, list rỗng hợp lệ, JSON text fallback và loại raw private data khỏi report. Probe Cloud trước đó trả transport_connected=true, notebook_access_verified=false, reason=authentication_required; giữ nguyên bằng chứng này. Kết quả Windows mới không thay đổi report Cloud. Lượt tiếp tục thêm recorder: 5/5 test local đạt, lint hai file JS và diff check đạt; capture/batch private được git ignore. CI code mới đã success: 11 Node + 4 Python, RDKit và kiểm template/self-check; không chứng minh truy vấn live. Không build/test lại app.

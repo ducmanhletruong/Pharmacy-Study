@@ -79,6 +79,8 @@ Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục.
 
 Chủ dự án cung cấp kết quả notebook_list thành công (47 notebook, chỉ đọc) tại Windows; đã đối chiếu lịch sử call của chat local. Quyền nguồn năm notebook cho cá nhân, không công khai giáo trình, đã được xác nhận. Có recorder tự tính hash/lưu lịch sử và handoff Windows sẵn để chạy; chưa có observation kiến thức thật. Không sửa report Cloud thành pass. Còn thiếu kiến thức/citation cho cùng năm chủ đề trên ba ngày; P01 vẫn PARTIAL / BLOCKED.
 
+Code spike ở commit `0dc5d96fbf774c764abd0b0063503b5dcd796f42` đã qua CI [run 43157607324](https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43157607324): 11 test Node (4 validator, 5 recorder, 2 evaluator), 4 test Python, RDKit hai process, reference self-check và từ chối template trống. Không gọi tài khoản NotebookLM hoặc API AI trong CI. Bổ sung sau commit này chỉ là tài liệu ghi kết quả/hướng dẫn, không thay đổi code đã kiểm.
+
 ### Cổng chưa đạt
 
 Còn thiếu hồ sơ kiến thức/citation cho năm chủ đề trên ba ngày; Windows list đã thành công theo chủ dự án, Cloud chưa có account auth riêng. Đường truy cập OpenAI cần chốt/thiết lập thực tế; hosting giai đoạn hiện tại đã chọn local theo ADR-0011, production còn hoãn. P01 chưa DONE. ADR-0006/0007 chưa chuyển Accepted; các hồ sơ bổ sung không tự thay thế quyết định của chủ dự án.

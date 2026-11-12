@@ -273,3 +273,10 @@ Bốn unit test parser đạt; live MCP handshake/catalog và auth-required outc
 - Cập nhật docs/spikes/llm-eval.md, ADR-0010, status/blockers/decision-register và handoff. ADR tích hợp vẫn PROPOSED/OPEN. Không mở P02/P06 hoặc yêu cầu API key trong chat.
 - Ngoài plan: dùng output của phiên Codex hiện tại thay cho chờ API credential để có một lượt thăm dò cơ học ngay; không thay thế bài kiểm định model/API còn thiếu. Chỉ lưu dữ liệu tổng hợp được phép commit, không thêm dependency hoặc gọi API trả phí. Hoàn tác bằng revert commit báo cáo riêng.
 - Kiểm chứng: evaluator exit 0 với 5/5 mẫu; chỉ format/đọc diff và kiểm hash báo cáo sau format. Không chạy lại suite/test/build đã đạt vì không sửa logic evaluator.
+
+### CI và bàn giao lượt tiếp tục P01
+
+- Đã commit riêng P01-T01 `a1e7cf4`, P01-T04 `0dc5d96` rồi push một lần vào phase-01, giữ PR #2 draft và base phase-00. Cập nhật mô tả PR theo trạng thái cuối, không merge/deploy hoặc gửi bình luận cho người khác.
+- GitHub Actions run 43157607324 trên `0dc5d96fbf774c764abd0b0063503b5dcd796f42` SUCCESS. Job feasibility-tools và các bước 11 test Node, 4 test Python, RDKit hai process, reference self-check và từ chối template trống đều success. CI không truy cập NotebookLM hoặc gọi AI; không suy ra live gate từ kết quả này.
+- Đã yêu cầu mở file handoff Windows trong panel phải của chat hiện tại; app trả queued, chưa xác nhận người dùng đã thấy file. Không điều khiển Windows hoặc chuyển credential, không kích hoạt agent khác.
+- Bổ sung CI vào status/handoff và ghi rõ recorder chỉ cần Node24, không cần cài lại server hoặc dependency app. Đây là cập nhật tài liệu sau kiểm chứng; không lặp test/build. Bước còn lại phải chạy nơi có MCP Windows và thu đủ ba ngày thật.

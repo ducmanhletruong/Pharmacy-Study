@@ -2,6 +2,8 @@
 
 Ngày chuẩn bị: 2026-11-12 (Asia/Saigon). Chưa chạy truy vấn kiến thức từ Cloud. Chủ dự án xác nhận nguồn trong năm notebook được phép dùng cá nhân, không công khai giáo trình. Windows đã gọi notebook_list thành công (47 notebook); không cần đăng nhập lại.
 
+Recorder/validator chỉ cần Node.js 24 theo `.nvmrc`; không cần pnpm install, Python venv mới hoặc build app để ghi capture. Dùng MCP Windows hiện có, không cài lại server nếu kết nối đang hoạt động.
+
 ## Nội dung gửi vào chat local đang có MCP
 
 Đoạn dưới đây giao việc cho phiên Windows; chỉ có hiệu lực khi chủ dự án gửi ở đó. Agent Cloud chưa gửi hoặc thực thi thay.
