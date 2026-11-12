@@ -28,7 +28,7 @@ jobs:
       - name: Install isolated spike dependency
         run: npm --prefix spikes ci --ignore-scripts --no-audit --no-fund
       - name: Validate evidence checker and LLM evaluator
-        run: node --test spikes/notebooklm/validate.test.mjs spikes/llm-eval/evaluate.test.mjs
+        run: node --test spikes/notebooklm/validate.test.mjs spikes/notebooklm/record.test.mjs spikes/llm-eval/evaluate.test.mjs
       - name: Check MCP result classification without accounts or network
         run: python3 -m unittest discover -s spikes/notebooklm -p 'test_probe_mcp.py'
       - name: Render ten synthetic structures in independent processes

@@ -8,26 +8,30 @@ Repo GitHub ban đầu chỉ có một commit README thay vì rỗng hoàn toàn
 
 ## P01 hiện tại
 
-| ID              | Điều còn thiếu                                                            | Ảnh hưởng                   | Cách gỡ                                                                                           |
-| --------------- | ------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------- |
-| MCP-GOOGLE-AUTH | Server đã nối/đăng ký; notebook_list thật trả chưa xác thực Google        | P01-T01 live access         | Mở lại nlm login và hoàn tất đăng nhập trực tiếp trên Desktop Cloud; không gửi cookie/password    |
-| MCP-3DAYS       | Chưa có observation thật                                                  | Cổng P01-T01                | Chạy năm chủ đề cùng nguồn trên ít nhất ba ngày khác nhau; runbook/validator đã sẵn sàng          |
-| OPENAI-ACCESS   | Chưa có entitlement/credit grant/OAuth token được cấp cho app trong Cloud | P01-T04 xác minh model thật | Chọn luồng hỗ trợ chính thức theo ADR-0010; cấu hình qua settings, không gửi token/key trong chat |
+| ID               | Điều còn thiếu                                                              | Ảnh hưởng                   | Cách gỡ                                                                                           |
+| ---------------- | --------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------- |
+| MCP-CLOUD-ACCESS | Cloud chưa xác thực; Windows list thành công theo chủ dự án (47 notebook)   | Chỉ gọi trực tiếp từ Cloud  | Tiếp tục kiểm chứng P01 bằng tay tại Windows; không cần đăng nhập Cloud lại                       |
+| MCP-3DAYS        | Chưa có observation kiến thức/citation thật; quyền dùng cá nhân đã xác nhận | Cổng P01-T01                | Chạy tại Windows theo docs/spikes/notebooklm-windows-handoff.md; recorder/validator đã có         |
+| OPENAI-ACCESS    | Chưa có entitlement/credit grant/OAuth token được cấp cho app trong Cloud   | P01-T04 xác minh model thật | Chọn luồng hỗ trợ chính thức theo ADR-0010; cấu hình qua settings, không gửi token/key trong chat |
 
 Q1 phần cho phép MCP bên thứ ba đã xác nhận, tài khoản cá nhân. Người dùng nói đã nối NotebookLM, nhưng điều đó chưa tạo tool callable trong chat Cloud này. Không coi dữ liệu unit test hoặc reference benchmark là bằng chứng đã truy cập account.
 
+### Cập nhật Windows — 2026-11-12
+
+Chủ dự án cung cấp kết quả notebook_list thành công trên Windows, tài khoản có 47 notebook, chỉ đọc; đã đối chiếu lịch sử call chat local. Quyền dùng nguồn năm notebook cho học tập cá nhân, không công khai giáo trình, đã xác nhận trực tiếp. Còn thiếu kiến thức/citation và ba ngày. Các mô tả Cloud timeout dưới đây là lịch sử riêng của Cloud, không yêu cầu đăng nhập lặp lại. Cloud không phải điều kiện bắt buộc cho kiểm chứng bằng tay P01-T01. Tiếp tục theo handoff Windows; chưa tự chạy hoặc gửi việc sang agent local.
+
 ## Các phase sau P01 (chưa triển khai)
 
-| ID          | Thông tin cần có                                                | Chặn                                                               | Trạng thái     |
-| ----------- | --------------------------------------------------------------- | ------------------------------------------------------------------ | -------------- |
-| APPROVAL-01 | Tiếp tục theo từng phase và quyết định nghiệp vụ tương ứng      | P01 đã được cho phép bằng lệnh tiếp tục; phase sau chưa triển khai | P01 AUTHORIZED |
-| Q1          | MCP bên thứ ba đã cho phép; còn xác minh server/nguồn thực tế   | P01-T01 live, P06                                                  | PARTIAL        |
-| Q2          | Cấu trúc đề, đề cương, đề cũ, quy tắc chấm và danh pháp         | P05, P07, P08, P10                                                 | OPEN           |
-| Q3          | Một người, cả lớp hay công khai                                 | P03                                                                | OPEN           |
-| Q5          | Ngân sách hosting/AI và nhà cung cấp LLM ưu tiên                | P01, P06, P12                                                      | OPEN           |
-| Q6          | Luồng sinh/duyệt, chính sách nguồn web và giấy phép hình        | P06                                                                | OPEN           |
-| D-01        | PostgreSQL lưu ngân hàng câu hỏi, NotebookLM là nguồn kiến thức | Phase dữ liệu tương ứng                                            | PROPOSED       |
-| ASSET-01    | Hình giải phẫu có nguồn và giấy phép rõ ràng                    | P09                                                                | OPEN           |
+| ID          | Thông tin cần có                                                                        | Chặn                                                               | Trạng thái                            |
+| ----------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------- |
+| APPROVAL-01 | Tiếp tục theo từng phase và quyết định nghiệp vụ tương ứng                              | P01 đã được cho phép bằng lệnh tiếp tục; phase sau chưa triển khai | P01 AUTHORIZED                        |
+| Q1          | MCP bên thứ ba và quyền dùng nguồn cá nhân đã xác nhận; còn kiểm chứng citation/ba ngày | P01-T01 live, P06                                                  | DECISION CONFIRMED / EVIDENCE PENDING |
+| Q2          | Cấu trúc đề, đề cương, đề cũ, quy tắc chấm và danh pháp                                 | P05, P07, P08, P10                                                 | OPEN                                  |
+| Q3          | Một người, cả lớp hay công khai                                                         | P03                                                                | OPEN                                  |
+| Q5          | Ngân sách hosting/AI và nhà cung cấp LLM ưu tiên                                        | P01, P06, P12                                                      | OPEN                                  |
+| Q6          | Luồng sinh/duyệt, chính sách nguồn web và giấy phép hình                                | P06                                                                | OPEN                                  |
+| D-01        | PostgreSQL lưu ngân hàng câu hỏi, NotebookLM là nguồn kiến thức                         | Phase dữ liệu tương ứng                                            | PROPOSED                              |
+| ASSET-01    | Hình giải phẫu có nguồn và giấy phép rõ ràng                                            | P09                                                                | OPEN                                  |
 
 Q4 mặc định A-03 (responsive, online); Q7 hạn thi/MVP chưa chặn. Không tự quyết thay chủ dự án; không yêu cầu secret qua chat.
 

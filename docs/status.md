@@ -14,21 +14,21 @@ Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P01 — PARTIAL / BL
 
 ## Bảng phase
 
-| Phase | Trạng thái        | Điều kiện trước khi bắt đầu                                                     |
-| ----- | ----------------- | ------------------------------------------------------------------------------- |
-| P00   | DONE              | Local, clean clone và GitHub Actions P00 đều pass; PR #1 đang draft, chưa merge |
-| P01   | PARTIAL / BLOCKED | RDKit và quyết định local đạt; chờ MCP thật/ba ngày và quyền OpenAI/model run   |
-| P02   | NOT STARTED       | P00 xong, duyệt tài liệu; Q4 mặc định A-03                                      |
-| P03   | NOT STARTED       | P02 và Q3                                                                       |
-| P04   | NOT STARTED       | P03                                                                             |
-| P05   | NOT STARTED       | P04 và Q2                                                                       |
-| P06   | NOT STARTED       | P04, P01, Q1, Q5, Q6                                                            |
-| P07   | NOT STARTED       | P04 và Q2                                                                       |
-| P08   | NOT STARTED       | P04, P01-T02 và Q2                                                              |
-| P09   | NOT STARTED       | P04 và hình có giấy phép                                                        |
-| P10   | NOT STARTED       | P06, P07, P08, P09, Q2 và taxonomy                                              |
-| P11   | NOT STARTED       | P05 và P10                                                                      |
-| P12   | NOT STARTED       | P11, ADR-0006 và điều kiện phát hành                                            |
+| Phase | Trạng thái        | Điều kiện trước khi bắt đầu                                                       |
+| ----- | ----------------- | --------------------------------------------------------------------------------- |
+| P00   | DONE              | Local, clean clone và GitHub Actions P00 đều pass; PR #1 đang draft, chưa merge   |
+| P01   | PARTIAL / BLOCKED | Windows list thành công; còn kiến thức/citation ba ngày và quyết định/tích hợp AI |
+| P02   | NOT STARTED       | P00 xong, duyệt tài liệu; Q4 mặc định A-03                                        |
+| P03   | NOT STARTED       | P02 và Q3                                                                         |
+| P04   | NOT STARTED       | P03                                                                               |
+| P05   | NOT STARTED       | P04 và Q2                                                                         |
+| P06   | NOT STARTED       | P04, P01, Q1, Q5, Q6                                                              |
+| P07   | NOT STARTED       | P04 và Q2                                                                         |
+| P08   | NOT STARTED       | P04, P01-T02 và Q2                                                                |
+| P09   | NOT STARTED       | P04 và hình có giấy phép                                                          |
+| P10   | NOT STARTED       | P06, P07, P08, P09, Q2 và taxonomy                                                |
+| P11   | NOT STARTED       | P05 và P10                                                                        |
+| P12   | NOT STARTED       | P11, ADR-0006 và điều kiện phát hành                                              |
 
 ## Kiểm chứng thực tế
 
@@ -58,12 +58,12 @@ Không chạy browser e2e, migration, auth, pipeline AI hoặc test nghiệp v�
 
 Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục. Không bắt đầu P02 hoặc sửa code sản phẩm trong lượt này.
 
-| Task    | Trạng thái                    | Bằng chứng / còn thiếu                                                                                                           |
-| ------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| P01-T01 | MCP CONNECTED / AUTH REQUIRED | Codex đã có server, stdio initialize/tools/list pass; notebook_list thật còn thiếu Google auth, chưa có dữ liệu ba ngày          |
-| P01-T02 | DONE                          | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                  |
-| P01-T03 | DONE — CURRENT STAGE          | ADR-0011 Accepted: tiếp tục local; production hosting hoãn, ADR-0006 vẫn OPEN                                                    |
-| P01-T04 | PREPARED / WAITING ACCESS     | OpenAI/Pro đã được chọn về nhà cung cấp; ADR-0010, prompt/evaluator và fixture đã có; chưa có API/plan grant hoặc model run thật |
+| Task    | Trạng thái                        | Bằng chứng / còn thiếu                                                                                                           |
+| ------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| P01-T01 | WINDOWS LIST OK / CAPTURE PENDING | Chủ dự án xác nhận 47 notebook và quyền dùng cá nhân; recorder/handoff Windows đã có; chưa có kiến thức/citation ba ngày         |
+| P01-T02 | DONE                              | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                  |
+| P01-T03 | DONE — CURRENT STAGE              | ADR-0011 Accepted: tiếp tục local; production hosting hoãn, ADR-0006 vẫn OPEN                                                    |
+| P01-T04 | PREPARED / WAITING ACCESS         | OpenAI/Pro đã được chọn về nhà cung cấp; ADR-0010, prompt/evaluator và fixture đã có; chưa có API/plan grant hoặc model run thật |
 
 ### Kiểm chứng P01
 
@@ -75,9 +75,13 @@ Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục.
 - Workflow `phase-01.yml` kiểm công cụ spike với Node/native tests và npm lockfile riêng. CI của spike chỉ chứng minh công cụ chạy được, không chứng minh live NotebookLM, quyền nguồn, chất lượng model hay provider entitlement. Kết quả CI thực tế ghi trong PR khi có.
 - Không build/test lại Next.js: không có thay đổi app, dependency workspace, DB schema hoặc build config của sản phẩm.
 
+### Kết quả Windows — 2026-11-12
+
+Chủ dự án cung cấp kết quả notebook_list thành công (47 notebook, chỉ đọc) tại Windows; đã đối chiếu lịch sử call của chat local. Quyền nguồn năm notebook cho cá nhân, không công khai giáo trình, đã được xác nhận. Có recorder tự tính hash/lưu lịch sử và handoff Windows sẵn để chạy; chưa có observation kiến thức thật. Không sửa report Cloud thành pass. Còn thiếu kiến thức/citation cho cùng năm chủ đề trên ba ngày; P01 vẫn PARTIAL / BLOCKED.
+
 ### Cổng chưa đạt
 
-Thiếu kết nối NotebookLM callable tại nơi chạy và hồ sơ năm chủ đề trên ba ngày; đường truy cập OpenAI cần chốt/thiết lập thực tế; hosting giai đoạn hiện tại đã chọn local theo ADR-0011, production còn hoãn. P01 chưa DONE. ADR-0006/0007 chưa chuyển Accepted; các hồ sơ bổ sung không tự thay thế quyết định của chủ dự án.
+Còn thiếu hồ sơ kiến thức/citation cho năm chủ đề trên ba ngày; Windows list đã thành công theo chủ dự án, Cloud chưa có account auth riêng. Đường truy cập OpenAI cần chốt/thiết lập thực tế; hosting giai đoạn hiện tại đã chọn local theo ADR-0011, production còn hoãn. P01 chưa DONE. ADR-0006/0007 chưa chuyển Accepted; các hồ sơ bổ sung không tự thay thế quyết định của chủ dự án.
 
 ## Phạm vi kết thúc
 

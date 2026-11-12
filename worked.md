@@ -246,3 +246,21 @@ Chủ dự án yêu cầu ưu tiên tìm cách nối MCP. Tiếp tục P01-T01: 
 ### Kiểm chứng và hoàn tác
 
 Bốn unit test parser đạt; live MCP handshake/catalog và auth-required outcome đã kiểm chứng. Không rebuild/test app hoặc lặp RDKit. Để hoàn tác cấu hình môi trường, chỉ xóa server pharmacy-notebooklm bằng codex mcp remove sau khi kiểm tra nó còn là server của tác vụ này; không xóa cấu hình khác. Không xóa state/profile có tài khoản thật nếu chưa được yêu cầu. Thay đổi repo có thể revert riêng commit kết nối, không cần migration/DB rollback. CI và PR được cập nhật sau commit; chỉ ghi pass khi có kết quả.
+
+## 2026-11-12 — Ghi nhận MCP Windows đọc được 47 notebook
+
+- Căn cứ: chủ dự án cung cấp kết quả notebook_list thành công, 47 notebook, chỉ đọc. Ghi đúng nguồn bằng chứng là báo cáo từ Windows; không tuyên bố agent Cloud tự gọi thành công.
+- Cập nhật docs/spikes/notebooklm-access.md, docs/blockers.md, docs/status.md, docs/decision-register.md và handoff.md: tiếp tục kiểm chứng P01-T01 bằng tay tại Windows; không yêu cầu đăng nhập Cloud lặp lại. Giữ nguyên report probe Cloud chưa xác thực và lịch sử kiểm tra.
+- Còn thiếu truy vấn kiến thức/citation, quyền dùng từng nguồn, cùng năm chủ đề trên ba ngày và model run thật. Không đánh dấu P01 DONE hoặc bắt đầu phase sau.
+- Kiểm tra: đọc diff và git diff --check cho thay đổi Markdown; không chạy test/build vì không đổi logic theo AGENTS.md.
+- Ngoài plan: không có thay đổi code, dependency, cấu hình MCP hoặc credential; chỉ điều chỉnh hồ sơ bàn giao sau kết quả kết nối. Không lấy dữ liệu notebook hoặc phiên Google. Có thể hoàn tác riêng diff tài liệu, không tác động tài khoản/runtime.
+
+## 2026-11-12 — P01-T01: chuẩn bị lượt kiến thức thật tại Windows
+
+- Chủ dự án yêu cầu tiếp tục; đã xác nhận quyền dùng tài liệu năm notebook cho học tập cá nhân, không công khai giáo trình. Ghi CHAT-08, không hỏi lại quyền nguồn cho cùng phạm vi.
+- Đọc turn gần nhất của đúng chat local “Kết nối Codex với NotebookLM”: có notebook_list trên gemini-notebook-mcp hoàn thành và kết luận 47 notebook. Không gửi tin nhắn hoặc kích hoạt agent local; chat Cloud vẫn không có tool NotebookLM callable.
+- Thêm spikes/notebooklm/record.mjs để nhập batch đã đối chiếu, tính SHA-256 UTF-8/số Unicode code point, nối capture và giữ lịch sử. Từ chối dữ liệu chưa grounded, thiếu nguồn/vị trí, thời gian tương lai, topic/day trùng theo giờ Việt Nam; chỉ đọc/ghi file nằm trong private bị Git ignore, lỗi JSON không in snippet riêng tư. Không gọi MCP hoặc tự nhận định tính đúng của nguồn.
+- Thêm record.test.mjs kiểm các rủi ro trên, cập nhật workflow P01 để chạy test mới. Thêm docs/spikes/notebooklm-windows-handoff.md với một đoạn giao việc cho chủ dự án gửi sang nơi có MCP; có thể dùng bản clone branch phase-01, không ghi đè checkout có thay đổi. Không dựng thêm tunnel/login/browser hoặc dependency.
+- Cập nhật runbook, status, blockers, decision-register và handoff. Chưa có observation kiến thức/citation, chưa đủ ba ngày; không mở phase sau.
+- Ngoài plan: helper ghi metadata là phần bổ sung cần thiết cho bộ kiểm chứng P01-T01 nhằm tránh tính hash hoặc sửa lịch sử bằng tay; không đổi mã sản phẩm, DB, runtime, billing hoặc credential. Hoàn tác bằng revert riêng commit, giữ nguyên hồ sơ private thật.
+- Kiểm chứng: 5/5 test recorder đạt, gồm CLI lưu ngày chưa đủ cổng và bảo toàn file khi từ chối; ESLint hai file JS exit 0; Prettier chỉ file thay đổi và git diff --check đạt. git check-ignore xác nhận capture/batch private bị bỏ qua. Không build/test lại app, RDKit hoặc Python parser vì không có thay đổi liên quan.

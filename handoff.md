@@ -17,6 +17,7 @@
 
 - RDKit JS/WASM: dựng 10 cấu trúc tổng hợp; SVG giống hash qua hai tiến trình, đo thời gian/kích thước và xử lý SMILES lỗi. Report thật ở `spikes/chem-render/report.json`.
 - NotebookLM: runbook kết nối, mẫu hồ sơ riêng tư, validator năm chủ đề qua ba ngày; 4 test của validator đạt. Template trống bị từ chối đúng exit 2.
+- Đã thêm recorder nối observation/hash và [handoff Windows](docs/spikes/notebooklm-windows-handoff.md) chứa nội dung gửi vào chat local; script không gọi MCP hoặc tự đặt grounding. Chưa chạy batch kiến thức thật. Không tự gửi việc sang agent khác.
 - Hosting: ADR-0009 so sánh local, Render + Neon preview free và paid; nguồn chính thức, hạn chế cold start/backup và phần chưa quyết định.
 - OpenAI: ADR-0010 phân biệt dùng tài khoản hiện có, SIWC/plan usage và API credits Pro nếu đủ điều kiện; chưa gọi API hoặc thay billing.
 - LLM evaluator offline: 5 fixture tổng hợp có nhãn năm môn, prompt export, kiểm đáp án/citation và 2 test các ca từ chối. Reference self-check 5/5 không phải model evaluation.
@@ -24,11 +25,12 @@
 
 ## Kết nối NotebookLM — cập nhật mới nhất
 
+- Ngày 2026-11-12 chủ dự án cung cấp kết quả từ Windows: notebook_list thành công, tài khoản có 47 notebook, chỉ đọc. Đã đối chiếu call hoàn thành trong turn mới nhất của đúng chat local; không phải call trực tiếp từ Cloud. Quyền dùng tài liệu năm notebook cho học tập cá nhân, không công khai giáo trình, đã được chủ dự án xác nhận. Tiếp tục P01-T01 bằng tay ở chat local “Kết nối Codex với NotebookLM”; không yêu cầu đăng nhập Cloud lại.
 - Codex CLI trong Cloud đã được đăng ký server `pharmacy-notebooklm`; chỉ bật notebook_list/notebook_get. Cấu hình global hiện tại được giữ nguyên các mục khác; không sửa config trên máy riêng của người dùng.
 - CLI package 0.16.2 ở `/workspace/.pharmacy-notebooklm/venv`; state riêng ở `/workspace/.pharmacy-notebooklm/state` (0700), profile pharmacy-personal. Không nằm trong Git.
 - MCP initialize và list 55 tool thành công. Server reported version 4.1.8 là framework, không phải CLI package version.
 - Lệnh notebook_list thật trả chưa có Google auth. Browser auth đã mở đúng trang NotebookLM nhưng timeout sau 300 giây, cửa sổ auth đã đóng; chưa có account session đã xác minh.
-- Bước tiếp: khi chủ dự án sẵn sàng, mở lại nlm login với DISPLAY/XAUTHORITY của Desktop hiện tại, người dùng Take over để đăng nhập Google, rồi chạy probe_mcp.py kiểm notebook_list. Không thu cookie/mật khẩu qua chat hoặc copy credential Desktop.
+- Bước tiếp tại Windows: chủ dự án gửi đoạn giao việc trong docs/spikes/notebooklm-windows-handoff.md ở chat local đang có MCP. Xác định notebook/năm chủ đề thật, dùng căn cứ quyền nguồn đã xác nhận rồi lấy trích đoạn kèm vị trí nguồn; đối chiếu thật và dùng record.mjs nối capture riêng. Lặp cùng năm chủ đề trên ba ngày khác nhau. Cloud auth là phương án riêng chưa hoàn tất, không cần lặp lại hoặc copy credential Desktop.
 - Cấu hình global CLI không tự hot-load tool vào chat hiện tại; probe SDK chạy trực tiếp là đường kiểm chứng đang dùng. Tài liệu đường Desktop/Secure MCP Tunnel trong docs/spikes/notebooklm-access.md.
 
 Report đã lọc: spikes/notebooklm/connection-report.json. Không coi transport/catalog hoặc isError=false là xác thực account thành công. Cần dữ liệu năm chủ đề thật qua ba ngày sau khi đăng nhập.
@@ -47,7 +49,7 @@ Trong Cloud thêm `--cache /workspace/.npm-cache` cho npm ci nếu home không g
 
 ## Phần còn thiếu / giới hạn
 
-P01-T01 chờ live MCP và bằng chứng ba ngày; P01-T03 đã chốt local cho giai đoạn hiện tại, production hoãn; P01-T04 chờ cách cấp quyền OpenAI và batch model thật. Chi tiết ở `docs/blockers.md`, `docs/status.md`, `docs/decision-register.md`.
+P01-T01 đã có kết quả list Windows do chủ dự án cung cấp, còn chờ kiến thức/citation và bằng chứng ba ngày; P01-T03 đã chốt local cho giai đoạn hiện tại, production hoãn; P01-T04 chờ cách cấp quyền OpenAI và batch model thật. Chi tiết ở `docs/blockers.md`, `docs/status.md`, `docs/decision-register.md`.
 
 Ưu tiên local và dùng tài khoản Pro không tự chứng minh API credits đã active hoặc token app đã được cấp. Có thể tạo prompt để chạy tại nơi được phép dùng tài khoản rồi nhập output vào evaluator; bước này chưa phải API adapter P06. Không tự claim credit, chọn model trả phí, auto-recharge hoặc tạo hosting.
 
@@ -67,4 +69,4 @@ CI cuối cho code công cụ `2e8a5d6` đã success: https://github.com/ducmanh
 
 ## Kiểm chứng bổ sung cho kết nối MCP
 
-Bốn test classifier Python đạt, gồm auth business error với isError=false, list rỗng hợp lệ, JSON text fallback và loại raw private data khỏi report. Probe live đã trả transport_connected=true, notebook_access_verified=false, reason=authentication_required. Không cần build/test lại Next.js. User login là phần còn thiếu thực tế; thư viện đã cài và Codex đã được cấu hình.
+Bốn test classifier Python đã đạt, gồm auth business error với isError=false, list rỗng hợp lệ, JSON text fallback và loại raw private data khỏi report. Probe Cloud trước đó trả transport_connected=true, notebook_access_verified=false, reason=authentication_required; giữ nguyên bằng chứng này. Kết quả Windows mới không thay đổi report Cloud. Lượt tiếp tục thêm recorder: 5/5 test đạt, lint hai file JS và diff check đạt; capture/batch private được git ignore. Không build/test lại app; CI cho code mới chưa được xác nhận.
