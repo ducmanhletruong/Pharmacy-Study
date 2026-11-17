@@ -43,3 +43,11 @@ Ngày dùng múi giờ Asia/Saigon. Không coi ASSUMPTION/PROPOSED là quyết �
 - **MCP-WINDOWS — HISTORY CHECKED:** đã đọc turn gần nhất của đúng chat local, có notebook_list hoàn thành trên gemini-notebook-mcp và kết luận 47 notebook. Không kích hoạt agent khác, không thay MCP Windows. Năm chủ đề cụ thể và version/transport Windows phải lấy từ lượt chạy thật.
 - **LLM-EXPLORATORY — RECORDED:** năm output do Codex sinh trong chat đạt kiểm tra cơ học của evaluator trên nguồn tổng hợp (5/5). Đánh giá không mù, model/version và usage/cost chưa có số xác minh, không phải benchmark chuyên môn hoặc bằng chứng API/plan grant. Report: spikes/llm-eval/codex-session-report.json. ADR-0007/0010 chưa đổi Accepted.
 - **MCP-FIRST-RUN — PARTIAL / ADMIN REVIEW PENDING:** chủ dự án cung cấp kết quả lượt đầu tại Windows, clone riêng phase-01 ở c50fda9. 5/5 query thành công; 3 observation của Hóa hữu cơ 2, KTCT và Vi sinh được agent đối chiếu nguồn và recorder lưu. Hóa phân tích và Giải phẫu sinh lý thiếu citation metadata, pending. Validator exit 2, 0/3 ngày đủ năm chủ đề. Lịch sử chat local xác nhận năm notebook_query hoàn thành và final khớp báo cáo; Cloud không đọc raw capture/nguồn. Đọc điều khoản và grounding do agent thực hiện, chưa được admin duyệt. Chưa nâng P01-T01 hoặc P01 thành DONE.
+
+## 2026-11-17 — kết thúc spike và tiếp tục P02
+
+- MCP-3DAYS: 15 observation, đủ các ngày 12/11, 13/11 và 17/11; exit 0 theo chat Windows. Không còn pending citation của lượt đầu. Cloud chỉ đọc lịch sử/final, không tự chạy validator trên capture private.
+- CHAT-09 CONFIRMED: chủ dự án trả lời “Đã review và duyệt cả grounding lẫn điều khoản”. P01-T01 DONE.
+- ADR-0006 Accepted phạm vi local theo quyết định đã có ADR-0011; production vẫn hoãn. ADR-0007 Accepted lựa chọn OpenAI đã được chủ dự án chốt; không coi là đã có API entitlement.
+- Đính chính ranh giới: P01 yêu cầu hồ sơ quyết định và spike, không yêu cầu app gọi API AI thật. Tích hợp đó thuộc P06; những mô tả trước coi API credential là blocker P02 quá chặt so với plan. Không thay đổi plan gốc hoặc âm thầm chốt ngân sách/model.
+- Chủ dự án đã yêu cầu tiếp tục bước tiếp theo; được bắt đầu P02 sau cổng P01, giữ giới hạn một phase sản phẩm.

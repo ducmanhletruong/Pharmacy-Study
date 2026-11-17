@@ -1,5 +1,13 @@
 # Trạng thái triển khai
 
+## Cập nhật 2026-11-17 — cổng P01
+
+Windows đã có 15 observation đủ năm chủ đề trên ba ngày 12/11, 13/11, 17/11; recorder/validator exit 0 theo báo cáo cuối của chat local và xác nhận chủ dự án. Hai mục pending cũ đã được bổ sung ở Windows; không còn là blocker hiện tại. Chủ dự án đã tự review và duyệt grounding/vị trí nguồn cùng điều khoản ngày 17/11. Cloud đối chiếu báo cáo/lịch sử, không tải nguồn hoặc capture private.
+
+P01-T01 DONE; P01 kết thúc trong phạm vi spike/local. ADR-0006 áp dụng quyết định local đã duyệt, ADR-0007 ghi lựa chọn OpenAI đã xác nhận. API credential/model/chi phí và hosting production vẫn mở cho phase tích hợp/phát hành; không tự tạo điều kiện API hoạt động để chặn P02. Các đoạn ngày 12/11 bên dưới là lịch sử, được cập nhật này thay thế về trạng thái.
+
+Chủ dự án yêu cầu tiếp tục bước tiếp theo: P02 là phase thực thi kế tiếp, chỉ dữ liệu tổng hợp và user dev, không AI runtime hoặc nguồn giáo trình. Không merge PR/deploy. Môi trường Cloud vừa khôi phục không còn checkout/runtime cũ; đã clone đúng branch phase-01 vào /workspace/web-starter, không tác động Windows.
+
 Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P01 — PARTIAL / BLOCKED tại cổng tích hợp. P00 đã DONE; các phase sau P01 chưa bắt đầu.
 
 | Task    | Trạng thái | Bằng chứng / còn lại                                                               |

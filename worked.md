@@ -290,3 +290,11 @@ Bốn unit test parser đạt; live MCP handshake/catalog và auth-required outc
 - Windows đang có thay đổi public chưa commit/push và dữ liệu private bị ignore. Cloud chỉ cập nhật tóm tắt, chưa merge các thay đổi local đó; không thao tác working tree Windows hoặc yêu cầu upload raw nguồn. Hướng đọc remote dùng fetch/git show nếu cần, không pull/reset ghi đè local.
 - Ngoài plan: không có thay đổi mã hoặc chức năng; làm rõ phương pháp chẩn đoán metadata và ranh giới agent/admin để không báo cổng đạt sai. Hoàn tác riêng commit tài liệu, không ảnh hưởng capture private hoặc các chỉnh sửa chưa commit trên Windows.
 - Kiểm chứng: chỉ format file Markdown đã sửa, đọc diff và git diff --check; không chạy test/build hoặc lặp CI spike vì không đổi logic/dependency/workflow. Kết quả live dựa trên báo cáo và lịch sử call local, không phải Cloud tự chạy lại validator.
+
+## 2026-11-17 — hoàn tất cổng P01 theo bằng chứng Windows
+
+Đối chiếu ba turn cuối chat local: ngày 17/11 đủ 15 observation/ba ngày và exit 0. Ngày 13/11 từng lỗi auth, refresh_auth khôi phục và 5 query đạt; không xác nhận phiên vô thời hạn. Chủ dự án trực tiếp xác nhận đã duyệt grounding và điều khoản. Ghi kết quả tổng hợp, không lấy nguồn/credential/private capture.
+
+Chuẩn bị ADR-0006/0007 theo đúng quyết định local/OpenAI đã có, giữ production/API integration chưa xác minh. Đính chính việc tự thêm điều kiện API hoạt động vào cổng P01; plan chỉ yêu cầu hồ sơ quyết định/spike, adapter ở P06. Không thay plan gốc, không tạo billing. Chủ dự án yêu cầu bước kế tiếp nên chuyển P02; không tự merge PR.
+
+Môi trường Cloud được khôi phục với /workspace không có repo cũ. Đã clone branch phase-01 từ remote, giữ nguyên Windows có dữ liệu private/chỉnh sửa riêng. Đây là phát sinh môi trường, không phục hồi phiên Google hoặc package MCP cũ. Chỉ kiểm diff cho tài liệu, không test/build P01 lại.

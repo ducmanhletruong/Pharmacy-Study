@@ -1,5 +1,13 @@
 # P01-T01 — Kiểm chứng kết nối NotebookLM
 
+## Cập nhật 2026-11-17 — cổng P01
+
+Windows đã có 15 observation đủ năm chủ đề trên ba ngày 12/11, 13/11, 17/11; recorder/validator exit 0 theo báo cáo cuối của chat local và xác nhận chủ dự án. Hai mục pending cũ đã được bổ sung ở Windows; không còn là blocker hiện tại. Chủ dự án đã tự review và duyệt grounding/vị trí nguồn cùng điều khoản ngày 17/11. Cloud đối chiếu báo cáo/lịch sử, không tải nguồn hoặc capture private.
+
+P01-T01 DONE; P01 kết thúc trong phạm vi spike/local. ADR-0006 áp dụng quyết định local đã duyệt, ADR-0007 ghi lựa chọn OpenAI đã xác nhận. API credential/model/chi phí và hosting production vẫn mở cho phase tích hợp/phát hành; không tự tạo điều kiện API hoạt động để chặn P02. Các đoạn ngày 12/11 bên dưới là lịch sử, được cập nhật này thay thế về trạng thái.
+
+Chủ dự án yêu cầu tiếp tục bước tiếp theo: P02 là phase thực thi kế tiếp, chỉ dữ liệu tổng hợp và user dev, không AI runtime hoặc nguồn giáo trình. Không merge PR/deploy. Môi trường Cloud vừa khôi phục không còn checkout/runtime cũ; đã clone đúng branch phase-01 vào /workspace/web-starter, không tác động Windows.
+
 - Trạng thái: **Windows đã query 5/5 chủ đề ở lượt đầu; 3 observation đã được agent đối chiếu, 2 pending citation; 0/3 ngày hoàn tất, admin review PENDING**. Cloud chưa xác thực riêng.
 - Ngày: 2026-11-12 (Asia/Saigon).
 - Chủ dự án xác nhận cho dùng MCP bên thứ ba và NotebookLM là tài khoản cá nhân. Quyền dùng nguồn của năm notebook cho học tập cá nhân, không công khai giáo trình, được xác nhận trực tiếp ngày 2026-11-12. Server Windows là gemini-notebook-mcp theo lịch sử call; version/transport tại Windows vẫn cần ghi thực tế khi thu capture.
