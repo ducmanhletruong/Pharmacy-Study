@@ -2,7 +2,8 @@ name: Phase 02 practice
 
 on:
   pull_request:
-    branches: [main, phase-01]
+    # main is covered by the superset Phase 03 workflow after P03 lands.
+    branches: [phase-01]
 
 permissions:
   contents: read

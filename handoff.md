@@ -1,35 +1,29 @@
 # Bàn giao
 
-Cập nhật: 2026-11-17 (Asia/Saigon). Repo /workspace/web-starter, branch phase-02 dựa trên phase-01.
+Cập nhật: 2026-11-18 (Asia/Saigon). Worktree `/workspace/pharmacy-study-p03`, branch `phase-03`, base `phase-02`.
 
-## Trạng thái
+## Yêu cầu và kết quả
 
-P00 và P01 DONE trong phạm vi local/spike. P01-T01 đã có 15 observation của năm chủ đề qua 12/11, 13/11 và 17/11; owner trực tiếp duyệt grounding và điều khoản. Không còn yêu cầu chờ ba ngày hoặc xử lý hai pending cũ. Bằng chứng private ở Windows, Cloud chỉ đối chiếu final/lịch sử.
+Theo yêu cầu nêu và thực hiện bước tiếp theo, triển khai P03 cho **lớp được mời, Google** (Q3 đã xác nhận). P00–P02 DONE; P01 đủ 15 observation/ba ngày và owner đã duyệt, không yêu cầu chạy lại. P03 có code T01–T06 nhưng chưa DONE vì Google OAuth thật chưa cấu hình/kiểm; CI đang chuẩn bị. Không bắt đầu P04.
 
-P02 DONE: local và CI đã đạt. Chỉ một môn tổng hợp tự viết với 10 MCQ, user dev cố định. Không AI runtime, auth thật hoặc hosting production. Không bắt đầu P03.
+## Thay đổi
 
-## Đã thay đổi P02
+- Google OIDC/NextAuth stable, email verified + exact admin/invited allowlist; cookie JWT8h gắn DB session revoke/expiry/disabled, không lưu OAuth access/refresh token. Test provider chỉ nonproduction.
+- Authorize default deny, guard mọi route attempt và SQL user_id; admin không đọc attempt người khác. Admin API/page riêng, no-store, request ID.
+- Migration0002, auth identities/sessions, audit_logs append-only, rate counters; nhóm DB app_rw/migrator riêng. Helper provision local ghi credential sinh ngẫu nhiên vào file private, không in ra.
+- Origin/Host, body limit16KB, CSP nonce/security headers, rate limit PostgreSQL; launcher từ chối runtime credential đặc quyền và dev/test production.
+- Tests auth/ownership/audit/rate/header, CI phase-03. Patch hai bản picomatch dev để chặn advisory high chưa có upstream fix; chi tiết docs/security/dependency-hardening.md. Không nâng nền hoặc refactor phần ngoài P03.
 
-- packages/db: migration 0001 cho 9 bảng, migration checksum/lock, seed idempotent và revision snapshot; Drizzle SQL và PostgreSQL pool. Không xóa data/volume.
-- packages/core: validator và grading MCQ; đúng bốn label A/B/C/D và một đáp án đúng.
-- packages/api-contract: Zod request/response; API-01..06 trong app. Không gửi correct_answer/is_correct/explanation trong đề; chỉ feedback sau đáp án.
-- API có owner scope, Origin (loopback mặc định, APP_ORIGIN cho proxy), idempotency khóa theo user/key, khóa parent attempt để answer/submit không race; freeze đáp án và kết quả đã nộp.
-- UI chọn bộ/chủ đề, luyện từng câu, giải thích nguồn tổng hợp, lưu/resume bằng URL attempt, tổng kết chủ đề, KaTeX; kiểm desktop/mobile.
-- Launcher dev đọc .env; launcher production chặn AUTH_MODE=dev trước khi mở cổng, instrumentation kiểm độc lập. Không copy .env thật vào Git.
-- CI phase-02 gồm migration/seed lặp, unit/integration/contract/E2E, build, guard, audit và secret scan. CI f771a7b đã success: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44133096057 .
+## Kiểm tra thực tế
 
-## Cách chạy
+Local unit104/104, integration14/14, E2E Chromium8/8 (bao gồm luồng10câu/mobile cũ và login/logout/cross-user mới) đã đạt. Production build, guard dev/test, migration/seed rerun và runtime DB ít quyền đã đạt. E2E dùng provider thử, **chưa kiểm Google thật**. Audit raw high1/moderate1, high đã có patch/regression; kiểm cuối lint/format/audit/CI ghi thêm khi hoàn tất.
 
-Xem docs/runbooks/local-practice.md. Node24/pnpm11.25.0/Docker; tạo .env từ example nếu chưa có; pnpm install --frozen-lockfile; docker compose -f infra/docker-compose.yml up -d --wait; pnpm db:migrate; pnpm db:seed; pnpm dev. Mở http://localhost:3000. Không overwrite checkout Windows đang lưu capture private; dùng clone riêng phase-02 nếu cần.
+## Bước còn lại
 
-## Kiểm chứng
+1. Cấu hình Google OAuth Web client riêng và email thật trong `.env` private theo [runbook](docs/runbooks/google-login.md). Không gửi secret trong chat. Kiểm Google admin/member/outsider/logout rồi ghi bằng chứng, mới đóng cổng P03.
+2. CI và PR draft phase-03 base phase-02; không merge/deploy. Quản lý user UI ngoài phạm vi. P04 chờ giao sau cổng P03.
+3. API entitlement/model/billing OpenAI ở P06; gói Pro không tự cấp API credit. Hosting production vẫn hoãn. Quyền nguồn P01 chỉ cá nhân, chưa cho phân phối giáo trình cho lớp.
 
-Local: migration DB rỗng và seed/rerun đạt, unit 3/3, integration/contract 7/7, E2E Chromium 2/2 (10 câu/reload/result và mobile), production build đạt, check-production-guard exit 0. Audit: 0 high/critical, 1 moderate minimatch. Lint/format và gitleaks29 commit đạt. CI f771a7bc11b8e52753fa068cad2bb8ad2e5ba115 success; PR #3 draft, base phase-01: https://github.com/ducmanhletruong/Pharmacy-Study/pull/3 . Bổ sung sau code đã kiểm chỉ đổi Markdown. Không claim kiểm mọi browser, độ chính xác chuyên môn hoặc API AI.
+## Chạy và bảo toàn
 
-## Bước sau
-
-P02 đã kết thúc; chờ giao P03 và câu trả lời Q3 về phạm vi người dùng. OpenAI đã chốt nhà cung cấp; API entitlement/model/cost/OAuth còn mở cho P06. Hosting production hoãn theo quyết định local ADR-0011. Các PR trước giữ draft, không merge/deploy.
-
-## Bảo toàn và phát sinh
-
-Cloud vừa resume với workspace không còn checkout/runtime cũ: đã clone từ remote, không truy cập/copy phiên Google Windows. Docker volume ở Cloud mới tạo cho seed tổng hợp; không tác động máy riêng. Không cài lại MCP hay làm lại spike/RDKit. Plan gốc và AGENTS giữ nguyên. Nhật ký đầy đủ ở worked.md.
+Xem docs/runbooks/google-login.md. P03 dùng DB `pharmacy_study_p03` riêng; `.env` runtime app ít quyền, `.env.db` CLI maintenance (đều ignore/600). Không copy `.env.db` vào web/hosting. P02 checkout `/workspace/web-starter`, DB cũ và dev server3000 được giữ; auth E2E dùng3001. Không overwrite clone Windows chứa capture/cookie private. Không xóa Docker volume hoặc sửa SQL migration đã áp dụng; thay đổi schema sau bằng forward migration. Worked.md ghi đầy đủ phát sinh và lỗi kiểm chứng.

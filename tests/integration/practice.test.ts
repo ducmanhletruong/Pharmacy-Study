@@ -1,4 +1,8 @@
-import { loadLocalEnv } from '../../packages/db/src/env'
+import {
+  loadMaintenanceEnv,
+  getMaintenancePool,
+  closeMaintenance,
+} from '../../packages/db/src/maintenance'
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, expect, test } from 'vitest'
 import { DEV_USER_ID, getPool, closeDb } from '../../packages/db/src/client'
@@ -17,7 +21,7 @@ import { GET as read } from '../../apps/web/src/app/api/v1/attempts/[id]/route'
 import { PUT as answer } from '../../apps/web/src/app/api/v1/attempts/[id]/items/[position]/route'
 import { POST as submit } from '../../apps/web/src/app/api/v1/attempts/[id]/submit/route'
 
-loadLocalEnv()
+loadMaintenanceEnv()
 const ids: string[] = []
 const origin = 'http://localhost:3000'
 const context = (id: string) => ({ params: Promise.resolve({ id }) })
@@ -52,15 +56,21 @@ async function newAttempt(key = randomUUID(), extra = {}) {
   return { response, value }
 }
 beforeAll(() => {
+  process.env.RATE_LIMIT_ATTEMPT_CREATE = '10000'
+  process.env.RATE_LIMIT_ITEM_WRITE = '10000'
   process.env.AUTH_MODE = 'dev'
 })
 afterAll(async () => {
-  await getPool().query(
+  await getMaintenancePool().query(
     'DELETE FROM attempt_items WHERE attempt_id=ANY($1::uuid[])',
     [ids],
   )
-  await getPool().query('DELETE FROM attempts WHERE id=ANY($1::uuid[])', [ids])
+  await getMaintenancePool().query(
+    'DELETE FROM attempts WHERE id=ANY($1::uuid[])',
+    [ids],
+  )
   await closeDb()
+  await closeMaintenance()
 })
 test('contracts API-01/02 expose subject counts and a topic tree', async () => {
   const response = await list(req('/subjects'))
@@ -239,12 +249,12 @@ test('attempts remain attached to the original revision if current revision chan
   const { value: attempt } = await newAttempt(randomUUID(), { count: 1 })
   const item = attempt.items[0],
     rid = randomUUID()
-  await getPool().query(
+  await getMaintenancePool().query(
     "INSERT INTO question_revisions(id,question_id,rev_no,stem,explanation,content_hash,created_by) VALUES($1,$2,999,'temporary revision','test-only',$3,$4)",
     [rid, item.question_id, randomUUID(), DEV_USER_ID],
   )
   try {
-    await getPool().query(
+    await getMaintenancePool().query(
       'UPDATE questions SET current_revision_id=$1 WHERE id=$2',
       [rid, item.question_id],
     )
@@ -255,11 +265,14 @@ test('attempts remain attached to the original revision if current revision chan
       item.stem,
     )
   } finally {
-    await getPool().query(
+    await getMaintenancePool().query(
       'UPDATE questions SET current_revision_id=$1 WHERE id=$2',
       [item.revision_id, item.question_id],
     )
-    await getPool().query('DELETE FROM question_revisions WHERE id=$1', [rid])
+    await getMaintenancePool().query(
+      'DELETE FROM question_revisions WHERE id=$1',
+      [rid],
+    )
   }
 })
 test('dev identity is unavailable without dev mode and production rejects its configuration', async () => {

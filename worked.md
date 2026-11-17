@@ -334,3 +334,28 @@ Ngoài plan: launcher dev/start và regression Host/Origin là phần cần thi�
 - CI f771a7bc11b8e52753fa068cad2bb8ad2e5ba115 run44133096057 SUCCESS. Tất cả bước frozen install/lint/format/typecheck/migrate-empty/seed-rerun/unit3/integration7/E2E2/build/production-guard/audit-high/gitleaks đều success. Đây là build/code cuối, bao gồm sửa idempotency; không suy ra từ build local trước sửa đó.
 - P02 DONE, không có deployment hay P03. Thêm hướng dẫn local-practice cho Windows/Linux, giữ nguyên clone Windows có private capture/chỉnh sửa riêng. Ghi trạng thái mới nhất vào handoff/status/blockers/register; thay các dòng pending cũ, không xóa lịch sử worked.md.
 - Commit sau kiểm chứng này chỉ chứa Markdown về CI và bàn giao, kiểm diff trực tiếp, không chạy lại local test/build. Workflow GitHub có thể tự chạy theo sự kiện synchronize; không nới cổng hoặc sửa trust/approval để né kiểm tra.
+
+## 2026-11-18 — P03 danh tính, phân quyền, audit
+
+### Phạm vi
+
+User yêu cầu nêu bước kế tiếp và thực hiện; chốt Q3 lớp được mời/Google. Triển khai T01–T06: auth/session/allowlist, authorize default deny, owner guards, audit và DB roles, Origin/CSP/limit, kiểm auth. Không P04, UI quản lý user, public signup, AI hoặc deploy. ADR-0008 cập nhật theo quyết định thật.
+
+### Thực hiện và kiểm chứng
+
+NextAuth4.24.15 stable được kiểm compatibility Next16/React19 và handler await headers/cookies; không patch thư viện auth. Identity không tự liên kết chéo provider/email, Google email verified; session8h có revoke DB, whitelist và role được kiểm lại. Không ghi access/refresh token. Ma trận96 ô quyền + default deny, unit tổng104, integration14 với PG thật, E2E8 Chromium testprovider đã đạt; P02 10câu/mobile vẫn đạt. Admin không mặc nhiên đọc attempt người khác. App role bị từ chối UPDATE/DELETE/TRUNCATE audit và DDL. Bodystream cap, requestID, no-store, Origin/Host và nonce CSP được kiểm; inline style cần KaTeX. Production build đạt, startup guard dev/test đạt. Không claim đăng nhập Google thật: thiếu OAuth client và email cấu hình private, runbook đã chuẩn bị.
+
+### Phát sinh ngoài plan và sửa lỗi
+
+- Tạo worktree phase-03 và DB pharmacy_study_p03 riêng để bảo toàn checkout/server3000/DB P02; không copy auth Windows. Role login nằm mức cluster nhưng grant/ownership chỉ DB P03. Helper provision localhost là công cụ cần thiết cho app/migrator tách biệt, không xoay credential role có sẵn; giữ các dòng env không liên quan, file private600. CLI maintenance đọc .env.db, launcher lọc credential đặc quyền khỏi child. Runtime probe kiểm session_user thật, không chỉ current_role. Runbook hướng dẫn khôi phục ADMIN_EMAILS và cấu hình private.
+- Thêm dependency cần auth (next-auth, zod/web, core workspace) và exports DB, sửa launcher đọc env + PORT/preflight; không nâng framework nền. Type lỗi UUID inference được sửa bằng string explicit; lint location.assign trong login được đổi router replace/refresh. Launcher gặp TDZ runtimeEnv, đã sửa trước chạy guard đạt.
+- Integration cleanup ban đầu dùng app_rw DELETE nên bị từ chối đúng thiết kế; chuyển cleanup/fixture snapshot sang maintenance pool, không tăng quyền web. E2E dùng tài khoản .invalid và secret synthetic riêng, không Google/cookie thật. CI cần bootstrap migration trước tạo login; phase-02 main job được thay bằng phase-03 superset để tránh chạy đường bootstrap cũ trên role mới.
+- Audit phát sinh GHSA-fc5q-39xc-vjpf high picomatch<=4.0.7, chưa có upstream patched release. Kiểm advisory/PR liên quan và không áp dụng PR không liên quan. Thêm PNPM patches cho2.3.2/4.0.7 chặn +()/*() extglob; manifest hash, verifier resolve module thật, child timeout2s, classifier fail closed exactID/version/devpath. Raw audit vẫn high1/moderate1, không ignore chung. Bốn classifier tests và verifier hai bản đạt. Đây là hardening tối thiểu cần cho cổng security, có hạn chế glob được ghi doc.
+- Một probe regex ban đầu chạy trực tiếp trên main Node bị treo CPU; đã xác định đúng PID probe của tác vụ và TERM. Không chạm process khác/dữ liệu. Sau đó mọi probe chạy process con timeout và SIGKILL giới hạn2s. Không lặp probe không giới hạn. Lệnh patch-commit ban đầu dùng --store-dir không được hỗ trợ, đổi --config.store-dir.
+- Sau patch, pnpm auto dependency check đòi purge modules và abort vì noTTY/store khác. Chạy lại frozen install với đúng store P02 và CI=true để đồng bộ patch, không sửa node_modules bằng tay; các lệnh kiểm bị abort không được tính pass.
+
+Hoàn tác code bằng revert task commits, không xóa DB volume/capture private. Migration0002 đã áp dụng không sửa; cần forward migration để đổi schema. Hoàn tác hardening khi chưa có thay thế tương đương sẽ khôi phục rủi ro và làm cổng high thất bại. Chưa commit/push Google credentials, không tạo billing hay hosting. Kết quả kiểm cuối/CI bổ sung bên dưới khi có thật.
+
+### Kiểm cuối trước PR
+
+Lint, format:check, git diff --check, unit104/104, classifier4/4, verifier patch và audit:security đều exit0. Raw audit high1/moderate1, unmitigated rỗng sau xác minh patch. Provision rerun sau sửa bảo toàn env đạt. Pnpm11 cần env pnpm_config_store_dir (npm_config không có tác dụng với wrapper hiện tại); frozen install với store đúng đạt, không đổi storeDir trong repo. Tách6 commit theo task; Google live vẫn pending, CI sẽ xác minh code cuối từ môi trường sạch.
