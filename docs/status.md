@@ -70,3 +70,5 @@ CI code `a4fc5f973ca8ce808a48a4bde4072c31102d1caf` SUCCESS: https://github.com/d
 CR DB: kiểm ngược trước0003 có6/7 test đỏ,1test unique-index cũ xanh; migration từ chối data sai với23514 và rollback. DB verified rỗng migrate/seed/rerun đạt,7test gốc CR đạt; DB upgrade riêng seed bằng code P02 cũ rồi áp0003/seed mới đạt. Không động DB P02/P03 hiện có.
 
 CR kiểm local: integrity10 test gồm7 từ CR và3 bổ sung cho superseded/attempted/draft choices; migration từ chối data cũ sai và không để lại registry0003/cột mới (đều count0). Unit106 và integration27 đạt. Query-counter cho1/10 câu đo3query tổng (owner,subject,items+choices), chỉ1query lấyitems/choices, giữredaction. E2E/build/CI còn đang thực hiện.
+
+CR readAttempt đã gộp choices vào queryitems; snapshot test rollback-only qua DB context, không disable trigger. API tests count/unavailable/payload/partial-submit đạt.
