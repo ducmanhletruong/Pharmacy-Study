@@ -1,13 +1,13 @@
 # Trạng thái triển khai
 
-Cập nhật: 2026-11-17 (Asia/Saigon). P02 DONE; P03 chưa bắt đầu. Không triển khai production.
+Cập nhật: 2026-11-17 (Asia/Saigon). P02 DONE; P03 IN PROGRESS, lớp được mời/Google đã chốt. Không triển khai production.
 
 | Phase | Trạng thái                 | Bằng chứng / còn lại                                                                                                               |
 | ----- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | P00   | DONE                       | Next.js/pnpm/TS strict, PostgreSQL ghim digest; CI run 43074691952; PR #1 draft                                                    |
 | P01   | DONE — phạm vi spike/local | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có |
 | P02   | DONE                       | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                       |
-| P03   | NOT STARTED                | Cần chốt Q3 về phạm vi người dùng, sau P02                                                                                         |
+| P03   | NOT STARTED                | Q3 đã chốt; P03 đang triển khai                                                                                         |
 | P04   | NOT STARTED                | Sau P03                                                                                                                            |
 | P05   | NOT STARTED                | Sau P04, Q2                                                                                                                        |
 | P06   | NOT STARTED                | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                   |
@@ -52,3 +52,7 @@ Plan upload giữ nguyên; phát sinh và lịch sử chi tiết ở worked.md. 
 CI code `f771a7bc11b8e52753fa068cad2bb8ad2e5ba115` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44133096057 . Frozen install, lint/format, typecheck, migration DB rỗng và seed/rerun, unit3/integration7/E2E2, production build, startup guard, audit mức high và gitleaks đều success. PR #3: https://github.com/ducmanhletruong/Pharmacy-Study/pull/3 (draft, base phase-01).
 
 Lượt sau CI chỉ cập nhật Markdown bàn giao/kết quả; không đổi code đã kiểm. P02 DONE, dừng cổng phase. Không tự mở P03 hoặc merge/deploy. Hướng dẫn chạy: docs/runbooks/local-practice.md.
+
+## P03 task log
+
+- T02: authorize default deny và ma trận96 ô +1 ca phủ nhận đã triển khai/kiểm local; các task tích hợp tiếp theo đang thực hiện.
