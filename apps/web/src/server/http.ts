@@ -28,7 +28,10 @@ export async function handle(
       throw new PracticeError('forbidden', 403, 'Bạn không có quyền truy cập')
     if (!['GET', 'HEAD'].includes(request.method)) {
       assertOrigin(request)
-      if (Number(request.headers.get('content-length') ?? 0) > 16384)
+      if (
+        Number(request.headers.get('content-length') ?? 0) >
+        config.MAX_BODY_BYTES
+      )
         throw new PracticeError('payload_too_large', 413, 'Nội dung quá lớn')
       const path = new URL(request.url).pathname
       const kind =

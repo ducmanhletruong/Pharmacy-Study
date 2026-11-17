@@ -74,3 +74,5 @@ CR kiểm local: integrity10 test gồm7 từ CR và3 bổ sung cho superseded/a
 CR readAttempt đã gộp choices vào queryitems; snapshot test rollback-only qua DB context, không disable trigger. API tests count/unavailable/payload/partial-submit đạt.
 
 CR CI trigger phase-03 superset mở main/phase-*; build cấu hình APP_ORIGIN riêng, giữ phase-02 legacy tách biệt. Chờ PR thật để kiểm trigger.
+
+CR config: pool và body có validate/cap, DEV_HOST loopback mặc định, production bắt buộcAPP_ORIGIN. Unit config/limits đạt; không chạm cấu hình server P02/P03 khác.

@@ -23,7 +23,7 @@ const child = spawn(
     ),
     'dev',
     '--hostname',
-    '0.0.0.0',
+    config.DEV_HOST,
     '--port',
     String(config.PORT),
   ],
