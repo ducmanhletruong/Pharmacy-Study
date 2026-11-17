@@ -63,18 +63,25 @@ Kiểm cuối local: lint, format:check, git diff --check, unit104, security cla
 
 CI code `a4fc5f973ca8ce808a48a4bde4072c31102d1caf` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44165851119 . Frozen install/lint/format/types, migration/bootstrap/provision/seed-rerun, unit104/integration14/E2E8, build, production guard, dependency hardening gate và gitleaks đều đạt. PR #4 draft: https://github.com/ducmanhletruong/Pharmacy-Study/pull/4 . Bổ sung sau CI chỉ đổi Markdown; P03 vẫn LIVE GOOGLE PENDING, không mở P04.
 
-## CR-0001 — IN PROGRESS
+## CR-0001 — DONE (phạm vi hardening đã duyệt)
 
-Được giao đánh giá rủi ro và thực hiện18/11. Nhánh phase-02-hardening base phase-03, migration0003; không rollback P03. ADR-0012 và phụ lục plan0.2 ghi thiết kế/điều chỉnh tương thích. Cần đo migration/tests/query-count/CI trước báo DONE. Không merge/deploy hoặc chọn by_topic mới.
+Cập nhật 2026-11-18. Branch `phase-02-hardening`, base `phase-03`; giữ nguyên auth/roles P03 và migration đã chạy. Dùng migration `0003_integrity_hardening.sql`. Phạm vi/điều chỉnh từ CR gốc: ADR-0012 và phụ lục plan v0.2.
 
-CR DB: kiểm ngược trước0003 có6/7 test đỏ,1test unique-index cũ xanh; migration từ chối data sai với23514 và rollback. DB verified rỗng migrate/seed/rerun đạt,7test gốc CR đạt; DB upgrade riêng seed bằng code P02 cũ rồi áp0003/seed mới đạt. Không động DB P02/P03 hiện có.
+| Kiểm chứng              | Kết quả thực tế                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Reverse trước migration | 6/7 test gốc CR đỏ; test unique-index có sẵn xanh                                                                              |
+| Data cũ sai             | Migration từ chối với 23514; registry 0003 và cột mới đều count 0 sau rollback                                                 |
+| DB rỗng                 | Migrate/provision/seed/rerun đạt ở CI                                                                                          |
+| DB đã seed trước CR     | Nâng 0003 và seed mới đạt trên DB upgrade riêng                                                                                |
+| Unit                    | 106/106 đạt                                                                                                                    |
+| Integration             | 27/27 đạt, gồm 10 test integrity                                                                                               |
+| Query-count             | Cả 1 và 10 câu đều 3 query tổng: owner, subject, items+choices; chỉ 1 query lấy items+choices; giữ thứ tự A/B/C/D và redaction |
+| Chromium E2E            | 8/8 đạt; local dùng Chromium có sẵn, CI dùng Playwright Chromium                                                               |
+| Build và startup guards | Production build đạt; dev/test bị từ chối ở production                                                                         |
+| Chất lượng/bảo mật      | Lint, format, typecheck, dependency mitigation/audit gate và gitleaks đạt; local gitleaks 44 commit                            |
 
-CR kiểm local: integrity10 test gồm7 từ CR và3 bổ sung cho superseded/attempted/draft choices; migration từ chối data cũ sai và không để lại registry0003/cột mới (đều count0). Unit106 và integration27 đạt. Query-counter cho1/10 câu đo3query tổng (owner,subject,items+choices), chỉ1query lấyitems/choices, giữredaction. E2E/build/CI còn đang thực hiện.
+CI code `51f9eb29255b1ed4377ae0231ff199ea1240cc70` **SUCCESS**: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44168202855 . Trigger PR vào `phase-03` đã chạy thực tế. [PR #5](https://github.com/ducmanhletruong/Pharmacy-Study/pull/5) draft, chưa merge/deploy. Sau code đã kiểm chỉ bổ sung Markdown rủi ro/bàn giao; không chạy lại local tests/build cho tài liệu.
 
-CR readAttempt đã gộp choices vào queryitems; snapshot test rollback-only qua DB context, không disable trigger. API tests count/unavailable/payload/partial-submit đạt.
+Quy tắc MCQ/seal/same-subject, query gộp, config pool/body/DEV_HOST/APP_ORIGIN, tests, docs và CI đã thực hiện. Không áp migration lên DB P02/P03 gốc hoặc Windows. Rủi ro vận hành còn lại: writer phải ghi revision và đủ choices trong transaction, nội dung sealed phải tạo revision mới, invalid legacy data phải được xử lý có review trước migration. Rollback vận hành dùng forward migration được review, không xóa registry hoặc volume.
 
-CR CI trigger phase-03 superset mở main/phase-*; build cấu hình APP_ORIGIN riêng, giữ phase-02 legacy tách biệt. Chờ PR thật để kiểm trigger.
-
-CR config: pool và body có validate/cap, DEV_HOST loopback mặc định, production bắt buộcAPP_ORIGIN. Unit config/limits đạt; không chạm cấu hình server P02/P03 khác.
-
-CR E2E Chromium8/8 đạt bằng /usr/bin/chromium. Build production đang chạy; format/diff đã đạt, không sửa migration cũ. Trạng thái chờ CI trước DONE.
+Các mục CR đã hoãn vẫn giữ nguyên: lifecycle P04, tối ưu random theo ngưỡng, password guard P12, quyết định by_topic trước P05. Không merge các PR xếp chồng. P03 Google live vẫn pending riêng; CR DONE không đóng cổng P03 hoặc cho phép mở P04.

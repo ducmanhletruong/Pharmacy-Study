@@ -29,4 +29,4 @@ Code và kiểm local bằng provider thử đã triển khai; không có Google
 
 ## CR-0001
 
-Không có blocker implementation; cổng CI còn chờ kết quả trong docs/status.md. Quy tắc by_topic nhiều chủ đề vẫn OPEN trướcP05, không tự chọn trong CR. Các đề xuất workflow duyệt/P12 password guard được đưa vào phụ lục plan0.2, không thực hiện ngoài scope. PRs giữ draft, không merge/deploy.
+Không còn blocker hardening CR; xem kết quả và cổng CI trong docs/status.md. Quy tắc by_topic nhiều chủ đề vẫn OPEN trướcP05, không tự chọn trong CR. Các đề xuất workflow duyệt/P12 password guard được đưa vào phụ lục plan0.2, không thực hiện ngoài scope. PRs giữ draft, không merge/deploy.

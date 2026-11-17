@@ -385,3 +385,9 @@ Rollback code cần đồng bộ schema subject_id NOT NULL; không chạy down/
 
 - E2E lượt đầu không chạy được test nào vì cache thiếu Chromium headless mặc định; binary `/usr/bin/chromium` đã có nên dùng PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, không tải/cài browser mới. Không ghi tám lỗi launch đó thành lỗi hành vi sản phẩm.
 - Migration trên DB reverse bị23514 như dự kiến, cả registry0003 và cột question_topics.subject_id đều không tồn tại sau thất bại, xác minh rollback DDL/registry cùng transaction. Không chỉnh data reverse để biến fail thành pass.
+
+### Bàn giao CR-0001 sau kiểm chứng
+
+Đã tách các commit theo nhóm docs → migration/seed → integrity tests → query/snapshot/API → CI trigger → config → docs vận hành. Push nhánh phase-02-hardening, tạo và attach PR #5 draft base phase-03. Không merge PR nào. Mọi bằng chứng và kết quả đo ở docs/status.md, bao gồm CI code cuối và giới hạn Google live riêng.
+
+Bổ sung cuối chỉ sửa Markdown: bảng đánh giá rủi ro trong ADR-0012, canonical status, blockers/handoff và nhật ký này; kiểm format/diff, không chạy lại local tests/build vì tài liệu. Giữ handoff dưới40 dòng, không lặp số test ngoài status. Không thực hiện down SQL hoặc xóa test DB để che kết quả reverse. Cổng CR được chốt theo phạm vi đã thực hiện, các mục hoãn/OPEN vẫn nêu rõ ở status và phụ lục plan.

@@ -13,7 +13,8 @@ Xem [runbook Google](docs/runbooks/google-login.md), config pool/body/DEV_HOST �
 Cloud preview chủ động đặt DEV_HOST=0.0.0.0; local mặc định127.0.0.1.
 Production cần APP_ORIGIN chính xác; Google OAuth client vẫn cấu hình private, không gửi secret chat.
 
-Đang hoàn tất kiểm E2E/build/CI và PR draft; xem status để biết kết quả mới nhất.
+PR #5 draft đã mở; kết quả CI và kiểm chứng đầy đủ ở docs/status.md.
+Google OAuth thật vẫn cần cấu hình riêng; xem runbook, không coi CR DONE là đóng P03.
 Không merge PR, deploy hoặc bắt đầu P04. By_topic nhiều chủ đề còn chờ quyết định trước P05.
 Không xóa volume hoặc chạy rollback SQL trong CR gốc lên data thật; dùng forward migration được review.
 Các phát sinh/khác biệt với đề xuất gốc đã nối vào worked.md.
