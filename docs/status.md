@@ -72,3 +72,5 @@ CR DB: kiểm ngược trước0003 có6/7 test đỏ,1test unique-index cũ xan
 CR kiểm local: integrity10 test gồm7 từ CR và3 bổ sung cho superseded/attempted/draft choices; migration từ chối data cũ sai và không để lại registry0003/cột mới (đều count0). Unit106 và integration27 đạt. Query-counter cho1/10 câu đo3query tổng (owner,subject,items+choices), chỉ1query lấyitems/choices, giữredaction. E2E/build/CI còn đang thực hiện.
 
 CR readAttempt đã gộp choices vào queryitems; snapshot test rollback-only qua DB context, không disable trigger. API tests count/unavailable/payload/partial-submit đạt.
+
+CR CI trigger phase-03 superset mở main/phase-*; build cấu hình APP_ORIGIN riêng, giữ phase-02 legacy tách biệt. Chờ PR thật để kiểm trigger.
