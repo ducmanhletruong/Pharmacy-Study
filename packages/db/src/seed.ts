@@ -1,8 +1,12 @@
-import { loadLocalEnv } from './env'
+import {
+  loadMaintenanceEnv,
+  getMaintenancePool,
+  closeMaintenance,
+} from './maintenance'
 import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { validateChoices, type Label } from '@pharmacy/core'
-import { DEV_USER_ID, getPool, closeDb } from './client'
+import { DEV_USER_ID } from './client'
 
 type Fixture = {
   stem: string
@@ -19,8 +23,8 @@ const fixtures: Fixture[] = JSON.parse(
 )
 const id = (group: number, n: number) =>
   `${group}0000000-0000-4000-8000-${String(n).padStart(12, '0')}`
-loadLocalEnv()
-const client = await getPool().connect()
+loadMaintenanceEnv()
+const client = await getMaintenancePool().connect()
 try {
   await client.query('BEGIN')
   await client.query(
@@ -115,5 +119,5 @@ try {
   throw error
 } finally {
   client.release()
-  await closeDb()
+  await closeMaintenance()
 }

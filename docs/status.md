@@ -56,3 +56,5 @@ Lượt sau CI chỉ cập nhật Markdown bàn giao/kết quả; không đổi 
 ## P03 task log
 
 - T02: authorize default deny và ma trận96 ô +1 ca phủ nhận đã triển khai/kiểm local; các task tích hợp tiếp theo đang thực hiện.
+
+- T04: migration0002, audit append-only và login DB app/migrator tách biệt; local migration/seed/permission checks đạt.
