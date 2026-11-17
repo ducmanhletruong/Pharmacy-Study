@@ -63,3 +63,5 @@ Thực hiện luồng luyện tổng hợp trong phạm vi plan: Drizzle/SQL mig
 - CHAT-10 CONFIRMED: chủ dự án chọn “Một nhóm/lớp được mời”, Google; Q3 đã giải quyết, ADR-0008 Accepted phạm vi/provider. Quyền dùng giáo trình P01 vẫn chỉ cá nhân, không tự mở rộng cho lớp.
 - Stable next-auth4.24.15 cho Next16/React19, session DB revoke + JWT cookie, allowlist email exact. Google OAuth client riêng website chưa được cấu hình nên chưa có live verification. Không yêu cầu cookie NotebookLM hay API key ChatGPT Pro.
 - App/migration DB credential tách riêng; provider thử chỉ nonproduction. Advisory picomatch được hardening có regression và báo raw counts, không ignore high chung. Hosting tiếp tục local, không P04.
+
+- P03-CI VERIFIED: a4fc5f9/run44165851119 SUCCESS (https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44165851119); PR #4 draft, không merge/deploy. Test provider đạt không thay Google live; P03 còn cổng cấu hình/kiểm callback thật.

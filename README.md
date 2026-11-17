@@ -1,6 +1,6 @@
 # Pharmacy-Study
 
-Web ôn thi cho 5 môn Dược. Trạng thái hiện tại: **P00 — khung repo và công cụ**, chưa có tính năng luyện đề hoặc nội dung môn học. Plan gốc: `IMPLEMENTATION_PLAN.md`; tiến độ thực tế: `docs/status.md`.
+Web ôn thi cho 5 môn Dược. P02 có luồng luyện 10 câu tổng hợp; P03 đã triển khai đăng nhập/phân quyền cho lớp được mời, còn chờ kiểm Google thật. Chưa có ngân hàng đề chuyên môn hoặc hosting production. Plan gốc: `IMPLEMENTATION_PLAN.md`; tiến độ thực tế: `docs/status.md`.
 
 ## Yêu cầu
 
@@ -11,17 +11,20 @@ Web ôn thi cho 5 môn Dược. Trạng thái hiện tại: **P00 — khung repo
 ## Bắt đầu
 
 ```bash
-cd /workspace/web-starter
+cd Pharmacy-Study
 pnpm install --frozen-lockfile
 cp .env.example .env
 # Chỉ cần copy .env một lần; không ghi đè file đã cấu hình.
 docker compose -f infra/docker-compose.yml up -d --wait
+pnpm db:migrate
+pnpm db:provision -- --write-local-env
+pnpm db:seed
 pnpm dev
 ```
 
-Mở http://localhost:3000 trong trình duyệt của môi trường hoặc dùng preview/chuyển tiếp cổng 3000 của Codex. Dev server cho phép kết nối từ môi trường Cloud. P00 chỉ có trang tên dự án; endpoint `GET /api/v1/health` trả `200 { "status": "ok" }`.
+Mở http://localhost:3000 trong trình duyệt của môi trường hoặc dùng preview/chuyển tiếp cổng 3000 của Codex. Dev server cho phép kết nối từ môi trường Cloud. Example mặc định AUTH_MODE=dev chỉ dùng local với user cố định. Để dùng Google cho lớp, cấu hình theo [runbook P03](docs/runbooks/google-login.md); endpoint `GET /api/v1/health` trả `200 { "status": "ok" }`.
 
-App P00 chưa truy cập database. Compose dùng các giá trị local mặc định trong `.env.example`; có thể tùy chỉnh bằng `.env` ở gốc repo. Khi phase dữ liệu cần đọc `DATABASE_URL` trong Next.js, cấu hình biến cho tiến trình app hoặc `.env.local` trong `apps/web` theo tài liệu phase đó. Không đưa secret vào biến `NEXT_PUBLIC_*`.
+Launcher đọc `.env` ở gốc repo. Provision ghi credential runtime ít quyền vào `.env`, giữ maintenance trong `.env.db` riêng. Không đưa `.env.db` vào web/hosting, không đưa secret vào `NEXT_PUBLIC_*`. Với DB đang có dữ liệu, sao lưu và áp dụng migration, không xóa volume.
 
 ## Lệnh đã được thiết lập
 
@@ -30,23 +33,23 @@ App P00 chưa truy cập database. Compose dùng các giá trị local mặc đ�
 | `pnpm dev`                          | Next.js development, cổng 3000                              |
 | `pnpm lint`                         | ESLint, quy tắc Next.js và TypeScript                       |
 | `pnpm typecheck`                    | Kiểm tra strict TypeScript cho core và web, tạo route types |
-| `pnpm test`                         | Vitest, smoke test hợp đồng health endpoint                 |
+| `pnpm test`                         | Vitest: grading, health, auth config và ma trận quyền       |
 | `pnpm format:check`                 | Kiểm tra định dạng                                          |
 | `pnpm exec prettier --write <file>` | Format đúng file vừa sửa                                    |
 | `pnpm build`                        | Build Next.js production, kèm kiểm tra TypeScript           |
 | `pnpm start`                        | Chạy bản production đã build, cổng 3000                     |
 
-Chỉ chạy kiểm tra có liên quan theo `AGENTS.md`. Chuỗi lint/typecheck/test/build là kiểm chứng bắt buộc của P00; không phải quy trình mặc định sau mỗi chỉnh sửa. Chưa đặt coverage threshold cho module chấm điểm/authz chưa tồn tại.
+Chỉ chạy kiểm tra có liên quan theo `AGENTS.md`. Chuỗi lint/typecheck/test/build là kiểm chứng bắt buộc của P00; không phải quy trình mặc định sau mỗi chỉnh sửa. Không suy ra coverage tổng thể từ số test đã pass.
 
-Các lệnh `db:migrate`, `db:seed`, `test:integration`, `e2e`, `content:validate`, `content:generate`, `content:coverage`, `content:audit-sample`: **to be established** ở phase tương ứng. Chưa có schema/migration, xác thực, provider AI hoặc NotebookLM trong P00.
+Đã có `db:migrate`, `db:provision`, `db:seed`, `test:integration`, `e2e`, `security:test` và `audit:security`. Các lệnh `content:*` và AI runtime còn **to be established** ở phase tương ứng. E2E login dùng provider thử riêng, không chứng minh callback Google thật hoạt động.
 
 ## Cấu trúc
 
 ```text
-apps/web/             Next.js App Router, trang tối thiểu và health endpoint
-packages/core/        Khung domain core, smoke test P00
+apps/web/             Next.js App Router, luyện mẫu và auth/guard
+packages/core/        Grading, authorize và tests
 infra/                PostgreSQL Docker Compose local
-.github/workflows/    CI cho phạm vi P00
+.github/workflows/    CI theo phase hiện hành
 docs/adr/             Quyết định đề xuất/được duyệt và các quyết định OPEN
 docs/status.md        Trạng thái task và kết quả kiểm chứng
 docs/blockers.md      Thông tin còn thiếu và phase bị chặn
@@ -54,7 +57,7 @@ handoff.md            Bàn giao gần nhất
 worked.md             Lịch sử phần phát sinh ngoài plan
 ```
 
-Các package DB, API contract, calc-engine, chem-render và content-pipeline sẽ được thêm khi phase liên quan bắt đầu; không tạo implementation giả ở P00.
+`packages/db` và `packages/api-contract` đã có. Calc-engine, chem-render sản phẩm và content-pipeline chờ phase liên quan; spike không được tính là tính năng sản phẩm.
 
 ## PostgreSQL local
 

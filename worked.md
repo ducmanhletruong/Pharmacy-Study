@@ -359,3 +359,11 @@ Hoàn tác code bằng revert task commits, không xóa DB volume/capture privat
 ### Kiểm cuối trước PR
 
 Lint, format:check, git diff --check, unit104/104, classifier4/4, verifier patch và audit:security đều exit0. Raw audit high1/moderate1, unmitigated rỗng sau xác minh patch. Provision rerun sau sửa bảo toàn env đạt. Pnpm11 cần env pnpm_config_store_dir (npm_config không có tác dụng với wrapper hiện tại); frozen install với store đúng đạt, không đổi storeDir trong repo. Tách6 commit theo task; Google live vẫn pending, CI sẽ xác minh code cuối từ môi trường sạch.
+
+- Bổ sung bàn giao: README vẫn mô tả P00 và thiếu migrate/seed dù code đã P03; sửa đúng các đoạn/lệnh hiện hành, dẫn runbook Google và phân biệt test provider. Đây là sửa tài liệu vận hành cần thiết, không mở rộng tính năng; không chạy lại local tests/build cho Markdown.
+
+### CI và bàn giao cuối
+
+Đã commit6 task (79ed3f9 T02,306d627 T04,85d2973 T01,bbf5f39 T03,f5f0ac9 T05,a4fc5f9 T06), push phase-03, tạo và attach PR #4 draft base phase-02: https://github.com/ducmanhletruong/Pharmacy-Study/pull/4. Không merge. Gitleaks36 commit không có secret. CI code a4fc5f973ca8ce808a48a4bde4072c31102d1caf run44165851119 SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44165851119. Tất cả bước frozen install/lint/format/typecheck, migrate DB rỗng/provision/seed-rerun, unit104/integration14/E2E8, production build/guard, mitigation verification/audit và gitleaks success.
+
+Bàn giao sau CI chỉ đổi Markdown (README/handoff/status/blockers/register/worked), kiểm format/diff trực tiếp; không chạy lại local tests/build. P03 giữ LIVE GOOGLE PENDING do thiếu OAuth Web client thật; runbook cụ thể đã sẵn. Không yêu cầu approval lại cho lựa chọn lớp/Google hoặc kiểm nguồn đã duyệt. Không tự bắt đầu P04 hay suy ra quyền phân phối giáo trình cho lớp.
