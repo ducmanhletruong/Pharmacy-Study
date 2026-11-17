@@ -1,0 +1,23 @@
+{
+  "name": "@pharmacy/db",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/client.ts",
+    "./practice": "./src/practice.ts"
+  },
+  "scripts": {
+    "migrate": "tsx src/migrate.ts",
+    "seed": "tsx src/seed.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.4",
+    "pg": "8.23.1",
+    "@pharmacy/core": "workspace:*",
+    "@pharmacy/api-contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1"
+  }
+}
