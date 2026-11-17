@@ -60,3 +60,5 @@ Lượt sau CI chỉ cập nhật Markdown bàn giao/kết quả; không đổi 
 - T04: migration0002, audit append-only và login DB app/migrator tách biệt; local migration/seed/permission checks đạt.
 
 - T01: Google allowlist/session code và runbook private config; Google live còn chờ OAuth client, chưa DONE. Hardening dependency cần cho auth CI được ghi doc riêng.
+
+- T03: session/role guard và owner filter API, admin page/API; cross-user test trả404 và learner admin bị chặn.
