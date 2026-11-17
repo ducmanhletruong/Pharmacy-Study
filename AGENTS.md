@@ -53,6 +53,11 @@ Với logic, xử lý dữ liệu hoặc lỗi có nguy cơ tái phát, chọn k
 
 ## 6. Bàn giao và ghi việc ngoài plan
 
+- `docs/status.md` là nguồn duy nhất cho trạng thái phase/task và bằng chứng kiểm chứng.
+- Cập nhật trạng thái ở đó trước; các tài liệu khác chỉ dẫn link, không chép lại bảng hoặc số test.
+- `handoff.md` tối đa 40 dòng, chỉ việc đang dở, lệnh chạy và bước kế tiếp.
+- `worked.md` append-only cho phần phát sinh ngoài plan; không dùng làm bảng trạng thái thứ hai.
+
 - Khi kết thúc tác vụ có sửa file hoặc có phát sinh, cập nhật `handoff.md`: yêu cầu, kết quả, file thay đổi, kiểm tra thực tế, việc còn lại và cách tiếp tục.
 - `handoff.md` mô tả trạng thái mới nhất, không sao chép toàn bộ lịch sử chat.
 - `worked.md` là nhật ký nối tiếp. Không xóa hoặc viết lại lịch sử để che phần phát sinh; bổ sung đính chính nếu cần.

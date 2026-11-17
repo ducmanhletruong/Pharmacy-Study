@@ -99,28 +99,25 @@ async function readAttempt(db: Db, id: string, userId: string) {
     stem: string
     answer: Label | null
     flagged: boolean
+    choices: { label: Label; text: string }[]
   }>(
-    'SELECT i.position,r.question_id,r.id AS revision_id,r.stem,i.answer,i.flagged FROM attempt_items i JOIN question_revisions r ON r.id=i.question_revision_id WHERE i.attempt_id=$1 ORDER BY i.position',
+    `SELECT i.position,r.question_id,r.id AS revision_id,r.stem,i.answer,i.flagged,
+      (SELECT json_agg(json_build_object('label',c.label,'text',c.text) ORDER BY c.label)
+       FROM question_choices c WHERE c.revision_id=r.id) AS choices
+     FROM attempt_items i JOIN question_revisions r ON r.id=i.question_revision_id
+     WHERE i.attempt_id=$1 ORDER BY i.position`,
     [id],
   )
-  const items = []
-  for (const row of result.rows) {
-    const choices = await db.query<{ label: Label; text: string }>(
-      'SELECT label,text FROM question_choices WHERE revision_id=$1 ORDER BY label',
-      [row.revision_id],
-    )
-    items.push({ ...row, choices: choices.rows })
-  }
   return attemptSchema.parse({
     id,
     subject: subject.rows[0]?.code,
     mode: 'practice',
     status: attempt.status,
-    items,
+    items: result.rows,
   })
 }
-export function getAttempt(id: string, userId: string) {
-  return readAttempt(getPool(), id, userId)
+export function getAttempt(id: string, userId: string, db: Db = getPool()) {
+  return readAttempt(db, id, userId)
 }
 
 export async function createAttempt(

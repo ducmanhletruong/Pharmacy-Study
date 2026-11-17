@@ -65,3 +65,9 @@ Thực hiện luồng luyện tổng hợp trong phạm vi plan: Drizzle/SQL mig
 - App/migration DB credential tách riêng; provider thử chỉ nonproduction. Advisory picomatch được hardening có regression và báo raw counts, không ignore high chung. Hosting tiếp tục local, không P04.
 
 - P03-CI VERIFIED: a4fc5f9/run44165851119 SUCCESS (https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44165851119); PR #4 draft, không merge/deploy. Test provider đạt không thay Google live; P03 còn cổng cấu hình/kiểm callback thật.
+
+## CR-0001 — 2026-11-18
+
+Chủ dự án yêu cầu “đánh giá rủi ro và thực hiện các thay đổi được đề xuất”. Accepted phần hardening dữ liệu/queries/tests/config/docs. Quy tắc seal và loopback DEV_HOST được áp dụng theo CR. Bản gốc đính kèm giữ làm tham chiếu; diễn giải thực thi ở ADR-0012. Không có lựa chọn mới cho by_topic; không merge PR/deploy (phần merge trong CR mâu thuẫn prompt cuối và quyết định giữ draft hiện có).
+
+Repo đã có P03: nhánh phase-02-hardening dựa phase-03 để bảo toàn auth, migration mới0003, không sửa0001/0002. CI phase-03 superset được mở cho phase-* thay vì chạy lại job P02 dùng credential bootstrap cũ. Tests dùng maintenance transaction rollback thay vì DISABLE TRIGGER. Bản plan0.1 giữ nguyên; phụ lục0.2 ghi tiền điều kiện CR.

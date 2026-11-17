@@ -1,6 +1,6 @@
 # Pharmacy-Study
 
-Web ôn thi cho 5 môn Dược. P02 có luồng luyện 10 câu tổng hợp; P03 đã triển khai đăng nhập/phân quyền cho lớp được mời, còn chờ kiểm Google thật. Chưa có ngân hàng đề chuyên môn hoặc hosting production. Plan gốc: `IMPLEMENTATION_PLAN.md`; tiến độ thực tế: `docs/status.md`.
+Web ôn thi cho 5 môn Dược. Có luồng luyện 10 câu tổng hợp và đăng nhập/phân quyền cho lớp được mời; tiến độ và kiểm chứng mới nhất chỉ ở [docs/status.md](docs/status.md). Chưa có ngân hàng đề chuyên môn hoặc hosting production. Plan gốc: `IMPLEMENTATION_PLAN.md`; tiến độ thực tế: `docs/status.md`.
 
 ## Yêu cầu
 
@@ -22,22 +22,27 @@ pnpm db:seed
 pnpm dev
 ```
 
-Mở http://localhost:3000 trong trình duyệt của môi trường hoặc dùng preview/chuyển tiếp cổng 3000 của Codex. Dev server cho phép kết nối từ môi trường Cloud. Example mặc định AUTH_MODE=dev chỉ dùng local với user cố định. Để dùng Google cho lớp, cấu hình theo [runbook P03](docs/runbooks/google-login.md); endpoint `GET /api/v1/health` trả `200 { "status": "ok" }`.
+Mở http://localhost:3000 trong trình duyệt của môi trường hoặc dùng preview/chuyển tiếp cổng 3000 của Codex. Dev server mặc định chỉ bind loopback; Cloud preview cần đặt DEV_HOST=0.0.0.0 riêng trong môi trường Cloud. Example mặc định AUTH_MODE=dev chỉ dùng local với user cố định. Để dùng Google cho lớp, cấu hình theo [runbook P03](docs/runbooks/google-login.md); endpoint `GET /api/v1/health` trả `200 { "status": "ok" }`.
 
 Launcher đọc `.env` ở gốc repo. Provision ghi credential runtime ít quyền vào `.env`, giữ maintenance trong `.env.db` riêng. Không đưa `.env.db` vào web/hosting, không đưa secret vào `NEXT_PUBLIC_*`. Với DB đang có dữ liệu, sao lưu và áp dụng migration, không xóa volume.
 
 ## Lệnh đã được thiết lập
 
-| Lệnh                                | Công dụng                                                   |
-| ----------------------------------- | ----------------------------------------------------------- |
-| `pnpm dev`                          | Next.js development, cổng 3000                              |
-| `pnpm lint`                         | ESLint, quy tắc Next.js và TypeScript                       |
-| `pnpm typecheck`                    | Kiểm tra strict TypeScript cho core và web, tạo route types |
-| `pnpm test`                         | Vitest: grading, health, auth config và ma trận quyền       |
-| `pnpm format:check`                 | Kiểm tra định dạng                                          |
-| `pnpm exec prettier --write <file>` | Format đúng file vừa sửa                                    |
-| `pnpm build`                        | Build Next.js production, kèm kiểm tra TypeScript           |
-| `pnpm start`                        | Chạy bản production đã build, cổng 3000                     |
+| Lệnh                                     | Công dụng                                                   |
+| ---------------------------------------- | ----------------------------------------------------------- |
+| `pnpm db:migrate`                        | Áp dụng forward migrations có checksum                      |
+| `pnpm db:provision -- --write-local-env` | Tạo login DB ít quyền, lưu env private                      |
+| `pnpm db:seed`                           | Seed 10 câu tổng hợp, không xóa bài làm                     |
+| `pnpm test:integration`                  | Kiểm API, quyền và toàn vẹn bằng PostgreSQL                 |
+| `pnpm e2e`                               | Chromium E2E bằng provider thử riêng                        |
+| `pnpm dev`                               | Next.js development, cổng 3000                              |
+| `pnpm lint`                              | ESLint, quy tắc Next.js và TypeScript                       |
+| `pnpm typecheck`                         | Kiểm tra strict TypeScript cho core và web, tạo route types |
+| `pnpm test`                              | Vitest: grading, health, auth config và ma trận quyền       |
+| `pnpm format:check`                      | Kiểm tra định dạng                                          |
+| `pnpm exec prettier --write <file>`      | Format đúng file vừa sửa                                    |
+| `pnpm build`                             | Build Next.js production, kèm kiểm tra TypeScript           |
+| `pnpm start`                             | Chạy bản production đã build, cổng 3000                     |
 
 Chỉ chạy kiểm tra có liên quan theo `AGENTS.md`. Chuỗi lint/typecheck/test/build là kiểm chứng bắt buộc của P00; không phải quy trình mặc định sau mỗi chỉnh sửa. Không suy ra coverage tổng thể từ số test đã pass.
 
@@ -48,6 +53,11 @@ Chỉ chạy kiểm tra có liên quan theo `AGENTS.md`. Chuỗi lint/typecheck/
 ```text
 apps/web/             Next.js App Router, luyện mẫu và auth/guard
 packages/core/        Grading, authorize và tests
+packages/db/          Migrations, seed, practice/auth/audit
+packages/api-contract/ Zod request/response contracts
+content/fixtures/     Dữ liệu tổng hợp tự viết
+tests/                Integration và E2E
+spikes/               Bằng chứng spike, không phải feature runtime
 infra/                PostgreSQL Docker Compose local
 .github/workflows/    CI theo phase hiện hành
 docs/adr/             Quyết định đề xuất/được duyệt và các quyết định OPEN
@@ -86,3 +96,7 @@ gitleaks git . --redact --no-banner --log-opts=--all
 Starter Vite trước khi chuyển kiến trúc được giữ ở commit `39ffc0b` và nhánh local `baseline-vite`. Có thể xem bằng `git show` hoặc checkout vào worktree khác để tham chiếu; không reset đè thay đổi hiện tại. Chuyển framework là quyết định trực tiếp của chủ dự án ngày 2026-11-12.
 
 pnpm 11 đọc cấu hình dự án trong `pnpm-workspace.yaml`. Store/cache đặt trong `.pnpm-store/` của checkout và bị Git bỏ qua để chạy được trong workspace Cloud giới hạn quyền ghi; không ghi cấu hình global hoặc token vào repo. VS Code dùng ESLint và Prettier được đề xuất, format khi lưu.
+
+## Cấu hình hardening
+
+`DB_POOL_MAX` mặc định5 (1–100); `MAX_BODY_BYTES` mặc định16384 (1–1048576). Giá trị phải là số nguyên hợp lệ. `DEV_HOST=127.0.0.1` mặc định trên máy cá nhân; Cloud preview chủ động đặt0.0.0.0. Production bắt buộc APP_ORIGIN chính xác, không suy từ Host. Ghi revision và đủ4 choices trong cùng transaction; revision sealed phải tạo bản mới. Xem ADR-0012 và runbook Google.

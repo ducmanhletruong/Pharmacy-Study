@@ -2,11 +2,22 @@ import pg from 'pg'
 import { drizzle } from 'drizzle-orm/node-postgres'
 
 export const DEV_USER_ID = '00000000-0000-4000-8000-000000000001'
+export function readPoolMax(
+  env: Record<string, string | undefined> = process.env,
+) {
+  const value = Number(env.DB_POOL_MAX ?? 5)
+  if (!Number.isInteger(value) || value < 1 || value > 100)
+    throw new Error('DB_POOL_MAX must be an integer from 1 to 100')
+  return value
+}
 // Lazy: importing a route or building must not create a connection.
 let pool: pg.Pool | undefined
 export function getPool() {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required')
-  pool ??= new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 })
+  pool ??= new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: readPoolMax(),
+  })
   return pool
 }
 export function getDb() {

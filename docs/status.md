@@ -62,3 +62,26 @@ DB P03 riêng, runtime app_rw không có quyền DDL/sửa xóa audit; maintenan
 Kiểm cuối local: lint, format:check, git diff --check, unit104, security classifier4 và audit:security đạt. Provision rerun sau sửa env đạt, không in credential. CI chưa chạy tại thời điểm commit này.
 
 CI code `a4fc5f973ca8ce808a48a4bde4072c31102d1caf` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44165851119 . Frozen install/lint/format/types, migration/bootstrap/provision/seed-rerun, unit104/integration14/E2E8, build, production guard, dependency hardening gate và gitleaks đều đạt. PR #4 draft: https://github.com/ducmanhletruong/Pharmacy-Study/pull/4 . Bổ sung sau CI chỉ đổi Markdown; P03 vẫn LIVE GOOGLE PENDING, không mở P04.
+
+## CR-0001 — DONE (phạm vi hardening đã duyệt)
+
+Cập nhật 2026-11-18. Branch `phase-02-hardening`, base `phase-03`; giữ nguyên auth/roles P03 và migration đã chạy. Dùng migration `0003_integrity_hardening.sql`. Phạm vi/điều chỉnh từ CR gốc: ADR-0012 và phụ lục plan v0.2.
+
+| Kiểm chứng              | Kết quả thực tế                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Reverse trước migration | 6/7 test gốc CR đỏ; test unique-index có sẵn xanh                                                                              |
+| Data cũ sai             | Migration từ chối với 23514; registry 0003 và cột mới đều count 0 sau rollback                                                 |
+| DB rỗng                 | Migrate/provision/seed/rerun đạt ở CI                                                                                          |
+| DB đã seed trước CR     | Nâng 0003 và seed mới đạt trên DB upgrade riêng                                                                                |
+| Unit                    | 106/106 đạt                                                                                                                    |
+| Integration             | 27/27 đạt, gồm 10 test integrity                                                                                               |
+| Query-count             | Cả 1 và 10 câu đều 3 query tổng: owner, subject, items+choices; chỉ 1 query lấy items+choices; giữ thứ tự A/B/C/D và redaction |
+| Chromium E2E            | 8/8 đạt; local dùng Chromium có sẵn, CI dùng Playwright Chromium                                                               |
+| Build và startup guards | Production build đạt; dev/test bị từ chối ở production                                                                         |
+| Chất lượng/bảo mật      | Lint, format, typecheck, dependency mitigation/audit gate và gitleaks đạt; local gitleaks 44 commit                            |
+
+CI code `51f9eb29255b1ed4377ae0231ff199ea1240cc70` **SUCCESS**: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44168202855 . Trigger PR vào `phase-03` đã chạy thực tế. [PR #5](https://github.com/ducmanhletruong/Pharmacy-Study/pull/5) draft, chưa merge/deploy. Sau code đã kiểm chỉ bổ sung Markdown rủi ro/bàn giao; không chạy lại local tests/build cho tài liệu.
+
+Quy tắc MCQ/seal/same-subject, query gộp, config pool/body/DEV_HOST/APP_ORIGIN, tests, docs và CI đã thực hiện. Không áp migration lên DB P02/P03 gốc hoặc Windows. Rủi ro vận hành còn lại: writer phải ghi revision và đủ choices trong transaction, nội dung sealed phải tạo revision mới, invalid legacy data phải được xử lý có review trước migration. Rollback vận hành dùng forward migration được review, không xóa registry hoặc volume.
+
+Các mục CR đã hoãn vẫn giữ nguyên: lifecycle P04, tối ưu random theo ngưỡng, password guard P12, quyết định by_topic trước P05. Không merge các PR xếp chồng. P03 Google live vẫn pending riêng; CR DONE không đóng cổng P03 hoặc cho phép mở P04.

@@ -2,7 +2,7 @@ name: Phase 03 identity and access
 
 on:
   pull_request:
-    branches: [main, phase-02]
+    branches: [main, 'phase-*']
   push:
     branches: [main]
 
@@ -61,6 +61,7 @@ jobs:
       - run: pnpm build
         env:
           AUTH_MODE: disabled
+          APP_ORIGIN: https://study.example.invalid
       - run: node scripts/check-production-guard.mjs
       - name: Verify hardening and reject unhandled high/critical advisories
         run: pnpm security:test && pnpm audit:security

@@ -8,6 +8,7 @@ const base = {
   AUTH_MODE: 'oidc',
   NODE_ENV: 'production',
   NEXTAUTH_URL: 'https://study.example.invalid',
+  APP_ORIGIN: 'https://study.example.invalid',
   NEXTAUTH_SECRET: 'synthetic-secret-for-config-tests-1234567890',
   GOOGLE_CLIENT_ID: 'synthetic-google-id',
   GOOGLE_CLIENT_SECRET: 'synthetic-google-client-secret',
@@ -63,4 +64,19 @@ test('CSP has a nonce and denies framing/object scripts; production has no unsaf
   expect(policy).toContain("object-src 'none'")
   expect(headers.get('X-Content-Type-Options')).toBe('nosniff')
   expect(headers.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin')
+})
+
+test('runtime limits reject invalid values and production requires an explicit origin', () => {
+  for (const MAX_BODY_BYTES of ['0', '-1', '1.5', 'NaN', '1048577'])
+    expect(() => readAuthConfig({ ...base, MAX_BODY_BYTES })).toThrow()
+  expect(
+    readAuthConfig({ ...base, MAX_BODY_BYTES: '1024' }).MAX_BODY_BYTES,
+  ).toBe(1024)
+  expect(readAuthConfig({}).DEV_HOST).toBe('127.0.0.1')
+  expect(() => readAuthConfig({ ...base, APP_ORIGIN: undefined })).toThrow(
+    /APP_ORIGIN is required/,
+  )
+  expect(() => readAuthConfig({ DEV_HOST: 'untrusted.invalid' })).toThrow(
+    /DEV_HOST/,
+  )
 })

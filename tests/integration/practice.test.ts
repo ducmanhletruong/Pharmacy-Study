@@ -249,30 +249,34 @@ test('attempts remain attached to the original revision if current revision chan
   const { value: attempt } = await newAttempt(randomUUID(), { count: 1 })
   const item = attempt.items[0],
     rid = randomUUID()
-  await getMaintenancePool().query(
-    "INSERT INTO question_revisions(id,question_id,rev_no,stem,explanation,content_hash,created_by) VALUES($1,$2,999,'temporary revision','test-only',$3,$4)",
-    [rid, item.question_id, randomUUID(), DEV_USER_ID],
-  )
+  const client = await getMaintenancePool().connect()
   try {
-    await getMaintenancePool().query(
+    await client.query('BEGIN')
+    await client.query(
+      "INSERT INTO question_revisions(id,question_id,rev_no,stem,explanation,content_hash,created_by) VALUES($1,$2,999,'temporary revision','test-only',$3,$4)",
+      [rid, item.question_id, randomUUID(), DEV_USER_ID],
+    )
+    for (const label of ['A', 'B', 'C', 'D'])
+      await client.query(
+        'INSERT INTO question_choices(revision_id,label,text,is_correct) VALUES($1,$2,$3,$4)',
+        [rid, label, `temporary ${label}`, label === 'A'],
+      )
+    await client.query(
       'UPDATE questions SET current_revision_id=$1 WHERE id=$2',
       [rid, item.question_id],
     )
-    expect(
-      (await getAttempt(attempt.id, DEV_USER_ID)).items[0]!.revision_id,
-    ).toBe(item.revision_id)
-    expect((await getAttempt(attempt.id, DEV_USER_ID)).items[0]!.stem).toBe(
-      item.stem,
+    await client.query('SET CONSTRAINTS ALL IMMEDIATE')
+    const current = await client.query(
+      'SELECT current_revision_id FROM questions WHERE id=$1',
+      [item.question_id],
     )
+    expect(current.rows[0].current_revision_id).toBe(rid)
+    const after = (await getAttempt(attempt.id, DEV_USER_ID, client)).items[0]!
+    expect(after.revision_id).toBe(item.revision_id)
+    expect(after.stem).toBe(item.stem)
   } finally {
-    await getMaintenancePool().query(
-      'UPDATE questions SET current_revision_id=$1 WHERE id=$2',
-      [item.revision_id, item.question_id],
-    )
-    await getMaintenancePool().query(
-      'DELETE FROM question_revisions WHERE id=$1',
-      [rid],
-    )
+    await client.query('ROLLBACK')
+    client.release()
   }
 })
 test('dev identity is unavailable without dev mode and production rejects its configuration', async () => {
@@ -286,6 +290,96 @@ test('dev identity is unavailable without dev mode and production rejects its co
     assertAuthMode({ AUTH_MODE: 'dev', NODE_ENV: 'production' }),
   ).toThrow(/forbidden/)
   expect(() =>
-    assertAuthMode({ AUTH_MODE: 'disabled', NODE_ENV: 'production' }),
+    assertAuthMode({
+      AUTH_MODE: 'disabled',
+      NODE_ENV: 'production',
+      APP_ORIGIN: 'https://study.example.invalid',
+    }),
   ).not.toThrow()
+})
+
+test('readAttempt fetches items and ordered public choices in one query for 1 and 10 items', async () => {
+  for (const count of [1, 10]) {
+    const { value: attempt } = await newAttempt(randomUUID(), { count })
+    const client = await getPool().connect(),
+      calls: string[] = []
+    try {
+      const db = {
+        query: ((...args: unknown[]) => {
+          calls.push(String(args[0]))
+          return Reflect.apply(client.query, client, args)
+        }) as typeof client.query,
+      }
+      const result = await getAttempt(attempt.id, DEV_USER_ID, db)
+      expect(calls).toHaveLength(3)
+      expect(
+        calls.filter((sql) => sql.includes('FROM attempt_items')),
+      ).toHaveLength(1)
+      expect(result.items).toHaveLength(count)
+      for (const item of result.items)
+        expect(item.choices.map((c) => c.label)).toEqual(['A', 'B', 'C', 'D'])
+      expect(JSON.stringify(result)).not.toMatch(
+        /is_correct|correct_answer|explanation|sources/,
+      )
+    } finally {
+      client.release()
+    }
+  }
+})
+test('partial and unanswered submissions keep all ten questions in the denominator', async () => {
+  for (const answered of [3, 0]) {
+    const { value: attempt } = await newAttempt()
+    for (let index = 0; index < answered; index++) {
+      const item = attempt.items[index],
+        correct = await getPool().query(
+          'SELECT label FROM question_choices WHERE revision_id=$1 AND is_correct',
+          [item.revision_id],
+        )
+      const label = correct.rows[0].label
+      const response = await answer(
+        req('/items', 'PUT', {
+          answer: index < 2 ? label : label === 'A' ? 'B' : 'A',
+        }),
+        {
+          params: Promise.resolve({
+            id: attempt.id,
+            position: String(index + 1),
+          }),
+        },
+      )
+      expect(response.status).toBe(200)
+    }
+    const response = await submit(req('/submit', 'POST'), context(attempt.id))
+    expect(response.status).toBe(200)
+    expect(resultSchema.parse(await response.json())).toMatchObject({
+      total: 10,
+      correct: answered ? 2 : 0,
+      unanswered: 10 - answered,
+      score: answered ? 2 : 0,
+    })
+  }
+})
+test('invalid counts, unavailable banks and oversized bodies never insert attempts', async () => {
+  const before = await getPool().query(
+    'SELECT count(*)::int n FROM attempts WHERE user_id=$1',
+    [DEV_USER_ID],
+  )
+  for (const count of [0, 11]) {
+    const result = await newAttempt(randomUUID(), { count })
+    expect(result.response.status).toBe(400)
+    expect(result.value.error.code).toBe('validation_failed')
+  }
+  const unavailable = await newAttempt(randomUUID(), { difficulty: 3 })
+  expect(unavailable.response.status).toBe(422)
+  expect(unavailable.value.error.code).toBe('insufficient_questions')
+  const large = await create(
+    req('/attempts', 'POST', { padding: 'x'.repeat(17000) }),
+  )
+  expect(large.status).toBe(413)
+  expect((await large.json()).error.code).toBe('payload_too_large')
+  const after = await getPool().query(
+    'SELECT count(*)::int n FROM attempts WHERE user_id=$1',
+    [DEV_USER_ID],
+  )
+  expect(after.rows[0].n).toBe(before.rows[0].n)
 })

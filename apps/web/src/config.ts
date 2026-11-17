@@ -4,6 +4,10 @@ const schema = z.object({
   AUTH_MODE: z.enum(['dev', 'disabled', 'oidc', 'test']).default('disabled'),
   NODE_ENV: z.string().default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+  DEV_HOST: z
+    .enum(['127.0.0.1', '0.0.0.0', 'localhost', '::1'])
+    .default('127.0.0.1'),
+  MAX_BODY_BYTES: z.coerce.number().int().min(1).max(1048576).default(16384),
   NEXTAUTH_URL: z.string().optional(),
   APP_ORIGIN: z.string().optional(),
   NEXTAUTH_SECRET: z.string().optional(),
@@ -48,6 +52,8 @@ export function readAuthConfig(
       `Invalid authentication configuration: ${[...new Set(parsed.error.issues.map((issue) => issue.path.join('.')))].join(', ')}`,
     )
   const config = parsed.data
+  if (config.NODE_ENV === 'production' && !config.APP_ORIGIN)
+    throw new Error('APP_ORIGIN is required in production')
   let configuredOrigin: URL | undefined
   if (config.APP_ORIGIN) {
     try {
