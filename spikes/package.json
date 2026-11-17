@@ -1,0 +1,16 @@
+{
+  "name": "pharmacy-feasibility-spikes",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "chem:render": "node chem-render/run.mjs",
+    "notebooklm:validate": "node notebooklm/validate.mjs",
+    "llm:eval": "node llm-eval/run.mjs"
+  },
+  "dependencies": {
+    "@rdkit/rdkit": "2026.9.2"
+  }
+}

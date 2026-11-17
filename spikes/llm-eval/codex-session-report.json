@@ -1,0 +1,60 @@
+{
+  "observed_at": "2026-11-12T04:47:47.122Z",
+  "generation_mode": "current_codex_conversation",
+  "candidates_origin": "Five answers generated in the current Codex session from exported synthetic prompts; not the reference self-check generator.",
+  "model": null,
+  "model_identity_verified": false,
+  "provider_access_verified": false,
+  "api_adapter_verified": false,
+  "external_api_calls": 0,
+  "usage": null,
+  "cost": null,
+  "synthetic_sources": true,
+  "blind_evaluation": false,
+  "benchmark_limitations": [
+    "The same Codex session inspected the evaluator before generating answers; this is a non-blind exploratory check.",
+    "Only synthetic label extraction, structure and exact citations are checked; real subject knowledge and exam quality are unmeasured.",
+    "Some distractors are invented fixture labels, unsuitable as evidence of pedagogical quality.",
+    "Exact model/version, subscription entitlement and metered usage were not exposed or verified; API/plan integration is still pending."
+  ],
+  "prompt_sha256": "2978a176d4af9c977d9303fbf41a0242796066c0a26b14a41cfcc995ea90d9b0",
+  "candidates_sha256": "fdd228dd785d6cacf3a230b6ad6408e23410c0f47ad3b3fcbff7bbe38e44ab8c",
+  "evaluation": {
+    "mode": "imported-candidates",
+    "inference_performed_by_this_command": false,
+    "provider_access_verified": false,
+    "external_api_calls": 0,
+    "fixture_count": 5,
+    "passed_count": 5,
+    "passed": true,
+    "issues": [],
+    "results": [
+      {
+        "fixture_id": "SYN-PT1",
+        "passed": true,
+        "errors": []
+      },
+      {
+        "fixture_id": "SYN-HC2",
+        "passed": true,
+        "errors": []
+      },
+      {
+        "fixture_id": "SYN-GP",
+        "passed": true,
+        "errors": []
+      },
+      {
+        "fixture_id": "SYN-KT",
+        "passed": true,
+        "errors": []
+      },
+      {
+        "fixture_id": "SYN-VS",
+        "passed": true,
+        "errors": []
+      }
+    ],
+    "limitation": "Synthetic extraction benchmark only; does not establish pharmacology accuracy, difficulty, or a real model/API entitlement."
+  }
+}

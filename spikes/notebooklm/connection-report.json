@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-11-11T18:54:41.081475+00:00",
+  "transport_connected": true,
+  "protocol_version": "2025-11-25",
+  "server_name": "gemini-notebook-mcp",
+  "server_reported_version": "4.1.8",
+  "tool_count": 55,
+  "read_only_tools": ["notebook_get", "notebook_list"],
+  "notebook_access_verified": false,
+  "native_chat_tools_hot_loaded": false,
+  "reason": "authentication_required",
+  "cli_distribution": "notebooklm-mcp-cli",
+  "cli_version": "0.16.2",
+  "sdk_version": "2.3.0",
+  "fastmcp_version": "4.1.8",
+  "codex_server_registered": true,
+  "codex_server_name": "pharmacy-notebooklm",
+  "codex_enabled_tools": ["notebook_list", "notebook_get"],
+  "google_login_attempt": "window opened; timed out after 300 seconds without authenticated access"
+}

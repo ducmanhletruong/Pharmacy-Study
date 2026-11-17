@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "synthetic": false,
+  "server": { "name": "", "version": "", "transport": "stdio" },
+  "source_permission": { "confirmed": false, "basis": "" },
+  "terms_review": { "reviewed_at": null, "reviewer": "", "notes": "" },
+  "topics": [
+    { "id": "topic-1", "label": "Thay bằng chủ đề thật 1" },
+    { "id": "topic-2", "label": "Thay bằng chủ đề thật 2" },
+    { "id": "topic-3", "label": "Thay bằng chủ đề thật 3" },
+    { "id": "topic-4", "label": "Thay bằng chủ đề thật 4" },
+    { "id": "topic-5", "label": "Thay bằng chủ đề thật 5" }
+  ],
+  "observations": []
+}
