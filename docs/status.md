@@ -62,3 +62,5 @@ Lượt sau CI chỉ cập nhật Markdown bàn giao/kết quả; không đổi 
 - T01: Google allowlist/session code và runbook private config; Google live còn chờ OAuth client, chưa DONE. Hardening dependency cần cho auth CI được ghi doc riêng.
 
 - T03: session/role guard và owner filter API, admin page/API; cross-user test trả404 và learner admin bị chặn.
+
+- T05: CSP nonce/security headers và Origin/body/rate protections đã tích hợp; checks local đạt.
