@@ -1,46 +1,64 @@
 import { randomUUID } from 'node:crypto'
 import { ZodError } from '@pharmacy/api-contract'
 import { PracticeError } from '@pharmacy/db/practice'
-import { DEV_USER_ID } from '@pharmacy/db'
-import { assertAuthMode } from '../config'
+import { getPool } from '@pharmacy/db'
+import { appendAudit } from '@pharmacy/db/audit'
+import { takeRateLimit } from '@pharmacy/db/limits'
+import { authorize, type Action } from '@pharmacy/core/authz'
+import type { Member } from '@pharmacy/db/auth'
+import { readAuthConfig } from '../config'
+import { currentActor } from './auth/actor'
+import { assertHost, assertOrigin } from './security/origin'
+import { readBody } from './security/body'
 
 export async function handle(
   request: Request,
-  run: (userId: string) => Promise<Response>,
+  run: (actor: Member, requestId: string) => Promise<Response>,
+  action: Action = 'practice:use',
 ) {
   const requestId = randomUUID()
+  let actor: Member | null = null
   try {
-    assertAuthMode()
-    if (process.env.AUTH_MODE !== 'dev')
-      throw new PracticeError(
-        'unauthenticated',
-        401,
-        'Chế độ luyện mẫu chưa được bật',
-      )
+    const config = readAuthConfig()
+    assertHost(request)
+    actor = await currentActor(requestId)
+    if (!actor)
+      throw new PracticeError('unauthenticated', 401, 'Vui lòng đăng nhập')
+    if (!authorize(actor, action))
+      throw new PracticeError('forbidden', 403, 'Bạn không có quyền truy cập')
     if (!['GET', 'HEAD'].includes(request.method)) {
-      const target = new URL(request.url)
-      // Next dev normalizes request.url to its bind address. Host retains the
-      // browser's actual destination; never trust forwarded headers here.
-      target.host = request.headers.get('host') ?? target.host
-      const expected = process.env.APP_ORIGIN ?? target.origin
-      const local = ['localhost', '127.0.0.1', '[::1]'].includes(
-        target.hostname,
-      )
-      if (
-        request.headers.get('origin') !== expected ||
-        (!process.env.APP_ORIGIN && !local)
-      )
-        throw new PracticeError('forbidden', 403, 'Origin không hợp lệ')
+      assertOrigin(request)
       if (Number(request.headers.get('content-length') ?? 0) > 16384)
         throw new PracticeError('payload_too_large', 413, 'Nội dung quá lớn')
+      const path = new URL(request.url).pathname
+      const kind =
+        request.method === 'PUT'
+          ? 'item'
+          : path.endsWith('/submit')
+            ? 'submit'
+            : 'create'
+      const limit =
+        kind === 'item'
+          ? config.RATE_LIMIT_ITEM_WRITE
+          : config.RATE_LIMIT_ATTEMPT_CREATE
+      const budget = await takeRateLimit(`api:${actor.id}:${kind}`, limit)
+      if (!budget.allowed) {
+        const error = new PracticeError(
+          'rate_limited',
+          429,
+          'Bạn thao tác quá nhanh. Vui lòng thử lại sau.',
+        )
+        error.retryAfter = budget.retryAfter
+        throw error
+      }
     }
-    const response = await run(DEV_USER_ID)
+    const response = await run(actor, requestId)
     response.headers.set('Cache-Control', 'no-store')
     response.headers.set('X-Request-Id', requestId)
     return response
   } catch (error) {
-    const known = error instanceof PracticeError
-    const validation = error instanceof ZodError || error instanceof SyntaxError
+    const known = error instanceof PracticeError,
+      validation = error instanceof ZodError || error instanceof SyntaxError
     const status = known ? error.status : validation ? 400 : 500
     const code = known
       ? error.code
@@ -52,16 +70,43 @@ export async function handle(
       : validation
         ? 'Dữ liệu không hợp lệ'
         : 'Không thể xử lý yêu cầu'
-    // Never serialize database errors, SQL or credentials into API responses.
+    if ([401, 403, 404, 429].includes(status)) {
+      try {
+        await appendAudit(getPool(), {
+          actorId: actor?.id ?? null,
+          action: 'security.denied',
+          entityType: 'request',
+          details: { reason: code },
+          requestId,
+        })
+      } catch {
+        console.warn(JSON.stringify({ event: 'audit.write_failed', requestId }))
+      }
+    }
+    console.info(
+      JSON.stringify({
+        event: 'api.error',
+        requestId,
+        userId: actor?.id ?? null,
+        code,
+        status,
+      }),
+    )
     return Response.json(
       { error: { code, message, details: null, requestId } },
-      { status, headers: { 'Cache-Control': 'no-store' } },
+      {
+        status,
+        headers: {
+          'Cache-Control': 'no-store',
+          'X-Request-Id': requestId,
+          ...(known && error.retryAfter
+            ? { 'Retry-After': String(error.retryAfter) }
+            : {}),
+        },
+      },
     )
   }
 }
 export async function body(request: Request) {
-  const text = await request.text()
-  if (Buffer.byteLength(text) > 16384)
-    throw new PracticeError('payload_too_large', 413, 'Nội dung quá lớn')
-  return JSON.parse(text)
+  return JSON.parse(await readBody(request))
 }

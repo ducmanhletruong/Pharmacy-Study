@@ -1,4 +1,5 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
+import { appendAudit } from './audit'
 import type pg from 'pg'
 import { sql } from 'drizzle-orm'
 import { gradeMcq, type Choice, type Label } from '@pharmacy/core'
@@ -13,6 +14,7 @@ import {
 import { getPool, getDb } from './client'
 
 export class PracticeError extends Error {
+  retryAfter?: number
   constructor(
     public code: string,
     public status: number,
@@ -125,6 +127,7 @@ export async function createAttempt(
   input: CreateAttempt,
   key: string,
   userId: string,
+  requestId: string = randomUUID(),
 ) {
   const normalized = {
     subject: input.subject,
@@ -203,6 +206,13 @@ export async function createAttempt(
         'INSERT INTO attempt_items(attempt_id,position,question_revision_id) VALUES($1,$2,$3)',
         [id, index + 1, question.current_revision_id],
       )
+    await appendAudit(client, {
+      actorId: userId,
+      action: 'attempt.created',
+      entityType: 'attempt',
+      entityId: id,
+      requestId,
+    })
     return { attempt: await readAttempt(client, id, userId), replayed: false }
   })
 }
@@ -213,6 +223,7 @@ export function answerItem(
   answer: Label,
   flagged: boolean | undefined,
   userId: string,
+  requestId: string = randomUUID(),
 ) {
   return transaction(async (client) => {
     const attempt = await owned(client, id, userId, true)
@@ -255,15 +266,32 @@ export function answerItem(
       explanation: revision.rows[0]!.explanation,
       sources: revision.rows[0]!.payload.sources,
     })
-    if (attempt.status === 'in_progress')
+    if (
+      attempt.status === 'in_progress' &&
+      (item.answer === null ||
+        (flagged !== undefined && flagged !== item.flagged))
+    ) {
       await client.query(
         'UPDATE attempt_items SET answer=$2::jsonb,is_correct=$3,answered_at=COALESCE(answered_at,now()),flagged=COALESCE($4,flagged) WHERE id=$1',
         [item.id, JSON.stringify(answer), grade.is_correct, flagged ?? null],
       )
+      await appendAudit(client, {
+        actorId: userId,
+        action: item.answer === null ? 'attempt.answered' : 'attempt.flagged',
+        entityType: 'attempt',
+        entityId: id,
+        details: { position, is_correct: grade.is_correct },
+        requestId,
+      })
+    }
     return feedback
   })
 }
-export function submitAttempt(id: string, userId: string) {
+export function submitAttempt(
+  id: string,
+  userId: string,
+  requestId: string = randomUUID(),
+) {
   return transaction(async (client) => {
     const attempt = await owned(client, id, userId, true)
     if (attempt.status === 'submitted')
@@ -300,6 +328,14 @@ export function submitAttempt(id: string, userId: string) {
       "UPDATE attempts SET status='submitted',submitted_at=now(),result=$2::jsonb WHERE id=$1",
       [id, JSON.stringify(summary)],
     )
+    await appendAudit(client, {
+      actorId: userId,
+      action: 'attempt.submitted',
+      entityType: 'attempt',
+      entityId: id,
+      details: { status: 'submitted' },
+      requestId,
+    })
     return summary
   })
 }

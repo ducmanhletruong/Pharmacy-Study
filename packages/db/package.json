@@ -5,11 +5,15 @@
   "type": "module",
   "exports": {
     ".": "./src/client.ts",
-    "./practice": "./src/practice.ts"
+    "./practice": "./src/practice.ts",
+    "./auth": "./src/auth.ts",
+    "./audit": "./src/audit.ts",
+    "./limits": "./src/limits.ts"
   },
   "scripts": {
     "migrate": "tsx src/migrate.ts",
-    "seed": "tsx src/seed.ts"
+    "seed": "tsx src/seed.ts",
+    "provision": "tsx src/provision.ts"
   },
   "dependencies": {
     "drizzle-orm": "0.45.4",

@@ -1,22 +1,22 @@
 # Trạng thái triển khai
 
-Cập nhật: 2026-11-17 (Asia/Saigon). P02 DONE; P03 chưa bắt đầu. Không triển khai production.
+Cập nhật: 2026-11-18 (Asia/Saigon). P03 đã triển khai, CI đạt, còn kiểm Google thật. Không triển khai production.
 
-| Phase | Trạng thái                 | Bằng chứng / còn lại                                                                                                               |
-| ----- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| P00   | DONE                       | Next.js/pnpm/TS strict, PostgreSQL ghim digest; CI run 43074691952; PR #1 draft                                                    |
-| P01   | DONE — phạm vi spike/local | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có |
-| P02   | DONE                       | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                       |
-| P03   | NOT STARTED                | Cần chốt Q3 về phạm vi người dùng, sau P02                                                                                         |
-| P04   | NOT STARTED                | Sau P03                                                                                                                            |
-| P05   | NOT STARTED                | Sau P04, Q2                                                                                                                        |
-| P06   | NOT STARTED                | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                   |
-| P07   | NOT STARTED                | Sau P04, Q2                                                                                                                        |
-| P08   | NOT STARTED                | Sau P04; RDKit spike đã đạt, Q2                                                                                                    |
-| P09   | NOT STARTED                | Sau P04 và quyền hình ảnh                                                                                                          |
-| P10   | NOT STARTED                | Sau P06/P07/P08/P09, taxonomy và Q2                                                                                                |
-| P11   | NOT STARTED                | Sau P05/P10                                                                                                                        |
-| P12   | NOT STARTED                | Sau P11 và quyết định hosting/phát hành                                                                                            |
+| Phase | Trạng thái                        | Bằng chứng / còn lại                                                                                                               |
+| ----- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| P00   | DONE                              | Next.js/pnpm/TS strict, PostgreSQL ghim digest; CI run 43074691952; PR #1 draft                                                    |
+| P01   | DONE — phạm vi spike/local        | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có |
+| P02   | DONE                              | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                       |
+| P03   | IMPLEMENTED — LIVE GOOGLE PENDING | T01–T06 có code; local unit104/integration14/E2E8 đạt với test provider; CI44165851119 đạt; chờ Google OAuth thật                  |
+| P04   | NOT STARTED                       | Sau P03                                                                                                                            |
+| P05   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
+| P06   | NOT STARTED                       | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                   |
+| P07   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
+| P08   | NOT STARTED                       | Sau P04; RDKit spike đã đạt, Q2                                                                                                    |
+| P09   | NOT STARTED                       | Sau P04 và quyền hình ảnh                                                                                                          |
+| P10   | NOT STARTED                       | Sau P06/P07/P08/P09, taxonomy và Q2                                                                                                |
+| P11   | NOT STARTED                       | Sau P05/P10                                                                                                                        |
+| P12   | NOT STARTED                       | Sau P11 và quyết định hosting/phát hành                                                                                            |
 
 ## Tasks P02
 
@@ -52,3 +52,13 @@ Plan upload giữ nguyên; phát sinh và lịch sử chi tiết ở worked.md. 
 CI code `f771a7bc11b8e52753fa068cad2bb8ad2e5ba115` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44133096057 . Frozen install, lint/format, typecheck, migration DB rỗng và seed/rerun, unit3/integration7/E2E2, production build, startup guard, audit mức high và gitleaks đều success. PR #3: https://github.com/ducmanhletruong/Pharmacy-Study/pull/3 (draft, base phase-01).
 
 Lượt sau CI chỉ cập nhật Markdown bàn giao/kết quả; không đổi code đã kiểm. P02 DONE, dừng cổng phase. Không tự mở P03 hoặc merge/deploy. Hướng dẫn chạy: docs/runbooks/local-practice.md.
+
+## P03 — kiểm chứng và cổng còn lại
+
+Q3 đã chốt lớp được mời, Google (ADR-0008). T01 auth/session, T02 authorize96 ô + default deny, T03 owner guard, T04 role DB/audit append-only, T05 Origin/CSP/nonce/rate limit, T06 auth E2E đã triển khai. Local đã đạt 104 unit, 14 integration, 8 E2E Chromium; production build và startup guard dev/test đạt. Callback Google thật chưa chạy do không có OAuth client; không báo P03 DONE trước kiểm này. CI phase-03 a4fc5f9/run44165851119 SUCCESS.
+
+DB P03 riêng, runtime app_rw không có quyền DDL/sửa xóa audit; maintenance riêng. Advisory picomatch high được mitigation bằng patch có hash/regression, raw audit vẫn có high1 và moderate1; xem docs/security/dependency-hardening.md. Không mở P04, merge hoặc deploy. Runbook: docs/runbooks/google-login.md.
+
+Kiểm cuối local: lint, format:check, git diff --check, unit104, security classifier4 và audit:security đạt. Provision rerun sau sửa env đạt, không in credential. CI chưa chạy tại thời điểm commit này.
+
+CI code `a4fc5f973ca8ce808a48a4bde4072c31102d1caf` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44165851119 . Frozen install/lint/format/types, migration/bootstrap/provision/seed-rerun, unit104/integration14/E2E8, build, production guard, dependency hardening gate và gitleaks đều đạt. PR #4 draft: https://github.com/ducmanhletruong/Pharmacy-Study/pull/4 . Bổ sung sau CI chỉ đổi Markdown; P03 vẫn LIVE GOOGLE PENDING, không mở P04.

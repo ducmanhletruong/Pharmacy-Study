@@ -573,3 +573,67 @@ progress {
     white-space: nowrap;
   }
 }
+.account {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-left: auto;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.account > span {
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account button {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 20px;
+  padding: 6px 14px;
+  color: var(--green);
+  font-size: 12px;
+}
+.site-header {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.login-panel {
+  max-width: 540px;
+  margin: 50px auto;
+}
+.login-panel h1 {
+  font-size: 38px;
+}
+.login-panel > p {
+  color: var(--muted);
+}
+.login-panel form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.login-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+.login-panel input {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: white;
+  color: var(--ink);
+}
+.login-panel .primary {
+  width: 100%;
+  margin-top: 8px;
+}
+.login-panel .error {
+  color: #8a331c;
+}
+.login-panel .sample-note {
+  margin: 10px 0;
+}

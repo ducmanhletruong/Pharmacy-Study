@@ -1,0 +1,72 @@
+name: Phase 03 identity and access
+
+on:
+  pull_request:
+    branches: [main, phase-02]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p03-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  identity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Public synthetic credentials, only for this ephemeral CI PostgreSQL.
+      BOOTSTRAP_DATABASE_URL: postgresql://pharmacy_dev:local-dev-only@127.0.0.1:5432/pharmacy_study_test
+      DATABASE_URL: postgresql://pharmacy_app:synthetic-app-password-for-ci-only@127.0.0.1:5432/pharmacy_study_test
+      MIGRATION_DATABASE_URL: postgresql://pharmacy_migrator:synthetic-migration-password-for-ci-only@127.0.0.1:5432/pharmacy_study_test
+      AUTH_MODE: dev
+      NEXT_TELEMETRY_DISABLED: '1'
+    services:
+      postgres:
+        image: postgres:17.11-alpine@sha256:e5d2edd28b1f8d40a0a6c0c9cdc545b19b56a0d5d88f94bc11a97d970d4700d0
+        env:
+          POSTGRES_DB: pharmacy_study_test
+          POSTGRES_USER: pharmacy_dev
+          POSTGRES_PASSWORD: local-dev-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U pharmacy_dev -d pharmacy_study_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint && pnpm format:check
+      - run: pnpm typecheck
+      - name: Bootstrap empty DB and privilege groups
+        run: pnpm db:migrate
+        env:
+          MIGRATION_DATABASE_URL: ''
+      - name: Provision separate logins without printing credentials
+        run: pnpm db:provision -- --write-local-env
+      - name: Seed and verify migration role reruns
+        run: pnpm db:seed && pnpm db:migrate && pnpm db:seed
+      - run: pnpm test && pnpm test:integration
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+      - run: pnpm build
+        env:
+          AUTH_MODE: disabled
+      - run: node scripts/check-production-guard.mjs
+      - name: Verify hardening and reject unhandled high/critical advisories
+        run: pnpm security:test && pnpm audit:security
+      - name: Scan history for secrets
+        run: |
+          curl --fail --silent --show-error --location --retry 3 https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum --check -
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" git . --redact --no-banner --log-opts=--all

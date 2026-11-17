@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { signOut } from 'next-auth/react'
 import {
   attemptSchema,
   feedbackSchema,
@@ -64,7 +65,13 @@ function TopicOptions({
     </>
   )
 }
-export function Practice() {
+export function Practice({
+  member,
+  canSignOut,
+}: {
+  member: { name: string; role: 'admin' | 'learner' }
+  canSignOut: boolean
+}) {
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [selected, setSelected] = useState<Subject | null>(null)
   const [topics, setTopics] = useState<Topic[]>([])
@@ -234,7 +241,17 @@ export function Practice() {
         >
           <span className="brand-symbol">P</span>Pharmacy<span>Study</span>
         </Link>
-        <span className="local-badge">Không gian luyện tập</span>
+        <div className="account">
+          <span title={member.name}>{member.name}</span>
+          {member.role === 'admin' && <Link href="/admin">Quản trị</Link>}
+          {canSignOut ? (
+            <button onClick={() => void signOut({ callbackUrl: '/login' })}>
+              Đăng xuất
+            </button>
+          ) : (
+            <span className="local-badge">Bộ luyện mẫu</span>
+          )}
+        </div>
       </header>
       <main className="workspace">
         <section className="intro">

@@ -1,10 +1,19 @@
+import { runtimeEnvironment } from './runtime-env.mjs'
+import { readAuthConfig } from '../apps/web/src/config.ts'
+import { assertRuntimeDatabase, closeDb } from '../packages/db/src/client.ts'
 import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { assertAuthMode } from '../apps/web/src/config.ts'
 
 // Reject before Next opens a port, even if its instrumentation hook leaves
 // background handles alive after a failed startup. Do not load dev .env here.
-assertAuthMode({ ...process.env, NODE_ENV: 'production' })
+const runtimeEnv = runtimeEnvironment(process.env)
+assertAuthMode({ ...runtimeEnv, NODE_ENV: 'production' })
+const config = readAuthConfig({ ...process.env, NODE_ENV: 'production' })
+if (config.AUTH_MODE === 'oidc') {
+  await assertRuntimeDatabase()
+  await closeDb()
+}
 const child = spawn(
   process.execPath,
   [
@@ -15,12 +24,12 @@ const child = spawn(
     '--hostname',
     '0.0.0.0',
     '--port',
-    '3000',
+    String(config.PORT),
     ...process.argv.slice(2),
   ],
   {
     cwd: new URL('../apps/web/', import.meta.url),
-    env: { ...process.env, NODE_ENV: 'production' },
+    env: { ...runtimeEnv, NODE_ENV: 'production' },
     stdio: 'inherit',
   },
 )

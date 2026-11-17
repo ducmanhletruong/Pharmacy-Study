@@ -1,6 +1,6 @@
 # Blockers và quyết định đang chờ
 
-Cập nhật 2026-11-17 (Asia/Saigon).
+Cập nhật 2026-11-18 (Asia/Saigon).
 
 ## P02 hiện tại
 
@@ -10,7 +10,7 @@ P02 DONE: code local và CI run 44133096057 đã đạt. Không còn blocker hi�
 
 | ID                 | Thông tin / kiểm chứng còn thiếu                                                                               | Phạm vi         |
 | ------------------ | -------------------------------------------------------------------------------------------------------------- | --------------- |
-| Q3                 | Chỉ cá nhân, cả lớp hay công khai; provider đăng nhập thật                                                     | P03             |
+| GOOGLE-LIVE        | OAuth Web client + danh sách email cấu hình private, kiểm callback Google thật; Q3 đã chốt lớp được mời/Google | P03             |
 | Q2                 | Cấu trúc đề, đề cương, danh pháp, quy tắc chấm                                                                 | P05/P07/P08/P10 |
 | OPENAI-ACCESS      | Credential/luồng OAuth hỗ trợ chính thức, model, hạn mức, kiểm batch thật; chọn OpenAI không tự cấp API từ Pro | P06             |
 | Q6                 | Luồng sinh/duyệt, nguồn web, quyền hình ảnh                                                                    | P06             |
@@ -22,3 +22,7 @@ Q1 đã xác nhận MCP bên thứ ba và quyền dùng nguồn cá nhân, khôn
 ## Bảo toàn dữ liệu
 
 Capture/nguồn/credential giữ ở Windows private bị ignore; không nhập vào repo hoặc DB seed. Chỉnh sửa public chưa push ở Windows chưa được hợp nhất vào Cloud; không reset/pull ghi đè chúng. Cloud mới clone phase-01 trước khi tạo branch phase-02; PostgreSQL local mới chỉ chứa dữ liệu tổng hợp.
+
+## P03 hiện tại
+
+Code và kiểm local bằng provider thử đã triển khai; không có Google client credentials ở Cloud. Owner cấu hình private theo docs/runbooks/google-login.md rồi kiểm admin/member/outsider/logout bằng Google thật. Không cần gửi secret qua chat. CI phase-03 run44165851119 đã SUCCESS; P03 chưa DONE, P04 chưa mở.

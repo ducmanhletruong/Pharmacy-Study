@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/grading/mcq.ts"
+    ".": "./src/grading/mcq.ts",
+    "./authz": "./src/authz/index.ts"
   }
 }

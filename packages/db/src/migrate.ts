@@ -1,10 +1,13 @@
-import { loadLocalEnv } from './env'
+import {
+  loadMaintenanceEnv,
+  getMaintenancePool,
+  closeMaintenance,
+} from './maintenance'
 import { createHash } from 'node:crypto'
 import { readFile, readdir } from 'node:fs/promises'
-import { getPool, closeDb } from './client'
 
-loadLocalEnv()
-const client = await getPool().connect()
+loadMaintenanceEnv()
+const client = await getMaintenancePool().connect()
 try {
   await client.query('BEGIN')
   await client.query(
@@ -41,5 +44,5 @@ try {
   throw error
 } finally {
   client.release()
-  await closeDb()
+  await closeMaintenance()
 }

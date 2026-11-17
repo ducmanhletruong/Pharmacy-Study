@@ -1,9 +1,10 @@
+import { signInAs } from './sign-in'
 import { expect, test } from '@playwright/test'
 
 test('choose a subject, answer ten questions, resume and see explanations and results', async ({
   page,
 }) => {
-  await page.goto('/')
+  await signInAs(page)
   await page.getByRole('button', { name: /Môn mẫu tổng hợp/ }).click()
   await page.getByRole('button', { name: 'Bắt đầu luyện →' }).click()
   await expect(page).toHaveURL(/attempt=/)
@@ -41,7 +42,7 @@ test('choose a subject, answer ten questions, resume and see explanations and re
 })
 test('mobile selection and practice fit the viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await signInAs(page)
   await page.getByRole('button', { name: /Môn mẫu tổng hợp/ }).click()
   await page.getByRole('button', { name: 'Bắt đầu luyện →' }).click()
   await expect(page.getByRole('radio').first()).toBeVisible()
