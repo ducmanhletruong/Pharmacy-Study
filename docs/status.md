@@ -58,3 +58,5 @@ Lượt sau CI chỉ cập nhật Markdown bàn giao/kết quả; không đổi 
 - T02: authorize default deny và ma trận96 ô +1 ca phủ nhận đã triển khai/kiểm local; các task tích hợp tiếp theo đang thực hiện.
 
 - T04: migration0002, audit append-only và login DB app/migrator tách biệt; local migration/seed/permission checks đạt.
+
+- T01: Google allowlist/session code và runbook private config; Google live còn chờ OAuth client, chưa DONE. Hardening dependency cần cho auth CI được ghi doc riêng.

@@ -10,16 +10,19 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@pharmacy/api-contract": "workspace:*",
+    "@pharmacy/db": "workspace:*",
+    "katex": "0.19.1",
     "next": "16.4.6",
+    "next-auth": "4.24.15",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "@pharmacy/db": "workspace:*",
-    "@pharmacy/api-contract": "workspace:*",
-    "katex": "0.19.1"
+    "zod": "4.6.7",
+    "@pharmacy/core": "workspace:*"
   },
   "devDependencies": {
+    "@types/katex": "0.16.8",
     "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0",
-    "@types/katex": "0.16.8"
+    "@types/react-dom": "19.3.0"
   }
 }

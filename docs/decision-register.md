@@ -57,3 +57,9 @@ Ngày dùng múi giờ Asia/Saigon. Không coi ASSUMPTION/PROPOSED là quyết �
 Thực hiện luồng luyện tổng hợp trong phạm vi plan: Drizzle/SQL migration theo ADR-0005 đề xuất, Zod, PostgreSQL local, user dev có chốt production. Không suy ra các ADR PROPOSED khác đã được owner duyệt toàn bộ. Tài liệu P01/nguồn riêng không trở thành seed. Mode mock, import, auth thật và AI adapter chưa làm.
 
 - P02 gate VERIFIED: CI f771a7b/run44133096057 success với PostgreSQL thật, 3 unit/7 integration/2 E2E, build và security checks. P02 DONE, PR #3 draft; chưa merge/deploy hoặc mở P03.
+
+## P03 — 2026-11-18
+
+- CHAT-10 CONFIRMED: chủ dự án chọn “Một nhóm/lớp được mời”, Google; Q3 đã giải quyết, ADR-0008 Accepted phạm vi/provider. Quyền dùng giáo trình P01 vẫn chỉ cá nhân, không tự mở rộng cho lớp.
+- Stable next-auth4.24.15 cho Next16/React19, session DB revoke + JWT cookie, allowlist email exact. Google OAuth client riêng website chưa được cấu hình nên chưa có live verification. Không yêu cầu cookie NotebookLM hay API key ChatGPT Pro.
+- App/migration DB credential tách riêng; provider thử chỉ nonproduction. Advisory picomatch được hardening có regression và báo raw counts, không ignore high chung. Hosting tiếp tục local, không P04.

@@ -1,3 +1,6 @@
+import { runtimeEnvironment } from './runtime-env.mjs'
+import { readAuthConfig } from '../apps/web/src/config.ts'
+import { assertRuntimeDatabase, closeDb } from '../packages/db/src/client.ts'
 import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
@@ -6,6 +9,12 @@ try {
 } catch (error) {
   if (error.code !== 'ENOENT') throw error
 }
+const config = readAuthConfig()
+if (config.AUTH_MODE === 'oidc' || config.AUTH_MODE === 'test') {
+  await assertRuntimeDatabase()
+  await closeDb()
+}
+const runtimeEnv = runtimeEnvironment(process.env)
 const child = spawn(
   process.execPath,
   [
@@ -16,11 +25,11 @@ const child = spawn(
     '--hostname',
     '0.0.0.0',
     '--port',
-    '3000',
+    String(config.PORT),
   ],
   {
     cwd: new URL('../apps/web/', import.meta.url),
-    env: process.env,
+    env: runtimeEnv,
     stdio: 'inherit',
   },
 )
