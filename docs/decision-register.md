@@ -51,3 +51,7 @@ Ngày dùng múi giờ Asia/Saigon. Không coi ASSUMPTION/PROPOSED là quyết �
 - ADR-0006 Accepted phạm vi local theo quyết định đã có ADR-0011; production vẫn hoãn. ADR-0007 Accepted lựa chọn OpenAI đã được chủ dự án chốt; không coi là đã có API entitlement.
 - Đính chính ranh giới: P01 yêu cầu hồ sơ quyết định và spike, không yêu cầu app gọi API AI thật. Tích hợp đó thuộc P06; những mô tả trước coi API credential là blocker P02 quá chặt so với plan. Không thay đổi plan gốc hoặc âm thầm chốt ngân sách/model.
 - Chủ dự án đã yêu cầu tiếp tục bước tiếp theo; được bắt đầu P02 sau cổng P01, giữ giới hạn một phase sản phẩm.
+
+## P02 — 2026-11-17
+
+Thực hiện luồng luyện tổng hợp trong phạm vi plan: Drizzle/SQL migration theo ADR-0005 đề xuất, Zod, PostgreSQL local, user dev có chốt production. Không suy ra các ADR PROPOSED khác đã được owner duyệt toàn bộ. Tài liệu P01/nguồn riêng không trở thành seed. Mode mock, import, auth thật và AI adapter chưa làm.

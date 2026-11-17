@@ -1,7 +1,4 @@
+import { Practice } from '../components/practice'
 export default function HomePage() {
-  return (
-    <main>
-      <h1>Pharmacy Study</h1>
-    </main>
-  )
+  return <Practice />
 }

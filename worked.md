@@ -298,3 +298,30 @@ Bốn unit test parser đạt; live MCP handshake/catalog và auth-required outc
 Chuẩn bị ADR-0006/0007 theo đúng quyết định local/OpenAI đã có, giữ production/API integration chưa xác minh. Đính chính việc tự thêm điều kiện API hoạt động vào cổng P01; plan chỉ yêu cầu hồ sơ quyết định/spike, adapter ở P06. Không thay plan gốc, không tạo billing. Chủ dự án yêu cầu bước kế tiếp nên chuyển P02; không tự merge PR.
 
 Môi trường Cloud được khôi phục với /workspace không có repo cũ. Đã clone branch phase-01 từ remote, giữ nguyên Windows có dữ liệu private/chỉnh sửa riêng. Đây là phát sinh môi trường, không phục hồi phiên Google hoặc package MCP cũ. Chỉ kiểm diff cho tài liệu, không test/build P01 lại.
+
+## 2026-11-17 — P02: luồng luyện MCQ tổng hợp
+
+### Phạm vi và thực hiện
+
+Theo lệnh tiếp tục bước sau và sau khi owner duyệt cổng P01, tạo branch phase-02 trên phase-01. P01 docs commit 240a4ee đã push; không merge PR #1/#2. Chỉ triển khai P02, không tự bắt đầu P03.
+
+- T01/T02: SQL migration 0001, 9 bảng và indexes/constraints trong plan; forward-only, khóa và checksum chống đổi migration cũ. Seed tự viết một môn, một cây topic, 10 MCQ (có công thức), hash/revision cố định; không overwrite revision hoặc truncate attempts khi seed lại. Drizzle và pg là dependency cần cho DB theo hướng đề xuất trong plan.
+- T03: grade theo label bất kể thứ tự, kiểm A/B/C/D, lựa chọn không trống/trùng và đúng một đáp án. Unit 2 ca bảo vệ các lỗi dữ liệu; health smoke giữ nguyên.
+- T04: contract Zod và API-01..06; practice-only, filter topic gồm descendant, count thiếu trả 422. Idempotency theo user/key và payload hash, Origin, dữ liệu lỗi an toàn, ownership, pin revision, khóa đồng thời answer/submit, submit lặp cùng kết quả và freeze bài đã nộp. Đề GET/create không lộ đáp án/nguồn/giải thích. Integration/contract 7 ca với Postgres thật, dọn riêng attempt của test và restore revision bị thay để kiểm snapshot.
+- T05/T06: UI tiếng Việt, bộ câu mẫu có nhãn tổng hợp, chọn topic/count, trả lời, feedback/nguồn, lưu/resume bằng URL, điểm và thống kê topic. KaTeX trust=false cho công thức. Hai E2E Chromium: đủ 10 câu/reload/kết quả và mobile390px; đã xem screenshot thật, không tràn ngang. Không tự nhận đây là kiến thức Dược hoặc dữ liệu NotebookLM.
+- Package cần thiết ghim: drizzle-orm0.45.4, pg8.23.1, zod4.6.7, katex0.19.1, tsx4.23.15, Playwright1.65.1 và types tương ứng. Không nâng nền Node/pnpm/Next/React/TS, không cài framework/ảnh/tài nguyên ngoài nhu cầu. Install xác minh supply-chain policy.
+
+### Phát sinh và sửa lỗi trong lúc kiểm chứng
+
+- Cloud không còn repo/runtime cũ sau resume, clone branch đúng và tạo DB Compose mới theo image17.11 ghim digest. Không sửa Windows/copy cookie; không xóa volume có dữ liệu người dùng. .env mới chỉ chứa giá trị local-dev-only từ example và bị ignore.
+- Lint đầu báo link nội bộ dùng a: đổi thành Next Link và reset state khi về trang chủ. pg cảnh báo Promise.all trên một connection: chuyển đọc choices trong transaction sang tuần tự, integration kiểm lại đạt.
+- Launcher Node với env-file flag không tương thích cách runtime truyền NODE_OPTIONS: thay bằng launcher dev.mjs dùng process.loadEnvFile, không sửa/unset NODE_OPTIONS. Tách loader .env CLI khỏi module DB dùng trong Next để không đưa đường dẫn .env vào bundler.
+- E2E phát hiện Next16 chặn HMR khi hostname127.0.0.1 khác bind host; thêm đúng hai allowedDevOrigins loopback, không wildcard. E2E tiếp theo phát hiện Origin so với request.url đã bị Next normalize thành0.0.0.0: dùng Host thực với whitelist loopback mặc định, hoặc APP_ORIGIN rõ ràng cho proxy. Thêm regression cho normalized Host và domain không tin cậy; không tắt CSRF/Origin. E2E cuối 2/2 đạt.
+- Production build đạt nhưng test guard đầu timeout: instrumentation đã báo lỗi dev-mode song Next giữ handle sống. Thêm start.mjs kiểm config trước khi Next mở cổng; check-production-guard đạt exit0 ngay, instrumentation vẫn là lớp kiểm độc lập. Không rebuild sau thay đổi launcher JS vì bundle app đã build không đổi.
+- Audit: 0 high/critical, 1 moderate minimatch (toolchain). Không tự nâng dependency nền ngoài phạm vi để sửa advisory không chặn cổng hiện tại. CI vẫn chạy audit mức high.
+
+### Kiểm chứng và giới hạn
+
+DB migrate/seed rỗng rồi lặp đạt; unit3/3, integration/contract7/7, E2E2/2, production build và guard đạt. Typecheck đã đạt trước build, có kiểm riêng CLI DB/contract không nằm trong bundle; không lặp typecheck sau build. Lint lỗi link đã sửa và file liên quan đã kiểm; format/lint toàn diff và CI được ghi khi hoàn tất. Mọi lượt chạy lại đều vì thay đổi/lỗi cụ thể ở trên, không lặp spike P01. Không gọi API AI, tạo billing hoặc triển khai production.
+
+Ngoài plan: launcher dev/start và regression Host/Origin là phần cần thiết để P02 chạy đúng và giữ chốt production; không refactor app nền không liên quan. Report/handoff được cập nhật để bỏ trạng thái pending cũ đã được owner giải quyết. Hoàn tác code bằng revert commit P02; không xóa private Windows hoặc DB volume. Migration đã áp dụng không sửa/xóa khỏi DB có dữ liệu; dùng forward migration nếu cần đổi schema.
