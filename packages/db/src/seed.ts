@@ -106,8 +106,8 @@ try {
       [qid, rid],
     )
     await client.query(
-      'INSERT INTO question_topics(question_id,topic_id) VALUES($1,$2) ON CONFLICT DO NOTHING',
-      [qid, id(2, fixture.topic + 1)],
+      'INSERT INTO question_topics(question_id,topic_id,subject_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING',
+      [qid, id(2, fixture.topic + 1), id(1, 1)],
     )
   }
   await client.query('COMMIT')
