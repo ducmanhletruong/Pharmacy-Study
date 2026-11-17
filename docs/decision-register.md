@@ -55,3 +55,5 @@ Ngày dùng múi giờ Asia/Saigon. Không coi ASSUMPTION/PROPOSED là quyết �
 ## P02 — 2026-11-17
 
 Thực hiện luồng luyện tổng hợp trong phạm vi plan: Drizzle/SQL migration theo ADR-0005 đề xuất, Zod, PostgreSQL local, user dev có chốt production. Không suy ra các ADR PROPOSED khác đã được owner duyệt toàn bộ. Tài liệu P01/nguồn riêng không trở thành seed. Mode mock, import, auth thật và AI adapter chưa làm.
+
+- P02 gate VERIFIED: CI f771a7b/run44133096057 success với PostgreSQL thật, 3 unit/7 integration/2 E2E, build và security checks. P02 DONE, PR #3 draft; chưa merge/deploy hoặc mở P03.
