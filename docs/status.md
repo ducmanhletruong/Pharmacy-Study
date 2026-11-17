@@ -1,123 +1,54 @@
 # Trạng thái triển khai
 
-## Cập nhật 2026-11-17 — cổng P01
+Cập nhật: 2026-11-17 (Asia/Saigon). P02 DONE; P03 chưa bắt đầu. Không triển khai production.
 
-Windows đã có 15 observation đủ năm chủ đề trên ba ngày 12/11, 13/11, 17/11; recorder/validator exit 0 theo báo cáo cuối của chat local và xác nhận chủ dự án. Hai mục pending cũ đã được bổ sung ở Windows; không còn là blocker hiện tại. Chủ dự án đã tự review và duyệt grounding/vị trí nguồn cùng điều khoản ngày 17/11. Cloud đối chiếu báo cáo/lịch sử, không tải nguồn hoặc capture private.
+| Phase | Trạng thái                 | Bằng chứng / còn lại                                                                                                               |
+| ----- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| P00   | DONE                       | Next.js/pnpm/TS strict, PostgreSQL ghim digest; CI run 43074691952; PR #1 draft                                                    |
+| P01   | DONE — phạm vi spike/local | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có |
+| P02   | DONE                       | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                       |
+| P03   | NOT STARTED                | Cần chốt Q3 về phạm vi người dùng, sau P02                                                                                         |
+| P04   | NOT STARTED                | Sau P03                                                                                                                            |
+| P05   | NOT STARTED                | Sau P04, Q2                                                                                                                        |
+| P06   | NOT STARTED                | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                   |
+| P07   | NOT STARTED                | Sau P04, Q2                                                                                                                        |
+| P08   | NOT STARTED                | Sau P04; RDKit spike đã đạt, Q2                                                                                                    |
+| P09   | NOT STARTED                | Sau P04 và quyền hình ảnh                                                                                                          |
+| P10   | NOT STARTED                | Sau P06/P07/P08/P09, taxonomy và Q2                                                                                                |
+| P11   | NOT STARTED                | Sau P05/P10                                                                                                                        |
+| P12   | NOT STARTED                | Sau P11 và quyết định hosting/phát hành                                                                                            |
 
-P01-T01 DONE; P01 kết thúc trong phạm vi spike/local. ADR-0006 áp dụng quyết định local đã duyệt, ADR-0007 ghi lựa chọn OpenAI đã xác nhận. API credential/model/chi phí và hosting production vẫn mở cho phase tích hợp/phát hành; không tự tạo điều kiện API hoạt động để chặn P02. Các đoạn ngày 12/11 bên dưới là lịch sử, được cập nhật này thay thế về trạng thái.
+## Tasks P02
 
-Chủ dự án yêu cầu tiếp tục bước tiếp theo: P02 là phase thực thi kế tiếp, chỉ dữ liệu tổng hợp và user dev, không AI runtime hoặc nguồn giáo trình. Không merge PR/deploy. Môi trường Cloud vừa khôi phục không còn checkout/runtime cũ; đã clone đúng branch phase-01 vào /workspace/web-starter, không tác động Windows.
+| Task    | Trạng thái | Kết quả                                                                                                      |
+| ------- | ---------- | ------------------------------------------------------------------------------------------------------------ |
+| P02-T01 | DONE       | SQL migration 0001, 9 bảng, FK revision-owner, index/constraints; migration rỗng và chạy lại đạt             |
+| P02-T02 | DONE       | 1 môn tổng hợp, cây chủ đề, 10 MCQ; seed lặp không nhân bản hoặc xóa attempts                                |
+| P02-T03 | DONE       | Chấm MCQ theo label, đủ A/B/C/D và đúng một đáp án; 2 test grading đạt                                       |
+| P02-T04 | DONE       | API-01..06, contract Zod, Origin, ownership, idempotency, revision snapshot; 7 integration/contract test đạt |
+| P02-T05 | DONE       | UI chọn môn/chủ đề, lưu từng câu, giải thích/nguồn, kết quả; KaTeX và responsive                             |
+| P02-T06 | DONE       | 2 Chromium E2E đạt local/CI: 10 câu, reload/resume, kết quả và mobile 390px                                  |
 
-Cập nhật: 2026-11-12 (Asia/Saigon). Phase hiện tại: P01 — PARTIAL / BLOCKED tại cổng tích hợp. P00 đã DONE; các phase sau P01 chưa bắt đầu.
+## Kiểm chứng P02 local
 
-| Task    | Trạng thái | Bằng chứng / còn lại                                                               |
-| ------- | ---------- | ---------------------------------------------------------------------------------- |
-| P00-T01 | DONE       | Workspace pnpm 11.25.0 và strict TypeScript; frozen install đạt trên clone sạch/CI |
-| P00-T02 | DONE       | ESLint, Prettier và typecheck đạt trên local/clone sạch/CI                         |
-| P00-T03 | DONE       | Vitest 5.1.0: smoke test health contract 1/1 đạt trên local/clone sạch/CI          |
-| P00-T04 | DONE       | PostgreSQL 17.11 ghim digest, Compose và CI service healthy                        |
-| P00-T05 | DONE       | Plan, 8 ADR, register/status/blockers/CR, AGENTS và báo cáo đã có; OPEN giữ nguyên |
-| P00-T06 | DONE       | GitHub Actions run 43074691952 success; PR #1 draft                                |
-| P00-T07 | DONE       | Build và HTTP production health/homepage đạt; dev server cổng 3000                 |
+- Frozen P00 install và install dependency P02 đạt; không nâng Node/pnpm/Next/React/TS.
+- PostgreSQL 17.11 healthy từ Compose; db:migrate/db:seed trên DB rỗng và chạy lại đạt. Không tác động DB Windows.
+- Unit 3/3 (2 grading + 1 health), integration/contract 7/7; kiểm không lộ đáp án, concurrent idempotency/answers, Origin, ownership, điểm, submit lặp, pin revision.
+- E2E 2/2, đã quan sát screenshot desktop/mobile. Chỉ kiểm Chromium/viewport, không nhận là đã kiểm mọi browser hoặc thiết bị vật lý.
+- Next production build đạt; production launcher từ chối AUTH_MODE=dev trước khi mở server, kiểm process exit 0 của test guard đạt.
+- Audit không có high/critical, có 1 moderate minimatch trong toolchain; không tự nâng dependency nền ngoài phạm vi.
+- Lint/format, checksum report và diff check ghi trong worked.md; CI và kiểm tra code mới đã đạt theo run ở phần cổng phía dưới.
 
-## Bảng phase
+## Bằng chứng P01
 
-| Phase | Trạng thái        | Điều kiện trước khi bắt đầu                                                       |
-| ----- | ----------------- | --------------------------------------------------------------------------------- |
-| P00   | DONE              | Local, clean clone và GitHub Actions P00 đều pass; PR #1 đang draft, chưa merge   |
-| P01   | PARTIAL / BLOCKED | Windows list thành công; còn kiến thức/citation ba ngày và quyết định/tích hợp AI |
-| P02   | NOT STARTED       | P00 xong, duyệt tài liệu; Q4 mặc định A-03                                        |
-| P03   | NOT STARTED       | P02 và Q3                                                                         |
-| P04   | NOT STARTED       | P03                                                                               |
-| P05   | NOT STARTED       | P04 và Q2                                                                         |
-| P06   | NOT STARTED       | P04, P01, Q1, Q5, Q6                                                              |
-| P07   | NOT STARTED       | P04 và Q2                                                                         |
-| P08   | NOT STARTED       | P04, P01-T02 và Q2                                                                |
-| P09   | NOT STARTED       | P04 và hình có giấy phép                                                          |
-| P10   | NOT STARTED       | P06, P07, P08, P09, Q2 và taxonomy                                                |
-| P11   | NOT STARTED       | P05 và P10                                                                        |
-| P12   | NOT STARTED       | P11, ADR-0006 và điều kiện phát hành                                              |
+Owner xác nhận “Đã review và duyệt cả grounding lẫn điều khoản” ngày 17/11. Lịch sử chat Windows báo recorder exit 0, 15 observation đủ năm chủ đề trên ba ngày; Cloud không đọc raw nguồn/private capture hoặc tự chạy lại validator. Hai pending cũ đã được xử lý ở Windows. Sự cố auth 13/11 khôi phục bằng refresh_auth, không chứng minh phiên vô thời hạn.
 
-## Kiểm chứng thực tế
+CI spike 0dc5d96 success: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43157607324 . Provider OpenAI đã được chọn; API entitlement/model/billing vẫn phải xác minh ở P06. Đính chính việc coi API app hoạt động là điều kiện P02 quá chặt so với mục P01 của plan. Hosting hiện tại local theo ADR-0011, production còn hoãn.
 
-Code được kiểm chứng tại commit `50403d8f7898a8de48c827f3521f172077584cb3`. Bổ sung sau commit này chỉ là tài liệu và hướng dẫn agent do Next.js sinh, không đổi code ứng dụng/dependency/build config.
+Plan upload giữ nguyên; phát sinh và lịch sử chi tiết ở worked.md. Không dùng nguồn giáo trình trong seed hoặc claim nội dung mẫu là đề thi thật.
 
-| Môi trường                               | Kiểm tra                                                                                                               | Kết quả                                                                  |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Checkout làm việc                        | Install, lint, strict typecheck, Vitest 1/1, production build                                                          | PASS                                                                     |
-| Local PostgreSQL                         | Compose up --wait, pg_isready, SHOW server_version                                                                     | PASS — 17.11, image ghim digest                                          |
-| HTTP production                          | /api/v1/health HTTP 200 và JSON chính xác; homepage có tên dự án và lang=vi                                            | PASS                                                                     |
-| Clone sạch /tmp/pharmacy-study-p00-clean | pnpm install --frozen-lockfile, lint, typecheck, test, build, format:check                                             | PASS; chỉ dùng chung cache package, không tái sử dụng node_modules/.next |
-| GitHub Actions                           | Frozen install, lint, format, typecheck, unit smoke, build, production HTTP health, gitleaks; Postgres service healthy | PASS — run 43074691952                                                   |
-| Secret scan                              | Gitleaks 8.30.1 local và CI                                                                                            | PASS — không phát hiện secret                                            |
-| Plan gốc                                 | cmp với upload mới nhất                                                                                                | Trùng byte, không tự thay đổi bản v0.1 DRAFT                             |
+## Cổng P02 đã đạt
 
-Bằng chứng CI: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43074691952
+CI code `f771a7bc11b8e52753fa068cad2bb8ad2e5ba115` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44133096057 . Frozen install, lint/format, typecheck, migration DB rỗng và seed/rerun, unit3/integration7/E2E2, production build, startup guard, audit mức high và gitleaks đều success. PR #3: https://github.com/ducmanhletruong/Pharmacy-Study/pull/3 (draft, base phase-01).
 
-PR: https://github.com/ducmanhletruong/Pharmacy-Study/pull/1 (draft, chưa merge).
-
-Bản tool đã kiểm: Node.js 24.22.1, pnpm 11.25.0, Next.js 16.4.6, React 19.3.1, TypeScript 6.0.3, ESLint 9.39.5 (thỏa peer của plugin Next.js), Vitest 5.1.0, PostgreSQL 17.11.
-
-Lượt format check đầu phát hiện cách xuống dòng mảng healthcheck của Compose; đã format đúng file và clone sạch/CI xác nhận pass. Lượt install đầu lỗi quyền ghi home và lượt offline thiếu metadata không được coi là đạt; kết quả cuối đã thay thế chúng bằng install thành công có kiểm tra supply-chain.
-
-Không chạy browser e2e, migration, auth, pipeline AI hoặc test nghiệp vụ ở P00 vì chúng chưa được thiết lập; không báo đạt các cổng MVP chưa tồn tại. Không triển khai production hoặc tự merge PR.
-
-## P01 — Khảo sát khả thi
-
-Lệnh “thực thi tiếp” của chủ dự án đã cho phép tiếp tục. Không bắt đầu P02 hoặc sửa code sản phẩm trong lượt này.
-
-| Task    | Trạng thái                         | Bằng chứng / còn thiếu                                                                                                                  |
-| ------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| P01-T01 | FIRST RUN PARTIAL / REVIEW PENDING | Windows: 5/5 query thành công, 3 observation đã đối chiếu bởi agent, 2 thiếu citation; 0/3 ngày đủ năm chủ đề; admin review pending     |
-| P01-T02 | DONE                               | RDKit 2026.09.2: 10 SVG tái lập trong hai process, SMILES lỗi bị từ chối, timing/hash có report                                         |
-| P01-T03 | DONE — CURRENT STAGE               | ADR-0011 Accepted: tiếp tục local; production hosting hoãn, ADR-0006 vẫn OPEN                                                           |
-| P01-T04 | EXPLORATORY OUTPUT EVALUATED       | 5 output Codex trong chat đạt kiểm tra cơ học trên nguồn tổng hợp; model/version, API/plan grant và chất lượng chuyên môn chưa xác minh |
-
-### Kiểm chứng P01
-
-- RDKit spike đã chạy thành công bằng dependency chính thức, ghim version/integrity trong lockfile riêng.
-- Validator NotebookLM: 4 unit test đạt, gồm các ca thiếu citation, lặp một ngày, tương lai và quyền nguồn chưa xác nhận.
-- Evaluator LLM: 2 unit test đạt; reference self-check đạt 5/5, có nhãn không phải inference. Bổ sung từ chối citation giả thêm vào danh sách và kiểm lại evaluator.
-- Template NotebookLM trống bị từ chối với exit 2 như mong đợi; không báo kết nối thành công.
-- ESLint chỉ trên spikes đạt. Chỉ format file mới/thay đổi, không format toàn repo.
-- Workflow `phase-01.yml` kiểm công cụ spike với Node/native tests và npm lockfile riêng. CI của spike chỉ chứng minh công cụ chạy được, không chứng minh live NotebookLM, quyền nguồn, chất lượng model hay provider entitlement. Kết quả CI thực tế ghi trong PR khi có.
-- Không build/test lại Next.js: không có thay đổi app, dependency workspace, DB schema hoặc build config của sản phẩm.
-
-### Kết quả Windows — 2026-11-12
-
-Chủ dự án cung cấp kết quả notebook_list thành công (47 notebook, chỉ đọc) tại Windows; đã đối chiếu lịch sử call của chat local. Quyền nguồn năm notebook cho cá nhân, không công khai giáo trình, đã được xác nhận. Lượt kiến thức đầu tiên đã chạy ở clone riêng `work/Pharmacy-Study` tại `c50fda9`: 5/5 query thành công; Hóa hữu cơ 2, KTCT và Vi sinh có 3 observation đã được agent đối chiếu nguồn; Hóa phân tích và Giải phẫu sinh lý pending vì thiếu citation metadata. Recorder đã lưu 3 observation; validator exit 2, **0/3 ngày đủ cả năm chủ đề**. Đối chiếu nguồn và đọc điều khoản do agent thực hiện, **chưa có admin review**. Ghi nhận theo báo cáo chủ dự án và final của chat Windows, không phải Cloud đọc capture private hoặc tự gọi MCP.
-
-Tài liệu public trên Windows có thay đổi chưa commit/push; capture/nguồn/output nằm trong private bị Git ignore. Không ghi đè checkout Windows để đồng bộ hồ sơ Cloud. Các ngày sau giữ cùng năm chủ đề; kiểm tra hai phản hồi pending đã lưu trước khi tốn thêm lượt query. Không đổi ngày cũ hoặc coi ba observation là một ngày hoàn tất.
-
-Code spike ở commit `0dc5d96fbf774c764abd0b0063503b5dcd796f42` đã qua CI [run 43157607324](https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43157607324): 11 test Node (4 validator, 5 recorder, 2 evaluator), 4 test Python, RDKit hai process, reference self-check và từ chối template trống. Không gọi tài khoản NotebookLM hoặc API AI trong CI. Bổ sung sau commit này chỉ là tài liệu ghi kết quả/hướng dẫn, không thay đổi code đã kiểm.
-
-### Cổng chưa đạt
-
-Còn thiếu hồ sơ kiến thức/citation cho năm chủ đề trên ba ngày; Windows list đã thành công theo chủ dự án, Cloud chưa có account auth riêng. Đường truy cập OpenAI cần chốt/thiết lập thực tế; hosting giai đoạn hiện tại đã chọn local theo ADR-0011, production còn hoãn. P01 chưa DONE. ADR-0006/0007 chưa chuyển Accepted; các hồ sơ bổ sung không tự thay thế quyết định của chủ dự án.
-
-## Phạm vi kết thúc
-
-Chỉ P01. Tiếp tục bước còn thiếu khi có thông tin/credential được cấu hình qua settings hoặc hồ sơ chạy local. Không tự vượt sang phase sản phẩm hoặc dùng dữ liệu mẫu để làm giả bằng chứng live.
-
-## Ranh giới commit P01
-
-- P01-T01: công cụ và runbook đã chuẩn bị; phần live vẫn blocked.
-- P01-T02: RDKit Node/WASM đã kiểm chứng 10 cấu trúc, report và dependency cô lập.
-- P01-T03: hồ sơ và quyết định tiếp tục local đã có; production được hoãn theo lựa chọn chủ dự án.
-- P01-T04: hồ sơ OpenAI/Pro, evaluator và năm output sinh trong chat đã có; chưa xác minh model/version, API/plan grant hoặc chất lượng chuyên môn.
-
-### Bổ sung rà soát P01
-
-PR nháp #2: https://github.com/ducmanhletruong/Pharmacy-Study/pull/2 . CI spike đã success trên commit 3c5f761, run 43078944161. Điều kiện live vẫn blocked. Rà lại P01-T01 cho thấy plan chỉ yêu cầu ổn định qua ba ngày, không bắt buộc liên tiếp; đã sửa validator/runbook để nhận ba ngày khác nhau và thêm test cho khoảng cách ngày. Không tự thêm điều kiện sản phẩm.
-
-### Quyết định local và CI cuối
-
-Chủ dự án chọn tiếp tục local, chưa triển khai production: ADR-0011 Accepted, không cấp tài nguyên mới. T03 hoàn thành hồ sơ và quyết định cho giai đoạn hiện tại; không tự coi ADR-0006 production đã Accepted. P01 tổng thể vẫn PARTIAL/BLOCKED.
-
-CI công cụ trên commit `2e8a5d61d1589edda392988143fcf602ba40497d` đã **success**, gồm 6 test, RDKit hai process, reference self-check và từ chối template trống: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43079292723 . Bổ sung sau commit này chỉ là tài liệu quyết định local, không đổi công cụ/app/dependency.
-
-### Ưu tiên nối MCP NotebookLM
-
-Đã cài MCP CLI 0.16.2 cô lập ngoài repo và đăng ký `pharmacy-notebooklm` vào Codex của executor, chỉ bật notebook_list/notebook_get. Bắt tay MCP thật và catalog 55 tool đạt; probe read-only tới notebook_list trả thiếu xác thực, dù isError=false. Bốn test classifier ngăn false-positive đã pass; báo cáo metadata trong spikes/notebooklm/connection-report.json.
-
-Phiên browser auth đã mở nhờ DISPLAY/XAUTHORITY đúng của Desktop; chưa được đăng nhập trong 300 giây và đã timeout/đóng. Cần chủ dự án đăng nhập Google khi sẵn sàng. Không có credential, notebook title/ID hoặc nguồn riêng được commit. CLI registration không tự chứng minh native tools đã hot-load vào chat hiện tại. P01 vẫn chưa đạt live gate.
+Lượt sau CI chỉ cập nhật Markdown bàn giao/kết quả; không đổi code đã kiểm. P02 DONE, dừng cổng phase. Không tự mở P03 hoặc merge/deploy. Hướng dẫn chạy: docs/runbooks/local-practice.md.

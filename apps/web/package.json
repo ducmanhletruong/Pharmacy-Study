@@ -4,18 +4,22 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "next dev --hostname 0.0.0.0 --port 3000",
+    "dev": "node ../../scripts/dev.mjs",
     "build": "next build",
-    "start": "next start --hostname 0.0.0.0 --port 3000",
+    "start": "node ../../scripts/start.mjs",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "next": "16.4.6",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "@pharmacy/db": "workspace:*",
+    "@pharmacy/api-contract": "workspace:*",
+    "katex": "0.19.1"
   },
   "devDependencies": {
     "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0"
+    "@types/react-dom": "19.3.0",
+    "@types/katex": "0.16.8"
   }
 }

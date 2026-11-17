@@ -1,82 +1,35 @@
 # Bàn giao
 
-## Cập nhật 2026-11-17 — cổng P01
+Cập nhật: 2026-11-17 (Asia/Saigon). Repo /workspace/web-starter, branch phase-02 dựa trên phase-01.
 
-Windows đã có 15 observation đủ năm chủ đề trên ba ngày 12/11, 13/11, 17/11; recorder/validator exit 0 theo báo cáo cuối của chat local và xác nhận chủ dự án. Hai mục pending cũ đã được bổ sung ở Windows; không còn là blocker hiện tại. Chủ dự án đã tự review và duyệt grounding/vị trí nguồn cùng điều khoản ngày 17/11. Cloud đối chiếu báo cáo/lịch sử, không tải nguồn hoặc capture private.
+## Trạng thái
 
-P01-T01 DONE; P01 kết thúc trong phạm vi spike/local. ADR-0006 áp dụng quyết định local đã duyệt, ADR-0007 ghi lựa chọn OpenAI đã xác nhận. API credential/model/chi phí và hosting production vẫn mở cho phase tích hợp/phát hành; không tự tạo điều kiện API hoạt động để chặn P02. Các đoạn ngày 12/11 bên dưới là lịch sử, được cập nhật này thay thế về trạng thái.
+P00 và P01 DONE trong phạm vi local/spike. P01-T01 đã có 15 observation của năm chủ đề qua 12/11, 13/11 và 17/11; owner trực tiếp duyệt grounding và điều khoản. Không còn yêu cầu chờ ba ngày hoặc xử lý hai pending cũ. Bằng chứng private ở Windows, Cloud chỉ đối chiếu final/lịch sử.
 
-Chủ dự án yêu cầu tiếp tục bước tiếp theo: P02 là phase thực thi kế tiếp, chỉ dữ liệu tổng hợp và user dev, không AI runtime hoặc nguồn giáo trình. Không merge PR/deploy. Môi trường Cloud vừa khôi phục không còn checkout/runtime cũ; đã clone đúng branch phase-01 vào /workspace/web-starter, không tác động Windows.
+P02 DONE: local và CI đã đạt. Chỉ một môn tổng hợp tự viết với 10 MCQ, user dev cố định. Không AI runtime, auth thật hoặc hosting production. Không bắt đầu P03.
 
-## Trạng thái mới nhất
+## Đã thay đổi P02
 
-- Ngày: 2026-11-12 (Asia/Saigon).
-- Dự án local: `/workspace/web-starter`; nhánh hiện tại `phase-01`, dựa trên `phase-00`.
-- P00 đã hoàn thành; CI cuối P00 trên commit `44848b1` thành công: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43075284113 . PR #1 còn draft, không tự merge.
-- **P01 đã triển khai phần độc lập nhưng chưa đạt cổng toàn phase.** P02 và phase khác chưa bắt đầu.
-- Lượt kiến thức đầu tiên tại Windows đã chạy: 5/5 query thành công, 3 observation được agent đối chiếu và lưu, 2 pending citation metadata; validator exit 2, **0/3 ngày đủ cả năm chủ đề**. Admin chưa review grounding/điều khoản. Cloud đã đối chiếu lịch sử call/final, không đọc raw capture riêng.
-- Code spike mới nhất đã kiểm tại `0dc5d96fbf774c764abd0b0063503b5dcd796f42`: CI success, https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43157607324 . Hai commit mới là `a1e7cf4` (recorder/handoff Windows) và `0dc5d96` (output Codex tổng hợp); đã push phase-01, PR #2 giữ draft. Các ghi chú CI sau đó chỉ đổi Markdown.
+- packages/db: migration 0001 cho 9 bảng, migration checksum/lock, seed idempotent và revision snapshot; Drizzle SQL và PostgreSQL pool. Không xóa data/volume.
+- packages/core: validator và grading MCQ; đúng bốn label A/B/C/D và một đáp án đúng.
+- packages/api-contract: Zod request/response; API-01..06 trong app. Không gửi correct_answer/is_correct/explanation trong đề; chỉ feedback sau đáp án.
+- API có owner scope, Origin (loopback mặc định, APP_ORIGIN cho proxy), idempotency khóa theo user/key, khóa parent attempt để answer/submit không race; freeze đáp án và kết quả đã nộp.
+- UI chọn bộ/chủ đề, luyện từng câu, giải thích nguồn tổng hợp, lưu/resume bằng URL attempt, tổng kết chủ đề, KaTeX; kiểm desktop/mobile.
+- Launcher dev đọc .env; launcher production chặn AUTH_MODE=dev trước khi mở cổng, instrumentation kiểm độc lập. Không copy .env thật vào Git.
+- CI phase-02 gồm migration/seed lặp, unit/integration/contract/E2E, build, guard, audit và secret scan. CI f771a7b đã success: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44133096057 .
 
-## Quyết định mới từ chủ dự án
+## Cách chạy
 
-- Cho thực thi tiếp.
-- Cho dùng MCP bên thứ ba; NotebookLM là tài khoản cá nhân và người dùng báo đã kết nối Codex.
-- Dùng OpenAI/ChatGPT Pro của tài khoản hiện có cho AI. Hosting giai đoạn hiện tại đã chốt local, chưa production theo ADR-0011; còn quyền API/plan cụ thể của ứng dụng.
+Xem docs/runbooks/local-practice.md. Node24/pnpm11.25.0/Docker; tạo .env từ example nếu chưa có; pnpm install --frozen-lockfile; docker compose -f infra/docker-compose.yml up -d --wait; pnpm db:migrate; pnpm db:seed; pnpm dev. Mở http://localhost:3000. Không overwrite checkout Windows đang lưu capture private; dùng clone riêng phase-02 nếu cần.
 
-## Đã làm P01
+## Kiểm chứng
 
-- RDKit JS/WASM: dựng 10 cấu trúc tổng hợp; SVG giống hash qua hai tiến trình, đo thời gian/kích thước và xử lý SMILES lỗi. Report thật ở `spikes/chem-render/report.json`.
-- NotebookLM: runbook kết nối, mẫu hồ sơ riêng tư, validator năm chủ đề qua ba ngày; 4 test của validator đạt. Template trống bị từ chối đúng exit 2.
-- Đã thêm recorder nối observation/hash và [handoff Windows](docs/spikes/notebooklm-windows-handoff.md); Windows đã chạy lượt đầu trên clone riêng tại c50fda9. Ba observation của Hóa hữu cơ 2, KTCT, Vi sinh có nguồn/vị trí/trích đoạn được agent đối chiếu; Hóa phân tích và Giải phẫu sinh lý pending metadata. Năm topic/mapping và output thật giữ trong private tại Windows. Không tự gửi việc sang agent khác.
-- Hosting: ADR-0009 so sánh local, Render + Neon preview free và paid; nguồn chính thức, hạn chế cold start/backup và phần chưa quyết định.
-- OpenAI: ADR-0010 phân biệt dùng tài khoản hiện có, SIWC/plan usage và API credits Pro nếu đủ điều kiện; chưa gọi API hoặc thay billing.
-- LLM evaluator offline: 5 fixture tổng hợp, prompt export, kiểm đáp án/citation và 2 test các ca từ chối. Ngoài reference self-check, đã nhập năm output do phiên Codex này sinh: 5/5 đạt trên nguồn tổng hợp. Report/candidates ở spikes/llm-eval/codex-session-*.json; đánh giá không mù, không phải kiểm kiến thức chuyên môn hoặc API entitlement. Model/version, usage/cost chưa xác minh, giữ null.
-- Workflow kiểm thử riêng công cụ P01; không rebuild Next.js vì không đổi code sản phẩm.
+Local: migration DB rỗng và seed/rerun đạt, unit 3/3, integration/contract 7/7, E2E Chromium 2/2 (10 câu/reload/result và mobile), production build đạt, check-production-guard exit 0. Audit: 0 high/critical, 1 moderate minimatch. Lint/format và gitleaks29 commit đạt. CI f771a7bc11b8e52753fa068cad2bb8ad2e5ba115 success; PR #3 draft, base phase-01: https://github.com/ducmanhletruong/Pharmacy-Study/pull/3 . Bổ sung sau code đã kiểm chỉ đổi Markdown. Không claim kiểm mọi browser, độ chính xác chuyên môn hoặc API AI.
 
-## Kết nối NotebookLM — cập nhật mới nhất
+## Bước sau
 
-- Ngày 2026-11-12 chủ dự án cung cấp kết quả từ Windows: notebook_list thành công, tài khoản có 47 notebook, chỉ đọc. Đã đối chiếu call hoàn thành trong turn mới nhất của đúng chat local; không phải call trực tiếp từ Cloud. Quyền dùng tài liệu năm notebook cho học tập cá nhân, không công khai giáo trình, đã được chủ dự án xác nhận. Tiếp tục P01-T01 bằng tay ở chat local “Kết nối Codex với NotebookLM”; không yêu cầu đăng nhập Cloud lại.
-- Codex CLI trong Cloud đã được đăng ký server `pharmacy-notebooklm`; chỉ bật notebook_list/notebook_get. Cấu hình global hiện tại được giữ nguyên các mục khác; không sửa config trên máy riêng của người dùng.
-- CLI package 0.16.2 ở `/workspace/.pharmacy-notebooklm/venv`; state riêng ở `/workspace/.pharmacy-notebooklm/state` (0700), profile pharmacy-personal. Không nằm trong Git.
-- MCP initialize và list 55 tool thành công. Server reported version 4.1.8 là framework, không phải CLI package version.
-- Lệnh notebook_list thật trả chưa có Google auth. Browser auth đã mở đúng trang NotebookLM nhưng timeout sau 300 giây, cửa sổ auth đã đóng; chưa có account session đã xác minh.
-- Bước tiếp tại Windows: giữ nguyên năm topic và checkout có thay đổi chưa commit/push. Kiểm citations/references và source snapshot đã lưu của hai mục pending trước khi query mới; không tự gán citation hoặc ngày cũ. Không nhập lại ba observation đã có. Các ngày khác giữ cùng năm chủ đề, ghi thời gian thật. Admin cần review grounding/hồ sơ điều khoản; không coi việc agent đối chiếu là chủ dự án đã duyệt. Xem mục “Kết quả lượt đầu và việc tiếp theo” trong handoff Windows. Không cần đăng nhập Cloud lại.
-- Cấu hình global CLI không tự hot-load tool vào chat hiện tại; probe SDK chạy trực tiếp là đường kiểm chứng đang dùng. Tài liệu đường Desktop/Secure MCP Tunnel trong docs/spikes/notebooklm-access.md.
-
-Report đã lọc: spikes/notebooklm/connection-report.json. Không coi transport/catalog hoặc isError=false là xác thực account thành công. Cần dữ liệu năm chủ đề thật qua ba ngày sau khi đăng nhập.
-
-## Lệnh chạy spike
-
-```bash
-npm --prefix spikes ci --ignore-scripts --no-audit --no-fund
-npm --prefix spikes run chem:render
-node --test spikes/notebooklm/validate.test.mjs spikes/llm-eval/evaluate.test.mjs
-node spikes/llm-eval/run.mjs
-node spikes/llm-eval/run.mjs --prompts
-```
-
-Trong Cloud thêm `--cache /workspace/.npm-cache` cho npm ci nếu home không ghi được. Dependency spike tách khỏi app. Report RDKit có timestamp/timing thực, chạy lại cập nhật file này; SVG output bị Git ignore. Không commit source riêng, model output, cookie hoặc token.
-
-## Phần còn thiếu / giới hạn
-
-P01-T01 đã có lượt query thật và ba observation, còn thiếu citation của hai chủ đề, admin review và ba ngày đủ năm chủ đề (hiện 0/3). Tài liệu local Windows chưa commit/push, chưa hợp nhất vào Cloud; không ghi đè chúng. P01-T03 đã chốt local, production hoãn; P01-T04 còn cách cấp quyền OpenAI, model định danh và đánh giá chuyên môn. Chi tiết ở docs/blockers.md và docs/status.md.
-
-Ưu tiên local và dùng tài khoản Pro không tự chứng minh API credits đã active hoặc token app đã được cấp. Có thể tạo prompt để chạy tại nơi được phép dùng tài khoản rồi nhập output vào evaluator; bước này chưa phải API adapter P06. Không tự claim credit, chọn model trả phí, auto-recharge hoặc tạo hosting.
+P02 đã kết thúc; chờ giao P03 và câu trả lời Q3 về phạm vi người dùng. OpenAI đã chốt nhà cung cấp; API entitlement/model/cost/OAuth còn mở cho P06. Hosting production hoãn theo quyết định local ADR-0011. Các PR trước giữ draft, không merge/deploy.
 
 ## Bảo toàn và phát sinh
 
-App Next.js/DB/dependency workspace/plan gốc và AGENTS không đổi trong P01. Giữ server/DB đang có; không restart hoặc mở thêm. Starter Vite vẫn tham chiếu được qua `39ffc0b`/`baseline-vite`. P01 không merge mã sản phẩm; lịch sử phát sinh trong `worked.md`.
-
-## PR và bằng chứng CI P01
-
-PR nháp P01: https://github.com/ducmanhletruong/Pharmacy-Study/pull/2, base phase-00 (xếp chồng PR #1). CI công cụ spike trên commit 3c5f761 đã success: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43078944161 . Chỉnh tiếp theo chỉ nới điều kiện ngày về đúng plan; cần lấy kết quả CI của commit mới trước khi báo CI mới đạt.
-
-## Cập nhật cuối theo trả lời hosting
-
-Chủ dự án chọn tiếp tục local, chưa triển khai production; ADR-0011 Accepted và không cấp tài nguyên hosting. P01 vẫn chờ live NotebookLM/ba ngày và quyền OpenAI/model run; không dùng quyết định local để tự tuyên bố production hosting đã chốt.
-
-CI cuối cho code công cụ `2e8a5d6` đã success: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/43079292723 . Tổng cộng 6 test (4 NotebookLM + 2 evaluator); RDKit, self-check và template-rejection cũng pass. Những thay đổi sau chỉ là tài liệu quyết định này, không cần chạy lại test/build. PR #2 còn draft; không tự merge.
-
-## Kiểm chứng bổ sung cho kết nối MCP
-
-Bốn test classifier Python đã đạt, gồm auth business error với isError=false, list rỗng hợp lệ, JSON text fallback và loại raw private data khỏi report. Probe Cloud trước đó trả transport_connected=true, notebook_access_verified=false, reason=authentication_required; giữ nguyên bằng chứng này. Kết quả Windows mới không thay đổi report Cloud. Lượt tiếp tục thêm recorder: 5/5 test local đạt, lint hai file JS và diff check đạt; capture/batch private được git ignore. CI code mới đã success: 11 Node + 4 Python, RDKit và kiểm template/self-check; không chứng minh truy vấn live. Không build/test lại app.
+Cloud vừa resume với workspace không còn checkout/runtime cũ: đã clone từ remote, không truy cập/copy phiên Google Windows. Docker volume ở Cloud mới tạo cho seed tổng hợp; không tác động máy riêng. Không cài lại MCP hay làm lại spike/RDKit. Plan gốc và AGENTS giữ nguyên. Nhật ký đầy đủ ở worked.md.
