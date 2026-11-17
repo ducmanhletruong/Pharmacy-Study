@@ -62,3 +62,7 @@ DB P03 riêng, runtime app_rw không có quyền DDL/sửa xóa audit; maintenan
 Kiểm cuối local: lint, format:check, git diff --check, unit104, security classifier4 và audit:security đạt. Provision rerun sau sửa env đạt, không in credential. CI chưa chạy tại thời điểm commit này.
 
 CI code `a4fc5f973ca8ce808a48a4bde4072c31102d1caf` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44165851119 . Frozen install/lint/format/types, migration/bootstrap/provision/seed-rerun, unit104/integration14/E2E8, build, production guard, dependency hardening gate và gitleaks đều đạt. PR #4 draft: https://github.com/ducmanhletruong/Pharmacy-Study/pull/4 . Bổ sung sau CI chỉ đổi Markdown; P03 vẫn LIVE GOOGLE PENDING, không mở P04.
+
+## CR-0001 — IN PROGRESS
+
+Được giao đánh giá rủi ro và thực hiện18/11. Nhánh phase-02-hardening base phase-03, migration0003; không rollback P03. ADR-0012 và phụ lục plan0.2 ghi thiết kế/điều chỉnh tương thích. Cần đo migration/tests/query-count/CI trước báo DONE. Không merge/deploy hoặc chọn by_topic mới.
