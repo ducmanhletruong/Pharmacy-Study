@@ -1,29 +1,19 @@
-# Bàn giao
+# Bàn giao CR-0001
 
-Cập nhật: 2026-11-18 (Asia/Saigon). Worktree `/workspace/pharmacy-study-p03`, branch `phase-03`, base `phase-02`.
+Worktree `/workspace/pharmacy-study-cr0001`, branch `phase-02-hardening`, base `phase-03`.
+Nguồn trạng thái/kiểm chứng: [docs/status.md](docs/status.md).
+Phạm vi/rủi ro: [ADR-0012](docs/adr/0012-db-integrity.md) và [phụ lục plan0.2](docs/plans/IMPLEMENTATION_PLAN.v0.2-addendum.md).
 
-## Yêu cầu và kết quả
+Đã áp dụng hardening DB, gộp choices query, tests, config và quy tắc tài liệu theo CR.
+Migration mới0003, không sửa0001/0002 hoặc mất auth P03.
+DB thử riêng, `.env`/`.env.db` private; không đổi DB/server P02/P03 hoặc Windows capture.
 
-Theo yêu cầu nêu và thực hiện bước tiếp theo, triển khai P03 cho **lớp được mời, Google** (Q3 đã xác nhận). P00–P02 DONE; P01 đủ 15 observation/ba ngày và owner đã duyệt, không yêu cầu chạy lại. P03 có code T01–T06 nhưng chưa DONE vì Google OAuth thật chưa cấu hình/kiểm; CI code a4fc5f9/run44165851119 SUCCESS. Không bắt đầu P04.
+Chạy: frozen install → db:migrate → db:provision (nếu clone mới) → db:seed → pnpm dev.
+Xem [runbook Google](docs/runbooks/google-login.md), config pool/body/DEV_HOST ở README.
+Cloud preview chủ động đặt DEV_HOST=0.0.0.0; local mặc định127.0.0.1.
+Production cần APP_ORIGIN chính xác; Google OAuth client vẫn cấu hình private, không gửi secret chat.
 
-## Thay đổi
-
-- Google OIDC/NextAuth stable, email verified + exact admin/invited allowlist; cookie JWT8h gắn DB session revoke/expiry/disabled, không lưu OAuth access/refresh token. Test provider chỉ nonproduction.
-- Authorize default deny, guard mọi route attempt và SQL user_id; admin không đọc attempt người khác. Admin API/page riêng, no-store, request ID.
-- Migration0002, auth identities/sessions, audit_logs append-only, rate counters; nhóm DB app_rw/migrator riêng. Helper provision local ghi credential sinh ngẫu nhiên vào file private, không in ra.
-- Origin/Host, body limit16KB, CSP nonce/security headers, rate limit PostgreSQL; launcher từ chối runtime credential đặc quyền và dev/test production.
-- Tests auth/ownership/audit/rate/header, CI phase-03. Patch hai bản picomatch dev để chặn advisory high chưa có upstream fix; chi tiết docs/security/dependency-hardening.md. Không nâng nền hoặc refactor phần ngoài P03.
-
-## Kiểm tra thực tế
-
-Local unit104/104, integration14/14, E2E Chromium8/8 (bao gồm luồng10câu/mobile cũ và login/logout/cross-user mới) đã đạt. Production build, guard dev/test, migration/seed rerun và runtime DB ít quyền đã đạt. E2E dùng provider thử, **chưa kiểm Google thật**. Audit raw high1/moderate1, high đã có patch/regression; kiểm cuối lint/format/audit, gitleaks36 commit và CI44165851119 đều đạt.
-
-## Bước còn lại
-
-1. Cấu hình Google OAuth Web client riêng và email thật trong `.env` private theo [runbook](docs/runbooks/google-login.md). Không gửi secret trong chat. Kiểm Google admin/member/outsider/logout rồi ghi bằng chứng, mới đóng cổng P03.
-2. [CI44165851119](https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44165851119) SUCCESS, [PR #4](https://github.com/ducmanhletruong/Pharmacy-Study/pull/4) draft, base phase-02; không merge/deploy. Quản lý user UI ngoài phạm vi. P04 chờ giao sau cổng P03.
-3. API entitlement/model/billing OpenAI ở P06; gói Pro không tự cấp API credit. Hosting production vẫn hoãn. Quyền nguồn P01 chỉ cá nhân, chưa cho phân phối giáo trình cho lớp.
-
-## Chạy và bảo toàn
-
-Xem docs/runbooks/google-login.md. P03 dùng DB `pharmacy_study_p03` riêng; `.env` runtime app ít quyền, `.env.db` CLI maintenance (đều ignore/600). Không copy `.env.db` vào web/hosting. P02 checkout `/workspace/web-starter`, DB cũ và dev server3000 được giữ; auth E2E dùng3001. Không overwrite clone Windows chứa capture/cookie private. Không xóa Docker volume hoặc sửa SQL migration đã áp dụng; thay đổi schema sau bằng forward migration. Worked.md ghi đầy đủ phát sinh và lỗi kiểm chứng.
+Đang hoàn tất kiểm E2E/build/CI và PR draft; xem status để biết kết quả mới nhất.
+Không merge PR, deploy hoặc bắt đầu P04. By_topic nhiều chủ đề còn chờ quyết định trước P05.
+Không xóa volume hoặc chạy rollback SQL trong CR gốc lên data thật; dùng forward migration được review.
+Các phát sinh/khác biệt với đề xuất gốc đã nối vào worked.md.

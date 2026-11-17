@@ -39,3 +39,9 @@ Migration và seed phải chạy trước integration/e2e. Tests integration ch�
 Mutation yêu cầu Origin khớp địa chỉ local và chỉ mặc định cho localhost/127.0.0.1/IPv6 loopback. Nếu dùng reverse proxy/Cloud preview, đặt APP_ORIGIN là URL gốc chính xác của preview, gồm scheme và port nếu có; không dùng wildcard hoặc tắt kiểm tra Origin. allowedDevOrigins trong Next chỉ cho hai host loopback để HMR hoạt động; preview có hostname riêng cần khai báo đúng host phát triển khi sử dụng.
 
 `pnpm db:migrate` chỉ chạy SQL forward-only, kiểm checksum migration đã áp dụng và khóa migration đồng thời. Seed chạy lại không ghi đè revision hoặc xóa attempts. Không xóa Docker volume để cập nhật; chỉ phục hồi/xóa DB nếu đó là DB thử riêng và đã chủ động quyết định bỏ dữ liệu.
+
+## CR-0001 trên nhánh hiện tại
+
+Hướng dẫn P02 phía trên dành checkout phase-02. Với phase-02-hardening kế thừa P03, dùng docs/runbooks/google-login.md (migrate/provision/seed), không lấy credential bootstrap chạy web. `DEV_HOST` mặc định127.0.0.1; để xem qua Cloud port preview đặt DEV_HOST=0.0.0.0 riêng, vẫn giữ Origin chính xác. Pool/payload cấu hình qua DB_POOL_MAX/MAX_BODY_BYTES như README, không tắt guard. Production thiếu APP_ORIGIN sẽ từ chối startup.
+
+Không sửa trực tiếp revision/choices sealed. Importer sau này phải insert revision và4choices trong transaction rồi đổi current_revision_id. Migration kiểm data cũ sai và rollback; không xóa volume hoặc tự sửa nội dung giáo trình để vượt kiểm.

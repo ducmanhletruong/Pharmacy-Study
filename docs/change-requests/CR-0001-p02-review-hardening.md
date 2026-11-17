@@ -10,22 +10,22 @@
 
 ## 1. Thay đổi và lý do
 
-| #   | Vấn đề (mức)                                                                            | Giải pháp                                                                           | Mục |
-| --- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | --- |
-| 1   | MCQ hợp lệ chỉ kiểm ở seed, DB không ép (Cao)                                           | Constraint trigger hoãn: đủ 4 lựa chọn, đúng 1 đáp án đúng, nội dung không trùng    | 3.1 |
-| 2   | Câu đã duyệt hoặc đã được làm vẫn sửa tại chỗ được (Cao)                                | Trigger chặn UPDATE/DELETE revision và lựa chọn đã "niêm phong"                     | 3.1 |
-| 3   | Chưa có luồng duyệt thật (Cao)                                                          | **Không sửa ở CR này.** Đã nằm ở P04-T03; chỉ thêm tiền điều kiện (mục 5)           | 5   |
-| 4   | Chủ đề có thể thuộc môn khác với câu hỏi (TB)                                           | Khóa ngoại tổng hợp `(question_id, subject_id)` và `(topic_id, subject_id)`         | 3.1 |
-| 5   | `readAttempt` truy vấn N+1 (TB)                                                         | Gộp một truy vấn                                                                    | 3.2 |
-| 6   | `ORDER BY random()` (TB)                                                                | Chưa sửa; ghi ngưỡng xem lại                                                        | 5   |
-| 7   | Origin dựa vào `Host`, dev bind `0.0.0.0` (TB)                                          | Tiền điều kiện P03 và biến `DEV_HOST`                                               | 3.5, 5 |
-| 8   | CI `phase-02.yml` chỉ chạy khi PR vào `main` hoặc `phase-01` (TB)                       | Mở rộng trigger, gộp PR vào `main`                                                  | 3.4 |
-| 9   | Test thưa (TB)                                                                          | Thêm test DB và bổ sung test API                                                    | 3.3 |
-| 10  | Mật khẩu dev có thể lọt lên production (TB)                                             | Guard khởi động production, làm ở P12                                               | 5   |
-| 11  | `minimatch` moderate (TB)                                                               | Theo dõi, không đổi                                                                 | 5   |
-| 12  | Hằng số ghi cứng (Thấp)                                                                 | Đưa ra biến môi trường                                                              | 3.5 |
-| 13  | Tài liệu trạng thái lặp (Thấp)                                                          | Quy tắc một nguồn sự thật                                                           | 3.6 |
-| 14  | README lỗi thời (Thấp)                                                                  | Viết lại các đoạn liên quan                                                         | 3.6 |
+| #   | Vấn đề (mức)                                                      | Giải pháp                                                                        | Mục    |
+| --- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------ |
+| 1   | MCQ hợp lệ chỉ kiểm ở seed, DB không ép (Cao)                     | Constraint trigger hoãn: đủ 4 lựa chọn, đúng 1 đáp án đúng, nội dung không trùng | 3.1    |
+| 2   | Câu đã duyệt hoặc đã được làm vẫn sửa tại chỗ được (Cao)          | Trigger chặn UPDATE/DELETE revision và lựa chọn đã "niêm phong"                  | 3.1    |
+| 3   | Chưa có luồng duyệt thật (Cao)                                    | **Không sửa ở CR này.** Đã nằm ở P04-T03; chỉ thêm tiền điều kiện (mục 5)        | 5      |
+| 4   | Chủ đề có thể thuộc môn khác với câu hỏi (TB)                     | Khóa ngoại tổng hợp `(question_id, subject_id)` và `(topic_id, subject_id)`      | 3.1    |
+| 5   | `readAttempt` truy vấn N+1 (TB)                                   | Gộp một truy vấn                                                                 | 3.2    |
+| 6   | `ORDER BY random()` (TB)                                          | Chưa sửa; ghi ngưỡng xem lại                                                     | 5      |
+| 7   | Origin dựa vào `Host`, dev bind `0.0.0.0` (TB)                    | Tiền điều kiện P03 và biến `DEV_HOST`                                            | 3.5, 5 |
+| 8   | CI `phase-02.yml` chỉ chạy khi PR vào `main` hoặc `phase-01` (TB) | Mở rộng trigger, gộp PR vào `main`                                               | 3.4    |
+| 9   | Test thưa (TB)                                                    | Thêm test DB và bổ sung test API                                                 | 3.3    |
+| 10  | Mật khẩu dev có thể lọt lên production (TB)                       | Guard khởi động production, làm ở P12                                            | 5      |
+| 11  | `minimatch` moderate (TB)                                         | Theo dõi, không đổi                                                              | 5      |
+| 12  | Hằng số ghi cứng (Thấp)                                           | Đưa ra biến môi trường                                                           | 3.5    |
+| 13  | Tài liệu trạng thái lặp (Thấp)                                    | Quy tắc một nguồn sự thật                                                        | 3.6    |
+| 14  | README lỗi thời (Thấp)                                            | Viết lại các đoạn liên quan                                                      | 3.6    |
 
 ## 2. Quyết định thiết kế (để chủ dự án duyệt)
 
@@ -252,7 +252,12 @@ test('attempts remain attached to the original revision if current revision chan
       "INSERT INTO question_revisions(id,question_id,rev_no,stem,explanation,content_hash,created_by) VALUES($1,$2,999,'temporary revision','test-only',$3,$4)",
       [rid, item.question_id, randomUUID(), DEV_USER_ID],
     )
-    for (const [label, correct] of [['A', true], ['B', false], ['C', false], ['D', false]] as const)
+    for (const [label, correct] of [
+      ['A', true],
+      ['B', false],
+      ['C', false],
+      ['D', false],
+    ] as const)
       await client.query(
         'INSERT INTO question_choices(revision_id,label,text,is_correct) VALUES($1,$2,$3,$4)',
         [rid, label, `temporary ${label}`, correct],
@@ -306,7 +311,9 @@ async function seeded() {
     id: string
     subject_id: string
     current_revision_id: string
-  }>("SELECT id,subject_id,current_revision_id FROM questions WHERE status='approved' LIMIT 1")
+  }>(
+    "SELECT id,subject_id,current_revision_id FROM questions WHERE status='approved' LIMIT 1",
+  )
   return result.rows[0]!
 }
 async function addRevision(
@@ -364,7 +371,13 @@ test('duplicate choice texts are rejected at commit', async () => {
   const q = await seeded()
   await expect(
     rolledBack(async (client) => {
-      await addRevision(client, q.id, 996, ['same', ' SAME ', 'c1', 'd1'], ['A'])
+      await addRevision(
+        client,
+        q.id,
+        996,
+        ['same', ' SAME ', 'c1', 'd1'],
+        ['A'],
+      )
       await client.query('SET CONSTRAINTS ALL IMMEDIATE')
     }),
   ).rejects.toMatchObject({ code: '23514' })
@@ -388,9 +401,10 @@ test('choices and revisions of an approved question are sealed', async () => {
     ),
   ).rejects.toMatchObject({ code: '23001' })
   await expect(
-    getPool().query("UPDATE question_revisions SET explanation='changed' WHERE id=$1", [
-      q.current_revision_id,
-    ]),
+    getPool().query(
+      "UPDATE question_revisions SET explanation='changed' WHERE id=$1",
+      [q.current_revision_id],
+    ),
   ).rejects.toMatchObject({ code: '23001' })
   await expect(
     getPool().query('DELETE FROM question_choices WHERE revision_id=$1', [
@@ -407,12 +421,29 @@ test('a draft revision stays editable until the question leaves draft', async ()
       "INSERT INTO questions(id,subject_id,type,difficulty,status) VALUES($1,$2,'mcq',1,'draft')",
       [question, q.subject_id],
     )
-    const rid = await addRevision(client, question, 1, ['a1', 'b1', 'c1', 'd1'], ['A'])
-    await client.query('UPDATE questions SET current_revision_id=$1 WHERE id=$2', [rid, question])
-    await client.query("UPDATE question_revisions SET explanation='edited' WHERE id=$1", [rid])
-    await client.query("UPDATE questions SET status='verified' WHERE id=$1", [question])
+    const rid = await addRevision(
+      client,
+      question,
+      1,
+      ['a1', 'b1', 'c1', 'd1'],
+      ['A'],
+    )
+    await client.query(
+      'UPDATE questions SET current_revision_id=$1 WHERE id=$2',
+      [rid, question],
+    )
+    await client.query(
+      "UPDATE question_revisions SET explanation='edited' WHERE id=$1",
+      [rid],
+    )
+    await client.query("UPDATE questions SET status='verified' WHERE id=$1", [
+      question,
+    ])
     await expect(
-      client.query("UPDATE question_revisions SET explanation='edited again' WHERE id=$1", [rid]),
+      client.query(
+        "UPDATE question_revisions SET explanation='edited again' WHERE id=$1",
+        [rid],
+      ),
     ).rejects.toMatchObject({ code: '23001' })
   })
 })
@@ -444,13 +475,13 @@ Ghi chú cho Codex: test thứ hai và thứ ba dùng `SET CONSTRAINTS ALL IMMED
 
 **(c) Test API bổ sung** (thêm vào `tests/integration/practice.test.ts`, dùng các helper `newAttempt`, `req`, `answer`, `submit`, `context` đã có; đọc test cũ để khớp chữ ký trước khi viết):
 
-| Tên test                          | Các bước                                                                            | Kỳ vọng pass/fail                                                      |
-| --------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| submit với câu bỏ trống           | Tạo bài 10 câu, trả lời 3 câu (đúng 2), nộp                                         | `total=10`, `correct=2`, `unanswered=7`, `score=2.0`                   |
-| nộp bài không trả lời câu nào     | Tạo bài, nộp ngay                                                                   | `correct=0`, `unanswered=10`, `score=0`, status 200                    |
-| giới hạn `count`                  | POST `count=0` rồi `count=11`                                                       | Cả hai 400 `validation_failed`, không tạo `attempts` mới               |
-| `count` vượt số câu có sẵn        | Ẩn tạm câu hỏi (trong test, khôi phục sau) hoặc lọc `difficulty` không có câu       | 422 `insufficient_questions`, không có dòng `attempts` mới             |
-| payload quá lớn                   | POST body lớn hơn giới hạn                                                          | 413 `payload_too_large`                                                |
+| Tên test                      | Các bước                                                                      | Kỳ vọng pass/fail                                          |
+| ----------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| submit với câu bỏ trống       | Tạo bài 10 câu, trả lời 3 câu (đúng 2), nộp                                   | `total=10`, `correct=2`, `unanswered=7`, `score=2.0`       |
+| nộp bài không trả lời câu nào | Tạo bài, nộp ngay                                                             | `correct=0`, `unanswered=10`, `score=0`, status 200        |
+| giới hạn `count`              | POST `count=0` rồi `count=11`                                                 | Cả hai 400 `validation_failed`, không tạo `attempts` mới   |
+| `count` vượt số câu có sẵn    | Ẩn tạm câu hỏi (trong test, khôi phục sau) hoặc lọc `difficulty` không có câu | 422 `insufficient_questions`, không có dòng `attempts` mới |
+| payload quá lớn               | POST body lớn hơn giới hạn                                                    | 413 `payload_too_large`                                    |
 
 Câu hỏi mở cho chủ dự án: nếu một câu gắn nhiều chủ đề thì `by_topic` hiện cộng câu đó vào **mỗi** chủ đề (tổng `by_topic` có thể lớn hơn `total`). Chưa có test cho trường hợp này vì chưa có quy tắc được duyệt; cần quyết định trước khi viết (xem mục 5).
 
@@ -536,14 +567,14 @@ Với bản code: `git revert` commit tương ứng (seed.ts phải quay lại c
 
 ## 5. Việc không làm trong CR này (kèm tiền điều kiện)
 
-| Vấn đề                      | Xử lý                                                                                                                                                                                                                                                                    |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| #3 Luồng duyệt              | Làm ở P04-T03. **Tiền điều kiện thêm vào plan:** chuyển `draft → verified → approved` chỉ qua một hàm/dịch vụ duy nhất, kiểm nguồn (đã có trong tiêu chí P04), ghi nhật ký người duyệt; seed không được tự đặt `approved` ngoài dữ liệu tổng hợp.                      |
-| #6 `ORDER BY random()`      | Xem lại khi một môn có hơn khoảng 2.000 câu `approved` hoặc khi tạo đề > 100 ms ở p95. Phương án: chọn theo khoảng id ngẫu nhiên hoặc lấy mẫu rồi xáo trộn.                                                                                                              |
-| #7 Origin, đăng nhập        | **Tiền điều kiện P03:** `APP_ORIGIN` bắt buộc ở production (thiếu thì từ chối khởi động); thay danh tính dev bằng phiên thật; bỏ việc suy ra Origin từ `Host`; thêm giới hạn tần suất.                                                                                   |
-| #10 Mật khẩu dev            | **Task P12:** khi `NODE_ENV=production`, từ chối khởi động nếu `DATABASE_URL` chứa `local-dev-only` hoặc `127.0.0.1`.                                                                                                                                                    |
-| #11 `minimatch`             | Chạy `pnpm audit` mỗi phase; cập nhật khi bản vá có trong toolchain, không nâng ngoài phạm vi.                                                                                                                                                                         |
-| Quy tắc `by_topic` nhiều chủ đề | Cần quyết định: (a) tính vào mọi chủ đề (hiện tại), hay (b) chỉ chủ đề chính. Quyết định trước P05 (thống kê chủ đề yếu).                                                                                                                                           |
+| Vấn đề                          | Xử lý                                                                                                                                                                                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #3 Luồng duyệt                  | Làm ở P04-T03. **Tiền điều kiện thêm vào plan:** chuyển `draft → verified → approved` chỉ qua một hàm/dịch vụ duy nhất, kiểm nguồn (đã có trong tiêu chí P04), ghi nhật ký người duyệt; seed không được tự đặt `approved` ngoài dữ liệu tổng hợp. |
+| #6 `ORDER BY random()`          | Xem lại khi một môn có hơn khoảng 2.000 câu `approved` hoặc khi tạo đề > 100 ms ở p95. Phương án: chọn theo khoảng id ngẫu nhiên hoặc lấy mẫu rồi xáo trộn.                                                                                       |
+| #7 Origin, đăng nhập            | **Tiền điều kiện P03:** `APP_ORIGIN` bắt buộc ở production (thiếu thì từ chối khởi động); thay danh tính dev bằng phiên thật; bỏ việc suy ra Origin từ `Host`; thêm giới hạn tần suất.                                                            |
+| #10 Mật khẩu dev                | **Task P12:** khi `NODE_ENV=production`, từ chối khởi động nếu `DATABASE_URL` chứa `local-dev-only` hoặc `127.0.0.1`.                                                                                                                             |
+| #11 `minimatch`                 | Chạy `pnpm audit` mỗi phase; cập nhật khi bản vá có trong toolchain, không nâng ngoài phạm vi.                                                                                                                                                    |
+| Quy tắc `by_topic` nhiều chủ đề | Cần quyết định: (a) tính vào mọi chủ đề (hiện tại), hay (b) chỉ chủ đề chính. Quyết định trước P05 (thống kê chủ đề yếu).                                                                                                                         |
 
 ## 6. Quyết định của chủ dự án
 

@@ -76,3 +76,5 @@ CR readAttempt đã gộp choices vào queryitems; snapshot test rollback-only q
 CR CI trigger phase-03 superset mở main/phase-*; build cấu hình APP_ORIGIN riêng, giữ phase-02 legacy tách biệt. Chờ PR thật để kiểm trigger.
 
 CR config: pool và body có validate/cap, DEV_HOST loopback mặc định, production bắt buộcAPP_ORIGIN. Unit config/limits đạt; không chạm cấu hình server P02/P03 khác.
+
+CR E2E Chromium8/8 đạt bằng /usr/bin/chromium. Build production đang chạy; format/diff đã đạt, không sửa migration cũ. Trạng thái chờ CI trước DONE.
