@@ -1,6 +1,6 @@
 import { readAuthConfig } from '../../config'
 import { PracticeError } from '@pharmacy/db/practice'
-export async function readBody(request: Request) {
+export async function readBody(request: Request, timeoutMs = 10000) {
   const maxBodyBytes = readAuthConfig().MAX_BODY_BYTES
   if (Number(request.headers.get('content-length') ?? 0) > maxBodyBytes)
     throw new PracticeError('payload_too_large', 413, 'Nội dung quá lớn')
@@ -8,9 +8,32 @@ export async function readBody(request: Request) {
   const reader = request.body.getReader(),
     chunks: Uint8Array[] = []
   let size = 0
+  const deadline = Date.now() + timeoutMs
   try {
     while (true) {
-      const { done, value } = await reader.read()
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const timedOut = new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => {
+            reject(
+              new PracticeError(
+                'request_timeout',
+                408,
+                'Gửi dữ liệu quá chậm. Vui lòng thử lại.',
+              ),
+            )
+            void reader.cancel().catch(() => {})
+          },
+          Math.max(1, deadline - Date.now()),
+        )
+      })
+      let chunk: ReadableStreamReadResult<Uint8Array>
+      try {
+        chunk = await Promise.race([reader.read(), timedOut])
+      } finally {
+        clearTimeout(timer)
+      }
+      const { done, value } = chunk
       if (done) break
       size += value.byteLength
       if (size > maxBodyBytes) {

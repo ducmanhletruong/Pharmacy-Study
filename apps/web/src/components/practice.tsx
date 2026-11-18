@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { signOut } from 'next-auth/react'
+import { getCsrfToken } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import {
   attemptSchema,
   feedbackSchema,
@@ -72,6 +73,11 @@ export function Practice({
   member: { name: string; role: 'admin' | 'learner' }
   canSignOut: boolean
 }) {
+  const generation = useRef(0)
+  const invalidate = useCallback(() => {
+    generation.current++
+  }, [])
+  const router = useRouter()
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [selected, setSelected] = useState<Subject | null>(null)
   const [topics, setTopics] = useState<Topic[]>([])
@@ -91,33 +97,14 @@ export function Practice({
   } | null>(null)
   useEffect(() => {
     let active = true
-    Promise.all([
-      request('/subjects'),
-      (async () => {
-        const id = new URLSearchParams(location.search).get('attempt')
-        return id
-          ? attemptSchema.parse(
-              await request(`/attempts/${encodeURIComponent(id)}`),
-            )
-          : null
-      })(),
-    ])
-      .then(([list, saved]) => {
-        if (!active) return
-        setSubjects(
-          list.items.map((item: unknown) => subjectSchema.parse(item)),
-        )
-        if (saved) {
-          setAttempt(saved)
-          if (saved.status === 'submitted')
-            request(`/attempts/${saved.id}/submit`, 'POST')
-              .then((value) => {
-                if (active) setResult(resultSchema.parse(value))
-              })
-              .catch((reason) => {
-                if (active) setError(reason.message)
-              })
-        }
+    const version = generation.current
+    // Loading the catalog must not depend on successful attempt recovery.
+    request('/subjects')
+      .then((list) => {
+        if (active)
+          setSubjects(
+            list.items.map((item: unknown) => subjectSchema.parse(item)),
+          )
       })
       .catch((reason) => {
         if (active) setError(reason.message)
@@ -125,11 +112,33 @@ export function Practice({
       .finally(() => {
         if (active) setLoading(false)
       })
+    const id = new URLSearchParams(location.search).get('attempt')
+    if (id)
+      void (async () => {
+        try {
+          const saved = attemptSchema.parse(
+            await request(`/attempts/${encodeURIComponent(id)}`),
+          )
+          if (!active || generation.current !== version) return
+          setAttempt(saved)
+          if (saved.status === 'submitted') {
+            const result = resultSchema.parse(
+              await request(`/attempts/${saved.id}/submit`, 'POST'),
+            )
+            if (active && generation.current === version) setResult(result)
+          }
+        } catch (reason) {
+          if (active && generation.current === version)
+            setError((reason as Error).message)
+        }
+      })()
     return () => {
       active = false
+      invalidate()
     }
-  }, [])
+  }, [invalidate])
   async function choose(subject: Subject) {
+    const version = ++generation.current
     setBusy(true)
     setError('')
     setSelected(subject)
@@ -139,15 +148,17 @@ export function Practice({
       const data = await request(
         `/subjects/${encodeURIComponent(subject.code)}/topics`,
       )
+      if (generation.current !== version) return
       setTopics(data.items)
     } catch (reason) {
-      setError((reason as Error).message)
+      if (generation.current === version) setError((reason as Error).message)
     } finally {
-      setBusy(false)
+      if (generation.current === version) setBusy(false)
     }
   }
   async function start() {
     if (!selected) return
+    const version = ++generation.current
     setBusy(true)
     setError('')
     const input = {
@@ -164,6 +175,7 @@ export function Practice({
       const saved = attemptSchema.parse(
         await request('/attempts', 'POST', input, key),
       )
+      if (generation.current !== version) return
       setAttempt(saved)
       setPosition(0)
       setAnswer('')
@@ -172,15 +184,16 @@ export function Practice({
       setPendingKey(null)
       history.replaceState(null, '', `?attempt=${saved.id}`)
     } catch (reason) {
-      setError((reason as Error).message)
+      if (generation.current === version) setError((reason as Error).message)
     } finally {
-      setBusy(false)
+      if (generation.current === version) setBusy(false)
     }
   }
   async function submitAnswer() {
     const item = attempt?.items[position]
     const chosen = item?.answer ?? answer
     if (!attempt || !item || !chosen) return
+    const version = generation.current
     setBusy(true)
     setError('')
     try {
@@ -192,31 +205,71 @@ export function Practice({
       const saved = attemptSchema.parse(
         await request(`/attempts/${attempt.id}`),
       )
+      if (generation.current !== version) return
       setFeedback((previous) => ({ ...previous, [item.position]: value }))
       setAttempt(saved)
     } catch (reason) {
-      setError((reason as Error).message)
+      if (generation.current === version) setError((reason as Error).message)
     } finally {
-      setBusy(false)
+      if (generation.current === version) setBusy(false)
     }
   }
   async function finish() {
     if (!attempt) return
+    const version = generation.current
     setBusy(true)
     setError('')
     try {
-      setResult(
-        resultSchema.parse(
-          await request(`/attempts/${attempt.id}/submit`, 'POST'),
-        ),
+      const summary = resultSchema.parse(
+        await request(`/attempts/${attempt.id}/submit`, 'POST'),
       )
+      if (generation.current !== version) return
+      setResult(summary)
     } catch (reason) {
-      setError((reason as Error).message)
+      if (generation.current === version) setError((reason as Error).message)
     } finally {
-      setBusy(false)
+      if (generation.current === version) setBusy(false)
+    }
+  }
+  async function logout() {
+    const version = ++generation.current
+    setBusy(true)
+    setError('')
+    try {
+      const csrfToken = await getCsrfToken()
+      if (!csrfToken) throw new Error('Không thể đăng xuất. Vui lòng thử lại.')
+      const response = await fetch('/api/auth/signout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          csrfToken,
+          callbackUrl: '/login',
+          json: 'true',
+        }),
+      })
+      if (!response.ok)
+        throw new Error('Chưa thể thu hồi phiên. Vui lòng thử đăng xuất lại.')
+      const payload = await response.json()
+      const target = new URL(payload.url ?? '', location.origin)
+      if (
+        target.origin !== location.origin ||
+        target.pathname !== '/login' ||
+        target.search ||
+        target.hash
+      )
+        throw new Error('Không thể đăng xuất. Vui lòng thử lại.')
+      if (generation.current !== version) return
+      router.replace('/login')
+      router.refresh()
+    } catch (reason) {
+      if (generation.current === version) setError((reason as Error).message)
+    } finally {
+      if (generation.current === version) setBusy(false)
     }
   }
   function reset() {
+    generation.current++
+    setBusy(false)
     history.replaceState(null, '', location.pathname)
     setAttempt(null)
     setSelected(null)
@@ -245,7 +298,7 @@ export function Practice({
           <span title={member.name}>{member.name}</span>
           {member.role === 'admin' && <Link href="/admin">Quản trị</Link>}
           {canSignOut ? (
-            <button onClick={() => void signOut({ callbackUrl: '/login' })}>
+            <button disabled={busy} onClick={() => void logout()}>
               Đăng xuất
             </button>
           ) : (
@@ -274,6 +327,7 @@ export function Practice({
         {error && (
           <div role="alert" className="error">
             {error}
+            <button onClick={reset}>Về bộ luyện</button>
             <button onClick={() => location.reload()}>Tải lại</button>
           </div>
         )}

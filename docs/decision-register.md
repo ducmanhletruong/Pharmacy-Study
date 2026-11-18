@@ -75,3 +75,7 @@ Repo đã có P03: nhánh phase-02-hardening dựa phase-03 để bảo toàn au
 ## Đợt sửa P1 — 2026-11-18
 
 Chủ dự án yêu cầu “sửa mục1 trước đi”, thực hiện đợt1 trong kế hoạch review gồm RV-01/RV-02. Chọn unique expression index kiểm ngay để PostgreSQL arbitrate concurrent writes, không đổi schema nội dung khác hoặc hạ guard production. Các P2/P3 còn OPEN, không merge/deploy.
+
+## Đợt2 — 2026-11-18
+
+User yêu cầu sửa logout/quota/UI/provision/audit/recorder. Thực hiện RV-03..08, RV-13, RV-15 theo kế hoạch review. Giữ auth provider/allowlist và CSRF; wrapper bảo đảm durable revoke trước khi trả response logout. Quota client dựa signed cookie, không tin X-Forwarded-For; signed logout tách global cap. Không tự sửa seal/cycle/topic rendering/taxonomy/result/evaluator của đợt3, không merge/deploy.
