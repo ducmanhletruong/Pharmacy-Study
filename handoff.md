@@ -1,20 +1,18 @@
-# Bàn giao CR-0001
+# Bàn giao sửa đợt1
 
-Worktree `/workspace/pharmacy-study-cr0001`, branch `phase-02-hardening`, base `phase-03`.
-Nguồn trạng thái/kiểm chứng: [docs/status.md](docs/status.md).
-Phạm vi/rủi ro: [ADR-0012](docs/adr/0012-db-integrity.md) và [phụ lục plan0.2](docs/plans/IMPLEMENTATION_PLAN.v0.2-addendum.md).
+Worktree `/workspace/pharmacy-study-cr0001`, branch `fix-review-p1`.
+Nguồn trạng thái/kiểm chứng: [docs/status.md](docs/status.md), mục sửa P1.
+Phạm vi: RV-01 cấu hình CI main và RV-02 write skew MCQ; P2/P3 còn OPEN.
 
-Đã áp dụng hardening DB, gộp choices query, tests, config và quy tắc tài liệu theo CR.
-Migration mới0003, không sửa0001/0002 hoặc mất auth P03.
-DB thử riêng, `.env`/`.env.db` private; không đổi DB/server P02/P03 hoặc Windows capture.
+Migration0004 thêm unique normalized choice text, không sửa SQL đã chạy.
+Chạy db:migrate bằng maintenance credential; invalid duplicate data sẽ chặn migration.
+Không tự sửa text cũ hoặc xóa volume để vượt kiểm.
+Unique kiểm ngay; text swap tạm trùng phải dùng revision mới hoặc giá trị trung gian.
+B-tree PostgreSQL có giới hạn kích thước key, cần lưu ý khi nhập text dài.
 
-Chạy: frozen install → db:migrate → db:provision (nếu clone mới) → db:seed → pnpm dev.
-Xem [runbook Google](docs/runbooks/google-login.md), config pool/body/DEV_HOST ở README.
-Cloud preview chủ động đặt DEV_HOST=0.0.0.0; local mặc định127.0.0.1.
-Production cần APP_ORIGIN chính xác; Google OAuth client vẫn cấu hình private, không gửi secret chat.
+Regression hai writer dùng fixture riêng, statement/lock timeout và cleanup.
+Probe launcher production dùng env đọc từ job YAML, port riêng để giữ server3000.
+PR #6 draft đã mở, CI nhánh đạt; kết quả và giới hạn kiểm main ở docs/status.md.
 
-PR #5 draft đã mở; kết quả CI và kiểm chứng đầy đủ ở docs/status.md.
-Google OAuth thật vẫn cần cấu hình riêng; xem runbook, không coi CR DONE là đóng P03.
-Không merge PR, deploy hoặc bắt đầu P04. By_topic nhiều chủ đề còn chờ quyết định trước P05.
-Không xóa volume hoặc chạy rollback SQL trong CR gốc lên data thật; dùng forward migration được review.
-Các phát sinh/khác biệt với đề xuất gốc đã nối vào worked.md.
+Không sửa các finding khác, không merge/deploy hoặc mở P04.
+P03 Google live vẫn pending; quyền nguồn/by_topic giữ nguyên.
