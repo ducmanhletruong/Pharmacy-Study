@@ -85,3 +85,9 @@ CI code `51f9eb29255b1ed4377ae0231ff199ea1240cc70` **SUCCESS**: https://github.c
 Quy tắc MCQ/seal/same-subject, query gộp, config pool/body/DEV_HOST/APP_ORIGIN, tests, docs và CI đã thực hiện. Không áp migration lên DB P02/P03 gốc hoặc Windows. Rủi ro vận hành còn lại: writer phải ghi revision và đủ choices trong transaction, nội dung sealed phải tạo revision mới, invalid legacy data phải được xử lý có review trước migration. Rollback vận hành dùng forward migration được review, không xóa registry hoặc volume.
 
 Các mục CR đã hoãn vẫn giữ nguyên: lifecycle P04, tối ưu random theo ngưỡng, password guard P12, quyết định by_topic trước P05. Không merge các PR xếp chồng. P03 Google live vẫn pending riêng; CR DONE không đóng cổng P03 hoặc cho phép mở P04.
+
+## Review độc lập — 2026-11-18
+
+Review theo yêu cầu chủ dự án đã hoàn tất trên snapshot b53016d (P00–P03 + CR-0001), bằng đội sáu subagent và root đối chiếu. Báo cáo nguồn: [review code](reviews/2026-11-18-code-review.md), gồm bằng chứng, giới hạn, vị trí code và đề xuất theo mức ưu tiên. Các finding hiện **OPEN, chưa sửa**; đặc biệt cần xử lý lỗi CI main và write skew MCQ trước tích hợp/mở writer.
+
+Không đổi lịch sử kết quả CI đã đo ở trên; review bổ sung các trường hợp test cũ chưa bao phủ, không suy từ CR DONE rằng các bảo đảm đều hoàn chỉnh. Không chạy lại full suite/build, không sửa logic/schema/config/dependency; probe dùng synthetic/rollback/fixture riêng, UI server riêng đã dừng. P03 Google live vẫn pending; không mở P04 hoặc merge/deploy.

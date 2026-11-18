@@ -1,20 +1,17 @@
-# Bàn giao CR-0001
+# Bàn giao review hiện trạng
 
-Worktree `/workspace/pharmacy-study-cr0001`, branch `phase-02-hardening`, base `phase-03`.
-Nguồn trạng thái/kiểm chứng: [docs/status.md](docs/status.md).
-Phạm vi/rủi ro: [ADR-0012](docs/adr/0012-db-integrity.md) và [phụ lục plan0.2](docs/plans/IMPLEMENTATION_PLAN.v0.2-addendum.md).
+Worktree báo cáo `/workspace/pharmacy-study-review`, branch `review-current-code`.
+Code được review: snapshot `b53016d`, branch `phase-02-hardening`, P00–P03 + CR-0001.
+Nguồn trạng thái: [docs/status.md](docs/status.md).
+Báo cáo/đề xuất chi tiết: [review ngày 18/11](docs/reviews/2026-11-18-code-review.md).
 
-Đã áp dụng hardening DB, gộp choices query, tests, config và quy tắc tài liệu theo CR.
-Migration mới0003, không sửa0001/0002 hoặc mất auth P03.
-DB thử riêng, `.env`/`.env.db` private; không đổi DB/server P02/P03 hoặc Windows capture.
+Đã review theo đội subagent và probe lỗi; chỉ thêm tài liệu, không sửa logic sản phẩm.
+Các finding đang OPEN; ưu tiên CI main và concurrency MCQ trước tích hợp/mở writer.
+Đợt kế tiếp đề xuất sửa fault handling auth/UI/provision/audit/recorder, rồi integrity/taxonomy.
+Không chạy lại full suite/build cho lượt review; bằng chứng và giới hạn ở báo cáo.
 
-Chạy: frozen install → db:migrate → db:provision (nếu clone mới) → db:seed → pnpm dev.
-Xem [runbook Google](docs/runbooks/google-login.md), config pool/body/DEV_HOST ở README.
-Cloud preview chủ động đặt DEV_HOST=0.0.0.0; local mặc định127.0.0.1.
-Production cần APP_ORIGIN chính xác; Google OAuth client vẫn cấu hình private, không gửi secret chat.
-
-PR #5 draft đã mở; kết quả CI và kiểm chứng đầy đủ ở docs/status.md.
-Google OAuth thật vẫn cần cấu hình riêng; xem runbook, không coi CR DONE là đóng P03.
-Không merge PR, deploy hoặc bắt đầu P04. By_topic nhiều chủ đề còn chờ quyết định trước P05.
-Không xóa volume hoặc chạy rollback SQL trong CR gốc lên data thật; dùng forward migration được review.
-Các phát sinh/khác biệt với đề xuất gốc đã nối vào worked.md.
+Code gốc vẫn tại `/workspace/pharmacy-study-cr0001`; không đổi DB/server P02/P03 hoặc capture Windows.
+Probe DB rollback hoặc cleanup fixture riêng; UI port3003 đã dừng; không dùng Google/AI thật.
+Nếu sửa DB dùng forward migration mới, không sửa SQL đã áp hoặc tắt trigger.
+Google OAuth thật vẫn pending riêng ở P03; không tự coi review hoàn tất là đóng P03.
+Không merge PR #5, deploy hoặc mở P04. Quyết định by_topic và quyền nguồn vẫn giữ như trước.
