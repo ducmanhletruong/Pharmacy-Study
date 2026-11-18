@@ -339,3 +339,23 @@ test('attempt snapshots preserve all original topic names and membership across 
     )
   })
 })
+
+for (const length of [2, 3])
+  test(`multi-row insertion cannot close a ${length}-topic cycle through the not-yet-visible current row`, async () => {
+    await rollback(async (client) => {
+      const { subject } = await questionFixture(client)
+      const ids = Array.from({ length }, () => randomUUID())
+      const args: string[] = []
+      const values = ids.map((id, index) => {
+        args.push(id, subject, ids[(index + 1) % length]!, `bulk-${index}`)
+        const base = index * 4
+        return `($${base + 1},$${base + 2},$${base + 3},$${base + 4},$${base + 4})`
+      })
+      await expect(
+        client.query(
+          `INSERT INTO topics(id,subject_id,parent_id,code,title) VALUES ${values.join(',')}`,
+          args,
+        ),
+      ).rejects.toMatchObject({ code: '23514' })
+    })
+  })

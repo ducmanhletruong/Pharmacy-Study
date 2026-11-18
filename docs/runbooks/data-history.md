@@ -4,7 +4,7 @@ Phạm vi: các finding RV-09/10/11/12/14/16 của review, không phải workflo
 
 ## Nâng cấp và giới hạn legacy
 
-Dùng forward migration0005 qua maintenance credential, không sửa SQL đã áp. Migration sẽ từ chối cây topic cũ có chu trình, không tự sửa hoặc xóa topic để vượt kiểm. Sao lưu và kiểm dữ liệu trước khi áp lên DB có người dùng; lượt phát triển chỉ dùng DB thử riêng.
+Dùng forward migrations0005 và0006 qua maintenance credential, không sửa SQL đã áp. Migration sẽ từ chối cây topic cũ có chu trình, không tự sửa hoặc xóa topic để vượt kiểm. Sao lưu và kiểm dữ liệu trước khi áp lên DB có người dùng; lượt phát triển chỉ dùng DB thử riêng.
 
 Seal mới lưu ledger: status quay về draft hoặc current pointer quay lại không mở được revision đã được ghi seal. Draft chưa dùng, chưa publish và chưa bị thay thế vẫn sửa được. Legacy chỉ backfill seal dựa trên bằng chứng hiện còn: trạng thái/current pointer/attempt reference. Không thể khôi phục trạng thái đã bị rewind trước migration; không tự coi mọi draft cũ là đã duyệt.
 

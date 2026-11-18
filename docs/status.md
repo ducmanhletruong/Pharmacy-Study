@@ -130,3 +130,5 @@ Nhánh fix-review-data-completion kế thừa đợt2. Scope RV-09/10/11/12/14/1
 Đợt3 local cuối: unit119/119, integration36/36, E2Etopic-depth1/1 đạt; chọn leaf cấp4 gửi đúngID. Lint/format/diff đạt; evaluator7test và reference self-check5/5 không inference đã được agent kiểm. Một E2E selector getByLabel exact không tìm select vì label bao options: sửa sang role combobox theo accessible name và kiểm lại đạt, không đổi hành vi để nới test. CI code cuối/build còn chờ.
 
 Đợt3 contract/evaluator/UI đã triển khai và kiểm local như trên; chờ CI môi trường sạch trước đóng các finding còn lại.
+
+Rà soát cuối bổ sung case bulk INSERT2/3topic có cycle: cả hai đỏ trước sửa. Vì0005 đã áp, thêm forward0006, không đổi checksum0005. Sau0006 history-taxonomy9/9 đạt, RC/RR vẫn đúng, preflight graph cũ fail nếu cycle thay vì tự repair. Fullintegration đã đạt36 trước hai regression mới; CI cuối sẽ chạy38.
