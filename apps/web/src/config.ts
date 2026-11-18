@@ -16,6 +16,12 @@ const schema = z.object({
   AUTH_TEST_SECRET: z.string().optional(),
   ADMIN_EMAILS: z.string().default(''),
   INVITED_EMAILS: z.string().default(''),
+  RATE_LIMIT_AUTH_GLOBAL: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100000)
+    .default(1200),
   RATE_LIMIT_AUTH: z.coerce.number().int().min(1).max(10000).default(120),
   RATE_LIMIT_ATTEMPT_CREATE: z.coerce
     .number()

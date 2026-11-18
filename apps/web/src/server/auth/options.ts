@@ -112,13 +112,25 @@ export function authOptions(requestId: string = randomUUID()): NextAuthOptions {
           })
           return false
         }
-        const member = await registerIdentity({
-          provider,
-          subject: account.providerAccountId,
-          email,
-          name: user.name ?? email.split('@')[0]!,
-          role,
-        })
+        let member
+        try {
+          member = await registerIdentity({
+            provider,
+            subject: account.providerAccountId,
+            email,
+            name: user.name ?? email.split('@')[0]!,
+            role,
+          })
+        } catch {
+          console.error(
+            JSON.stringify({
+              event: 'auth.identity_failed',
+              requestId,
+              code: 'IDENTITY_UNAVAILABLE',
+            }),
+          )
+          return false
+        }
         if (!member) return false
         user.id = member.id
         return true

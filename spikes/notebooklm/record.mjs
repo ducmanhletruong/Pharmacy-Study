@@ -1,5 +1,12 @@
 import { createHash, randomUUID } from 'node:crypto'
-import { readFile, realpath, rename, writeFile } from 'node:fs/promises'
+import {
+  readFile,
+  realpath,
+  rename,
+  writeFile,
+  mkdir,
+  rm,
+} from 'node:fs/promises'
 import { isAbsolute, relative } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { validateCapture } from './validate.mjs'
@@ -97,6 +104,29 @@ async function readJson(path) {
   }
 }
 
+export async function withCaptureLock(capturePath, run) {
+  const lock = `${capturePath}.lock`
+  const deadline = Date.now() + 5000
+  while (true) {
+    try {
+      await mkdir(lock, { mode: 0o700 })
+      break
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error
+      if (Date.now() >= deadline)
+        throw new Error(
+          'Recorder lock is busy or stale; confirm no writer is running before removing the .lock directory',
+        )
+      await new Promise((resolve) => setTimeout(resolve, 25))
+    }
+  }
+  try {
+    return await run()
+  } finally {
+    await rm(lock, { recursive: true, force: true })
+  }
+}
+
 async function main() {
   if (process.argv.length !== 4) {
     throw new Error(
@@ -107,19 +137,27 @@ async function main() {
   const batchPath = await privateFile(process.argv[3])
   if (capturePath === batchPath)
     throw new Error('Use separate capture and batch files')
-  const capture = await readJson(capturePath)
-  const batch = await readJson(batchPath)
-  const updated = appendBatch(capture, batch)
-  const temporary = `${capturePath}.${randomUUID()}.tmp`
-  await writeFile(temporary, `${JSON.stringify(updated, null, 2)}\n`, {
-    encoding: 'utf8',
-    flag: 'wx',
-    mode: 0o600,
+  await withCaptureLock(capturePath, async () => {
+    const capture = await readJson(capturePath)
+    const batch = await readJson(batchPath)
+    const updated = appendBatch(capture, batch)
+    const temporary = `${capturePath}.${randomUUID()}.tmp`
+    try {
+      await writeFile(temporary, `${JSON.stringify(updated, null, 2)}\n`, {
+        encoding: 'utf8',
+        flag: 'wx',
+        mode: 0o600,
+      })
+      await rename(temporary, capturePath)
+    } finally {
+      await rm(temporary, { force: true })
+    }
+    const report = validateCapture(updated)
+    console.log(
+      JSON.stringify({ added_count: batch.length, ...report }, null, 2),
+    )
+    if (!report.gate_passed) process.exitCode = 2
   })
-  await rename(temporary, capturePath)
-  const report = validateCapture(updated)
-  console.log(JSON.stringify({ added_count: batch.length, ...report }, null, 2))
-  if (!report.gate_passed) process.exitCode = 2
 }
 
 if (

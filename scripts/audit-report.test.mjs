@@ -50,3 +50,43 @@ test('registry failures and unclassified counts fail closed', () => {
   ])
     assert.throws(() => classifyAudit(data))
 })
+
+test('malformed or inconsistent report counts never pass', () => {
+  for (const counts of [
+    {},
+    { high: 'unknown', critical: 0 },
+    { high: NaN, critical: 0 },
+    { high: -1, critical: 0 },
+    { high: 1.5, critical: 0 },
+    { high: 0, critical: undefined },
+  ])
+    assert.throws(() =>
+      classifyAudit({ metadata: { vulnerabilities: counts }, advisories: {} }),
+    )
+  assert.throws(() =>
+    classifyAudit({
+      metadata: { vulnerabilities: { high: 0, critical: 0 } },
+      advisories: { x: finding() },
+    }),
+  )
+  for (const advisories of [
+    [],
+    null,
+    { x: null },
+    { x: { severity: 'unknown' } },
+  ])
+    assert.throws(() =>
+      classifyAudit({
+        metadata: { vulnerabilities: { high: 0, critical: 0 } },
+        advisories,
+      }),
+    )
+  assert.throws(() => classifyAudit(null))
+  assert.deepEqual(
+    classifyAudit({
+      metadata: { vulnerabilities: { high: 0, critical: 0 } },
+      advisories: {},
+    }).unmitigated,
+    [],
+  )
+})

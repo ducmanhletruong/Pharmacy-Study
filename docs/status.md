@@ -101,3 +101,22 @@ Ngày 2026-11-18, user yêu cầu sửa mục1 của kế hoạch review. Branch
 - RV-01: job main có AUTH_MODE=disabled và APP_ORIGIN=http://127.0.0.1:3000. Probe đọc đúng hai env từ YAML, khởi động launcher production trên bundle đã build trước đó (appcode không đổi), override PORT3199 để bảo toàn server3000; GET health trả200 đúng payload. Server probe đã dừng. Không claim đã chạy workflow main trên GitHub; chờ CI branch cho code cuối.
 
 CI nhánh code `b1d3c9ab00a5c97b8a0172ed2d04b74df14038a7` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44225961205 . Frozen install/lint/format/typecheck, migrate-empty/provision/seed-rerun, unit106/integration29/E2E8, build, guard, dependency gate và secret scan đều đạt. PR #6 draft base phase-02-hardening: https://github.com/ducmanhletruong/Pharmacy-Study/pull/6 . RV-01/RV-02 đã sửa; các P2/P3 còn OPEN. Workflow main chưa chạy trực tiếp trên GitHub; startup với env của nó đã kiểm local. Bổ sung sau CI chỉ là Markdown, không đổi code đã kiểm. Không merge/deploy.
+
+## Đợt 2 — phục hồi và bảo mật — DONE
+
+Ngày 2026-11-18, nhánh fix-review-recovery-security kế thừa fix-review-p1. Phạm vi RV-03/04/05/06/07/08/13/15, không sửa các mục đợt3.
+
+- Auth: wrapper chặn response xóa cookie/redirect nếu event revoke bị NextAuth nuốt lỗi; trả503 và UI cho retry. Giữ CSRF của thư viện. Signed session logout dùng quota riêng, không ăn global anonymous. Anonymous dùng cookie rate identity có HMAC (không dùng IP header),120/client/phút và global cap1200/phút. Cookie là rate identity, không xác thực người dùng; xóa cookie có thể đổi bucket, cần trusted-edge chống abuse ở hosting; global cap vẫn có thể chặn anonymous login khi flood, không chặn signed logout.
+- UI: generation guard vô hiệu callback cũ khi reset/unmount/chuyển context; catalog tải độc lập với resume; lỗi có nút về bộ luyện. Logout kiểm status/redirect, không báo thu hồi thành công khi503 hoặc CSRF redirect.
+- Provision: journal credential private được sync trước DDL; DDL transaction; probe credential existing trước grant, không đổi password existing; ghi maintenance env trước runtime env bằng atomic rename và file600; lỗi còn journal để retry. Temp env cũng thuộc pattern ignore .env.*. Lock stale phải kiểm tra không có CLI chạy trước khi xóa, không xóa journal bừa.
+- Audit: validate numeric high/critical và consistency, từ chối malformed advisory/exit status không hợp lệ; giữ verifier patch/advisory exact. Recorder khóa cả read-append-rename, cleanup khi lỗi; stale lock fail rõ ràng, không tự reap.
+- Kiểm local: unit112 đạt trước test deadline bổ sung, test deadline riêng1/1 đạt; auth/provision fault tests, rate cookie chống giả, identity sentinel denial đạt. Classifier5/5 và recorder6/6 đạt (5CLI concurrent giữ5records). E2E recovery4/4 và happy logout/cookie-reuse1/1 đạt, CSRF âm đúng. Typecheck, lint/format và provision local rerun đạt; audit raw high1/moderate1, verifier mitigation đạt. CI sẽ kiểm code cuối.
+- UI E2E lượt đầu bị HMR reload lặp; đã dừng runner, xóa riêng cache .next/dev rồi kiểm lại thành công. Một assertion alert bị trùng Next route announcer đã sửa selector đúng app error; không nới hành vi. Không coi các lượt lỗi này là pass.
+
+Đợt2 provision đã tách core có fault injection, lưu journal và ghi env atomic theo thứ tự maintenance→runtime; DDL rollback/IO failure retry giữ nguyên credential đã kiểm, không sửa role password.
+
+Đợt2 tooling: classifier malformed-report negatives và recorder concurrent CLI test đã được nối vào CI nhánh, bao gồm PR base fix-*. Đang chờ kiểm chứng môi trường sạch trước đóng các finding đợt2.
+
+CI code `9428b3d8408c887826753db98274eb1ccf13784f` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44229307690 . Frozen install/lint/format/typecheck, migrate-empty/provision/seed rerun, unit113/integration29/E2E12, build production/guards, classifier5 và recorder6, dependency audit/mitigation gate và gitleaks đều đạt. PR #7 draft, base fix-review-p1: https://github.com/ducmanhletruong/Pharmacy-Study/pull/7 . Gitleaks local trước fixture test sửa cuối đã quét52commit, không có secret; CI kiểm code cuối cũng đạt.
+
+Đã xử lý RV-03/04/05/06/07/08/13/15 theo phạm vi đợt2. Quota cookie/global có giới hạn được ghi trong runbook, không tuyên bố chốngDDoS. Còn OPEN: RV-09/10/11/12/14/16 cho đợt3 và Google live P03 riêng. Chỉ bổ sung Markdown sau CI, không đổi code đã kiểm hoặc chạy lại local test/build; chưa merge/deploy.

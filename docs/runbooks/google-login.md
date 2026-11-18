@@ -40,4 +40,4 @@ Session tối đa 8 giờ, có bản ghi DB để revoke; user disabled bị ch�
 
 ## Giới hạn vận hành
 
-Mặc định mỗi actor tạo/nộp bài tối đa 20 lần/phút, ghi item 120 lần/phút. Auth dùng ngân sách chung anonymous 120 request/phút lưu PostgreSQL, chưa phân phối theo IP và không tin X-Forwarded-For. Giới hạn trả 429/Retry-After. CSP script theo nonce; style inline được giữ cho KaTeX. Nhật ký không lưu access token/refresh token hoặc body thô. Quản lý vòng đời dữ liệu/log và hosting thuộc các phase sau.
+Mặc định mỗi actor tạo/nộp bài tối đa 20 lần/phút, ghi item 120 lần/phút. Auth dùng quota120/phút theo signed rate-client cookie và global anonymous cap1200/phút; signed logout có quota riêng theo SID, không dùng ngân sách anonymous. Không tin X-Forwarded-For. Rate cookie không phải định danh chống bot; xem docs/runbooks/recovery-security.md. Giới hạn trả 429/Retry-After. CSP script theo nonce; style inline được giữ cho KaTeX. Nhật ký không lưu access token/refresh token hoặc body thô. Quản lý vòng đời dữ liệu/log và hosting thuộc các phase sau.
