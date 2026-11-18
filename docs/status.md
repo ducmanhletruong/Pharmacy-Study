@@ -112,3 +112,5 @@ Ngày 2026-11-18, nhánh fix-review-recovery-security kế thừa fix-review-p1.
 - Audit: validate numeric high/critical và consistency, từ chối malformed advisory/exit status không hợp lệ; giữ verifier patch/advisory exact. Recorder khóa cả read-append-rename, cleanup khi lỗi; stale lock fail rõ ràng, không tự reap.
 - Kiểm local: unit112 đạt trước test deadline bổ sung, test deadline riêng1/1 đạt; auth/provision fault tests, rate cookie chống giả, identity sentinel denial đạt. Classifier5/5 và recorder6/6 đạt (5CLI concurrent giữ5records). E2E recovery4/4 và happy logout/cookie-reuse1/1 đạt, CSRF âm đúng. Typecheck, lint/format và provision local rerun đạt; audit raw high1/moderate1, verifier mitigation đạt. CI sẽ kiểm code cuối.
 - UI E2E lượt đầu bị HMR reload lặp; đã dừng runner, xóa riêng cache .next/dev rồi kiểm lại thành công. Một assertion alert bị trùng Next route announcer đã sửa selector đúng app error; không nới hành vi. Không coi các lượt lỗi này là pass.
+
+Đợt2 provision đã tách core có fault injection, lưu journal và ghi env atomic theo thứ tự maintenance→runtime; DDL rollback/IO failure retry giữ nguyên credential đã kiểm, không sửa role password.
