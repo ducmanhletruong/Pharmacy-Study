@@ -1,18 +1,17 @@
-# Bàn giao sửa đợt1
+# Bàn giao sửa đợt2
 
-Worktree `/workspace/pharmacy-study-cr0001`, branch `fix-review-p1`.
-Nguồn trạng thái/kiểm chứng: [docs/status.md](docs/status.md), mục sửa P1.
-Phạm vi: RV-01 cấu hình CI main và RV-02 write skew MCQ; P2/P3 còn OPEN.
+Worktree `/workspace/pharmacy-study-cr0001`, branch `fix-review-recovery-security`, base `fix-review-p1`.
+Nguồn trạng thái/kiểm chứng: [docs/status.md](docs/status.md), mục đợt2.
+Scope RV-03..08, RV-13, RV-15; đợt3 còn OPEN, P1 giữ nguyên.
 
-Migration0004 thêm unique normalized choice text, không sửa SQL đã chạy.
-Chạy db:migrate bằng maintenance credential; invalid duplicate data sẽ chặn migration.
-Không tự sửa text cũ hoặc xóa volume để vượt kiểm.
-Unique kiểm ngay; text swap tạm trùng phải dùng revision mới hoặc giá trị trung gian.
-B-tree PostgreSQL có giới hạn kích thước key, cần lưu ý khi nhập text dài.
+Auth giữ CSRF, lỗi revoke trả503 không clear session; UI báo chưa xong và cho retry.
+Quota signed logout riêng; anonymous signed-cookie budget + global cap, không tin header IP.
+UI chống stale response và phục hồi link attempt lỗi.
+Provision dùng journal/lock .env.provision.*, maintenance env ghi trước runtime env.
+Nếu lock stale: kiểm không có CLI chạy, chỉ xóa lock rồi retry; giữ journal private.
+Recorder lock cùng capture: xác nhận không có writer trước khi xóa stale lock, không xóa capture.
+Xem docs/runbooks/recovery-security.md và Google runbook.
 
-Regression hai writer dùng fixture riêng, statement/lock timeout và cleanup.
-Probe launcher production dùng env đọc từ job YAML, port riêng để giữ server3000.
-PR #6 draft đã mở, CI nhánh đạt; kết quả và giới hạn kiểm main ở docs/status.md.
-
-Không sửa các finding khác, không merge/deploy hoặc mở P04.
-P03 Google live vẫn pending; quyền nguồn/by_topic giữ nguyên.
+Đang hoàn tất CI/PR; trạng thái mới nhất ở docs/status.md.
+Không copy journal/maintenance env vào web hoặc gửi secret trong chat/Git.
+Không merge/deploy, đổi Google thật, chạy lại P01 hoặc mở P04.

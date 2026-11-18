@@ -413,3 +413,17 @@ Probe CI đọc env từ YAML thực tế và dùng production launcher/bundle c
 Các sửa fault-handling/logout/UI/recorder/taxonomy vẫn chưa làm. Hoàn tác index bằng forward migration được review nếu cần, không sửa hash migration đã áp; revert code phải đồng bộ assertion/test. Không merge/deploy hoặc đổi dữ liệu private/NotebookLM.
 
 Bàn giao sau CI: đã push nhánh fix-review-p1, tạo và attach PR #6 draft, chưa merge. CI code đã kiểm và các kết quả ở docs/status.md; không khẳng định workflow main đã được chạy qua GitHub. Bổ sung cuối chỉ đổi Markdown để đóng RV-01/RV-02 và ghi bàn giao; không chạy lại local tests/build cho tài liệu. Không mở các phần sửa P2/P3.
+
+## 2026-11-18 — Sửa đợt2 phục hồi và bảo mật
+
+Theo yêu cầu trực tiếp, tạo branch fix-review-recovery-security từ fix-review-p1, chỉ xử lý các finding thuộc đợt2. Không dùng thêm subagent, dependency hoặc dịch vụ bên ngoài. Các kết quả và trạng thái ở docs/status.md; report gốc giữ evidence snapshot.
+
+Phát sinh cần thiết: NextAuth nuốt lỗi signOut event nên route wrapper giữ cờ lỗi và bỏ response thư viện khi revoke chưa thành công; giữ nguyên CSRF/cookie strategy. UI dùng fetch logout có CSRF và kiểm redirect thay việc signOut tự điều hướng dù503. Thêm signed rate-client cookie và cap global lớn hơn; không giả IP client qua header. Identity error chuyển false/public denial để raw exception không đi vào callback URL. Thêm deadline đọc body10s vì body được kiểm trước quota, tránh request treo giữ tài nguyên vô hạn; test stream không gửi byte xác nhận408/cancel.
+
+Provision cần tách core CLI sang provision-local để test fault injection tại DB/FS mà không làm hỏng role thật. Journal private sync trước CREATE ROLE, DDL transaction, existing credential probe trước grant, file atomic/mode600. Ghi .env.db trước .env để lỗi IO không làm mất đường bootstrap khi runtime URL đã đổi. Temp file đặt .env.write-* để nếu process chết cũng bị Git ignore. Journal/lock private không vào web runtime; khi stale phải operator kiểm không còn CLI trước xóa lock, không auto xoay role password.
+
+Recorder dùng mkdir lock cùng private capture, bounded wait và release finally. Không auto xóa lock theo tuổi vì có thể xóa lock của writer còn sống; runbook hướng dẫn stale recovery. Năm CLI test dùng synthetic data giữ mọi observation, không đọc private P01 hoặc gọi NotebookLM. Audit classifier validate schema/count, wrapper kiểm exit code; không mở ngoại lệ advisory mới hay giả raw audit về0.
+
+Test auth route ban đầu đặt trong core không resolve Next dependency theo pnpm strict; chuyển đúng vị trí web và thêm Vitest include web server tests, không thêm dependency core. Lint cảnh báo ref cleanup đã sửa bằng callback ổn định, bỏ unused import. Lượt E2E đầu HMR reload vòng khi dùng cache cũ: dừng đúng runner, chỉ xóa .next/dev cache sinh tự động; ca login sau cache sạch đạt. E2E error selector ban đầu trùng Next route announcer: sửa selector app error, thêm chờ response thực sự xong cho stale-response regression. Không đánh dấu các lượt timeout/interrupted là pass; không chạy lặp fullsuite khi không đổi logic.
+
+CI cần nhận PR base fix-* (base đợt1 không còn phase-*), nên mở trigger tương ứng; thêm recorder tests nhẹ vào job hiện hành để PR này không bỏ qua hồi quy tooling. Đây là sửa cổng cần thiết cho scope, không hợp nhất/nâng cấp toolchain. Không sửa migration hoặc các finding đợt3; rollback bằng revert code phù hợp, bảo toàn journal private đến khi provision hoàn tất.
