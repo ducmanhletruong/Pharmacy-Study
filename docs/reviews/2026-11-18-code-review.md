@@ -195,3 +195,7 @@ Các file dưới `/tmp` chỉ phục vụ lần chạy này, có thể mất sa
 - `pharmacy-review-grading-probe.ts`, `pharmacy-review-ui-probe.cjs`, `pharmacy-review-ops-provision.mjs`, `pharmacy-review-tooling.mjs`.
 
 Server UI riêng port3003 đã dừng; DB fixture committed tạm cho concurrency đã được dọn, các probe còn lại rollback. Không sửa DB P02/P03 gốc hoặc copy cookie/secret; không gọi dịch vụ AI/Google có trả phí.
+
+## Theo dõi sau review
+
+User đã giao sửa đợt1 (RV-01/RV-02). Trạng thái và kiểm chứng bản sửa ở docs/status.md; các phần phía trên giữ nguyên bằng chứng của snapshot review, không mô tả trạng thái code mới. Những finding khác chưa được sửa trong đợt này.

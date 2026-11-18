@@ -89,7 +89,7 @@ test('duplicate choice texts are rejected at commit', async () => {
       )
       await client.query('SET CONSTRAINTS ALL IMMEDIATE')
     }),
-  ).rejects.toMatchObject({ code: '23514' })
+  ).rejects.toMatchObject({ code: '23505' })
 })
 
 test('a second correct choice is rejected by the unique index', async () => {

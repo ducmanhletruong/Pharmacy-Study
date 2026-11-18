@@ -401,3 +401,13 @@ Phát sinh cần để chứng minh lỗi: agent DB tạo fixture synthetic UUID
 Một probe callback ban đầu lỗi CJS/ESM interop, chạy lại đúng chế độ và ghi rõ không phải bug sản phẩm. Root chạy lại classifier trên malformed input để đối chiếu. Không chạy full suite/build/upgrade package; các kiểm chứng cũ được dẫn đúng nguồn, không claim là vừa chạy lại. Báo cáo phân biệt thực thi/tĩnh/fault injection, hạn chế của prototype và sự cố chưa quan sát thực tế; không suy ra capture P01 trước đây sai hoặc yêu cầu làm lại ba ngày.
 
 Chỉ thêm báo cáo, cập nhật status/handoff và nối nhật ký này. Không push thay đổi vào PR sản phẩm, gửi comment GitHub, merge/deploy hoặc mở P04. Các probe /tmp có thể mất sau thay môi trường nên kịch bản/kết quả quan trọng được lưu bằng văn bản trong báo cáo. Có thể hoàn tác tài liệu bằng revert commit review; không có migration/code sản phẩm để rollback trong lượt này.
+
+## 2026-11-18 — Sửa đợt1 của review
+
+Thực hiện RV-01/RV-02 theo yêu cầu. Tạo branch fix-review-p1 trong worktree CR hiện có để dùng dependencies, bundle và DB thử sẵn, không cài thêm hoặc dùng subagent mới. Kế thừa commit review để giữ báo cáo bên cạnh bản sửa. Kết quả đo ở docs/status.md.
+
+Migration0004 là unique expression index kiểm ngay, xử lý tranh chấp key trực tiếp trong PG thay vì chỉ count từ snapshot. Không sửa0001–0003 hoặc tắt trigger. Do duplicate bây giờ bị bắt sớm, test cũ trùng text đổi kỳ vọng23514 thành23505; không nới điều kiện dữ liệu. Thêm hai-connection regression có deadline/PGlock barrier và cleanup riêng fixture; kiểm cả commit và rollback của writer đầu, không chỉ nhận lỗi timeout.
+
+Probe CI đọc env từ YAML thực tế và dùng production launcher/bundle cũ vì chỉ đổi SQL/tests/YAML, không đổi bundle ứng dụng. PORT3199 tránh đụng server3000, tắt process probe sau health check. Không rebuild local cho cùng app code đã build. Không nâng toolchain/dependency. Phát sinh liên quan được ghi rõ: unique immediate hạn chế text swap tạm trùng và B-tree giới hạn kích thước key; không tự thêm normalization hash hoặc thay thiết kế nội dung để mở rộng phạm vi.
+
+Các sửa fault-handling/logout/UI/recorder/taxonomy vẫn chưa làm. Hoàn tác index bằng forward migration được review nếu cần, không sửa hash migration đã áp; revert code phải đồng bộ assertion/test. Không merge/deploy hoặc đổi dữ liệu private/NotebookLM.

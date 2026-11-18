@@ -1,17 +1,18 @@
-# Bàn giao review hiện trạng
+# Bàn giao sửa đợt1
 
-Worktree báo cáo `/workspace/pharmacy-study-review`, branch `review-current-code`.
-Code được review: snapshot `b53016d`, branch `phase-02-hardening`, P00–P03 + CR-0001.
-Nguồn trạng thái: [docs/status.md](docs/status.md).
-Báo cáo/đề xuất chi tiết: [review ngày 18/11](docs/reviews/2026-11-18-code-review.md).
+Worktree `/workspace/pharmacy-study-cr0001`, branch `fix-review-p1`.
+Nguồn trạng thái/kiểm chứng: [docs/status.md](docs/status.md), mục sửa P1.
+Phạm vi: RV-01 cấu hình CI main và RV-02 write skew MCQ; P2/P3 còn OPEN.
 
-Đã review theo đội subagent và probe lỗi; chỉ thêm tài liệu, không sửa logic sản phẩm.
-Các finding đang OPEN; ưu tiên CI main và concurrency MCQ trước tích hợp/mở writer.
-Đợt kế tiếp đề xuất sửa fault handling auth/UI/provision/audit/recorder, rồi integrity/taxonomy.
-Không chạy lại full suite/build cho lượt review; bằng chứng và giới hạn ở báo cáo.
+Migration0004 thêm unique normalized choice text, không sửa SQL đã chạy.
+Chạy db:migrate bằng maintenance credential; invalid duplicate data sẽ chặn migration.
+Không tự sửa text cũ hoặc xóa volume để vượt kiểm.
+Unique kiểm ngay; text swap tạm trùng phải dùng revision mới hoặc giá trị trung gian.
+B-tree PostgreSQL có giới hạn kích thước key, cần lưu ý khi nhập text dài.
 
-Code gốc vẫn tại `/workspace/pharmacy-study-cr0001`; không đổi DB/server P02/P03 hoặc capture Windows.
-Probe DB rollback hoặc cleanup fixture riêng; UI port3003 đã dừng; không dùng Google/AI thật.
-Nếu sửa DB dùng forward migration mới, không sửa SQL đã áp hoặc tắt trigger.
-Google OAuth thật vẫn pending riêng ở P03; không tự coi review hoàn tất là đóng P03.
-Không merge PR #5, deploy hoặc mở P04. Quyết định by_topic và quyền nguồn vẫn giữ như trước.
+Regression hai writer dùng fixture riêng, statement/lock timeout và cleanup.
+Probe launcher production dùng env đọc từ job YAML, port riêng để giữ server3000.
+Đang hoàn tất PR/CI; kết quả mới nhất chỉ ghi ở docs/status.md.
+
+Không sửa các finding khác, không merge/deploy hoặc mở P04.
+P03 Google live vẫn pending; quyền nguồn/by_topic giữ nguyên.
