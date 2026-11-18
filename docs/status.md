@@ -121,7 +121,7 @@ CI code `9428b3d8408c887826753db98274eb1ccf13784f` SUCCESS: https://github.com/d
 
 Đã xử lý RV-03/04/05/06/07/08/13/15 theo phạm vi đợt2. Quota cookie/global có giới hạn được ghi trong runbook, không tuyên bố chốngDDoS. Còn OPEN: RV-09/10/11/12/14/16 cho đợt3 và Google live P03 riêng. Chỉ bổ sung Markdown sau CI, không đổi code đã kiểm hoặc chạy lại local test/build; chưa merge/deploy.
 
-## Đợt3 — nền dữ liệu/nội dung — IN PROGRESS
+## Đợt3 — nền dữ liệu/nội dung — DONE
 
 Nhánh fix-review-data-completion kế thừa đợt2. Scope RV-09/10/11/12/14/16, migration forward mới dự kiến0005, không sửa0001–4. Chưa đóng finding trước khi kiểm migration, concurrency, API/contract và UI. P03 Google live còn pending; P04 chưa mở.
 
@@ -132,3 +132,7 @@ Nhánh fix-review-data-completion kế thừa đợt2. Scope RV-09/10/11/12/14/1
 Đợt3 contract/evaluator/UI đã triển khai và kiểm local như trên; chờ CI môi trường sạch trước đóng các finding còn lại.
 
 Rà soát cuối bổ sung case bulk INSERT2/3topic có cycle: cả hai đỏ trước sửa. Vì0005 đã áp, thêm forward0006, không đổi checksum0005. Sau0006 history-taxonomy9/9 đạt, RC/RR vẫn đúng, preflight graph cũ fail nếu cycle thay vì tự repair. Fullintegration đã đạt36 trước hai regression mới; CI cuối sẽ chạy38.
+
+CI code `ce6791b723d9f2528a9ce54a1d71ec0df0a26129` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44232623121 . Frozen install/lint/format/typecheck, emptyDB migrations0001–0006/provision/seed-rerun, unit119/integration38/E2E13, production build/guards, classifier5/recorder6/evaluator7 và reference self-check5/5, audit/mitigation gate và gitleaks đều đạt. PR #8 draft: https://github.com/ducmanhletruong/Pharmacy-Study/pull/8 (base fix-review-recovery-security).
+
+RV-09/10/11/12/14/16 đã được xử lý theo scope; các finding của ba đợt review đều có bản sửa/kiểm chứng, không đồng nghĩa mọi lỗi tương lai đã bị loại bỏ. Giới hạn legacy và quota/hosting đã ghi runbooks. P03 Google live vẫn pending, P04 chưa bắt đầu. Bổ sung sau CI chỉ đổi Markdown; không merge/deploy hoặc chạy lại local tests/build cho tài liệu.

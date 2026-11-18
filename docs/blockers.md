@@ -34,3 +34,7 @@ Không còn blocker hardening CR; xem kết quả và cổng CI trong docs/statu
 ## Đợt2 phục hồi/bảo mật
 
 Không còn blocker trong scope đợt2; kết quả và finding còn OPEN của đợt3 ở docs/status.md. Runbook recovery-security ghi giới hạn quota, stale-lock/journal recovery. Google live vẫn là cổng riêng, không yêu cầu thêm ngày P01.
+
+## Đợt3 review
+
+Không còn blocker trong scope sáu finding đợt3, xem docs/status.md và runbook data-history. Giới hạn backfill lịch sử cũ vẫn được ghi rõ. Bước sản phẩm P04 chưa mở: cần hoàn tất Google OAuth live của P03; không yêu cầu chạy lại P01 hoặc gửi secret trong chat.
