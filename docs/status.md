@@ -92,10 +92,12 @@ Review theo yêu cầu chủ dự án đã hoàn tất trên snapshot b53016d (P
 
 Không đổi lịch sử kết quả CI đã đo ở trên; review bổ sung các trường hợp test cũ chưa bao phủ, không suy từ CR DONE rằng các bảo đảm đều hoàn chỉnh. Không chạy lại full suite/build, không sửa logic/schema/config/dependency; probe dùng synthetic/rollback/fixture riêng, UI server riêng đã dừng. P03 Google live vẫn pending; không mở P04 hoặc merge/deploy.
 
-## Đợt sửa P1 — RV-01/RV-02 — IN PROGRESS
+## Đợt sửa P1 — RV-01/RV-02 — DONE
 
 Ngày 2026-11-18, user yêu cầu sửa mục1 của kế hoạch review. Branch fix-review-p1 kế thừa review-current-code. Chỉ xử lý hai P1, không mở các mục P2/P3 hoặc P04.
 
 - RV-02: migration0004 thêm unique index `(revision_id, lower(btrim(text)))`, không sửa migration cũ. Kiểm ngược trước migration: ca hai writer commit đỏ như dự kiến, ca writer rollback xanh. Sau migration: cả hai ca và10test integrity đều đạt (12/12). Writer thứ hai nhận23505 khi writer đầu commit; nếu writer đầu rollback thì writer thứ hai ghi được, dữ liệu vẫn đủ4text khác nhau.
 - Migration/seed/migration rerun đạt trên DB thử verified của CR, không đổi DB P02/P03 gốc. Unique index kiểm ngay, không hỗ trợ đổi chéo hai text bằng các bước tạm trùng; dùng text trung gian hoặc revision mới. Text dài chịu giới hạn B-tree PostgreSQL: nếu vượt, DB từ chối ghi thay vì bỏ kiểm uniqueness.
 - RV-01: job main có AUTH_MODE=disabled và APP_ORIGIN=http://127.0.0.1:3000. Probe đọc đúng hai env từ YAML, khởi động launcher production trên bundle đã build trước đó (appcode không đổi), override PORT3199 để bảo toàn server3000; GET health trả200 đúng payload. Server probe đã dừng. Không claim đã chạy workflow main trên GitHub; chờ CI branch cho code cuối.
+
+CI nhánh code `b1d3c9ab00a5c97b8a0172ed2d04b74df14038a7` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44225961205 . Frozen install/lint/format/typecheck, migrate-empty/provision/seed-rerun, unit106/integration29/E2E8, build, guard, dependency gate và secret scan đều đạt. PR #6 draft base phase-02-hardening: https://github.com/ducmanhletruong/Pharmacy-Study/pull/6 . RV-01/RV-02 đã sửa; các P2/P3 còn OPEN. Workflow main chưa chạy trực tiếp trên GitHub; startup với env của nó đã kiểm local. Bổ sung sau CI chỉ là Markdown, không đổi code đã kiểm. Không merge/deploy.

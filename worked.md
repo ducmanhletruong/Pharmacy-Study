@@ -411,3 +411,5 @@ Migration0004 là unique expression index kiểm ngay, xử lý tranh chấp key
 Probe CI đọc env từ YAML thực tế và dùng production launcher/bundle cũ vì chỉ đổi SQL/tests/YAML, không đổi bundle ứng dụng. PORT3199 tránh đụng server3000, tắt process probe sau health check. Không rebuild local cho cùng app code đã build. Không nâng toolchain/dependency. Phát sinh liên quan được ghi rõ: unique immediate hạn chế text swap tạm trùng và B-tree giới hạn kích thước key; không tự thêm normalization hash hoặc thay thiết kế nội dung để mở rộng phạm vi.
 
 Các sửa fault-handling/logout/UI/recorder/taxonomy vẫn chưa làm. Hoàn tác index bằng forward migration được review nếu cần, không sửa hash migration đã áp; revert code phải đồng bộ assertion/test. Không merge/deploy hoặc đổi dữ liệu private/NotebookLM.
+
+Bàn giao sau CI: đã push nhánh fix-review-p1, tạo và attach PR #6 draft, chưa merge. CI code đã kiểm và các kết quả ở docs/status.md; không khẳng định workflow main đã được chạy qua GitHub. Bổ sung cuối chỉ đổi Markdown để đóng RV-01/RV-02 và ghi bàn giao; không chạy lại local tests/build cho tài liệu. Không mở các phần sửa P2/P3.
