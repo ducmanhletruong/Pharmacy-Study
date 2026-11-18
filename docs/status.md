@@ -114,3 +114,5 @@ Ngày 2026-11-18, nhánh fix-review-recovery-security kế thừa fix-review-p1.
 - UI E2E lượt đầu bị HMR reload lặp; đã dừng runner, xóa riêng cache .next/dev rồi kiểm lại thành công. Một assertion alert bị trùng Next route announcer đã sửa selector đúng app error; không nới hành vi. Không coi các lượt lỗi này là pass.
 
 Đợt2 provision đã tách core có fault injection, lưu journal và ghi env atomic theo thứ tự maintenance→runtime; DDL rollback/IO failure retry giữ nguyên credential đã kiểm, không sửa role password.
+
+Đợt2 tooling: classifier malformed-report negatives và recorder concurrent CLI test đã được nối vào CI nhánh, bao gồm PR base fix-*. Đang chờ kiểm chứng môi trường sạch trước đóng các finding đợt2.

@@ -140,3 +140,66 @@ test('CLI saves a partial day, preserves files on rejection and never prints pri
     await rm(directory, { recursive: true, force: true })
   }
 })
+
+test('concurrent CLI recorders preserve every batch and failed operations release locks', async () => {
+  const { spawn } = await import('node:child_process')
+  const { withCaptureLock } = await import('./record.mjs')
+  const root = fileURLToPath(new URL('./private/', import.meta.url))
+  await mkdir(root, { recursive: true, mode: 0o700 })
+  const dir = await mkdtemp(join(root, 'synthetic-race-')),
+    path = join(dir, 'capture.json')
+  try {
+    await writeFile(path, JSON.stringify(capture()))
+    const paths = await Promise.all(
+      Array.from({ length: 5 }, async (_, i) => {
+        const batch = join(dir, `batch-${i}.json`)
+        await writeFile(batch, JSON.stringify([observation(i)]))
+        return batch
+      }),
+    )
+    const results = await Promise.all(
+      paths.map(
+        (batch) =>
+          new Promise((resolve, reject) => {
+            const child = spawn(
+              process.execPath,
+              [
+                fileURLToPath(new URL('./record.mjs', import.meta.url)),
+                path,
+                batch,
+              ],
+              { timeout: 10000 },
+            )
+            let stdout = '',
+              stderr = ''
+            child.stdout.on('data', (chunk) => {
+              stdout += chunk
+            })
+            child.stderr.on('data', (chunk) => {
+              stderr += chunk
+            })
+            child.on('error', reject)
+            child.on('close', (code) => resolve({ code, stdout, stderr }))
+          }),
+      ),
+    )
+    for (const result of results) {
+      assert.equal(result.code, 2, result.stderr)
+      assert.equal(JSON.parse(result.stdout).added_count, 1)
+    }
+    const saved = JSON.parse(await readFile(path, 'utf8'))
+    assert.equal(saved.observations.length, 5)
+    assert.equal(
+      new Set(saved.observations.map((item) => item.topic_id)).size,
+      5,
+    )
+    await assert.rejects(
+      withCaptureLock(path, () => {
+        throw new Error('synthetic failure')
+      }),
+    )
+    assert.equal(await withCaptureLock(path, async () => true), true)
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+})

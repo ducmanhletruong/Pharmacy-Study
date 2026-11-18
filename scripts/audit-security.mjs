@@ -13,7 +13,12 @@ const result = spawnSync(
     maxBuffer: 8 * 1024 * 1024,
   },
 )
-if (result.error)
+if (
+  result.error ||
+  result.signal ||
+  result.status === null ||
+  ![0, 1].includes(result.status)
+)
   throw new Error('Registry audit failed; no advisory was ignored')
 let report
 try {
@@ -21,6 +26,12 @@ try {
 } catch {
   throw new Error('Invalid registry audit report; fail closed')
 }
+if (
+  result.status === 0 &&
+  (report.metadata?.vulnerabilities?.high > 0 ||
+    report.metadata?.vulnerabilities?.critical > 0)
+)
+  throw new Error('Inconsistent audit exit status; fail closed')
 const outcome = classifyAudit(report)
 console.log(JSON.stringify(outcome, null, 2))
 if (outcome.unmitigated.length) process.exitCode = 1
