@@ -120,3 +120,11 @@ Ngày 2026-11-18, nhánh fix-review-recovery-security kế thừa fix-review-p1.
 CI code `9428b3d8408c887826753db98274eb1ccf13784f` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44229307690 . Frozen install/lint/format/typecheck, migrate-empty/provision/seed rerun, unit113/integration29/E2E12, build production/guards, classifier5 và recorder6, dependency audit/mitigation gate và gitleaks đều đạt. PR #7 draft, base fix-review-p1: https://github.com/ducmanhletruong/Pharmacy-Study/pull/7 . Gitleaks local trước fixture test sửa cuối đã quét52commit, không có secret; CI kiểm code cuối cũng đạt.
 
 Đã xử lý RV-03/04/05/06/07/08/13/15 theo phạm vi đợt2. Quota cookie/global có giới hạn được ghi trong runbook, không tuyên bố chốngDDoS. Còn OPEN: RV-09/10/11/12/14/16 cho đợt3 và Google live P03 riêng. Chỉ bổ sung Markdown sau CI, không đổi code đã kiểm hoặc chạy lại local test/build; chưa merge/deploy.
+
+## Đợt3 — nền dữ liệu/nội dung — IN PROGRESS
+
+Nhánh fix-review-data-completion kế thừa đợt2. Scope RV-09/10/11/12/14/16, migration forward mới dự kiến0005, không sửa0001–4. Chưa đóng finding trước khi kiểm migration, concurrency, API/contract và UI. P03 Google live còn pending; P04 chưa mở.
+
+Đợt3 DB local: migration0005 apply/seed/rerun đạt; upgradeprobe2legacyitems có originlegacy_backfill và submitted.result giữ nguyên. App không được INSERT/UPDATE ledger hoặc gọi mutator trực tiếp. Unit topic-tree1 và integration lịch sử7 đạt (RC23514/RR40001); full integration36/36 đạt, gồm concurrency choices cũ. Contract5/5 và evaluator7/7 đạt; 65cặp score và topic overlap vẫn hợp lệ. Đang chờ UI/fullCI trước đóng scope.
+
+Đợt3 local cuối: unit119/119, integration36/36, E2Etopic-depth1/1 đạt; chọn leaf cấp4 gửi đúngID. Lint/format/diff đạt; evaluator7test và reference self-check5/5 không inference đã được agent kiểm. Một E2E selector getByLabel exact không tìm select vì label bao options: sửa sang role combobox theo accessible name và kiểm lại đạt, không đổi hành vi để nới test. CI code cuối/build còn chờ.
