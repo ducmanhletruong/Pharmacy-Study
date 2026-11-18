@@ -102,7 +102,7 @@ Ngày 2026-11-18, user yêu cầu sửa mục1 của kế hoạch review. Branch
 
 CI nhánh code `b1d3c9ab00a5c97b8a0172ed2d04b74df14038a7` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44225961205 . Frozen install/lint/format/typecheck, migrate-empty/provision/seed-rerun, unit106/integration29/E2E8, build, guard, dependency gate và secret scan đều đạt. PR #6 draft base phase-02-hardening: https://github.com/ducmanhletruong/Pharmacy-Study/pull/6 . RV-01/RV-02 đã sửa; các P2/P3 còn OPEN. Workflow main chưa chạy trực tiếp trên GitHub; startup với env của nó đã kiểm local. Bổ sung sau CI chỉ là Markdown, không đổi code đã kiểm. Không merge/deploy.
 
-## Đợt 2 — phục hồi và bảo mật — IMPLEMENTED / CI PENDING
+## Đợt 2 — phục hồi và bảo mật — DONE
 
 Ngày 2026-11-18, nhánh fix-review-recovery-security kế thừa fix-review-p1. Phạm vi RV-03/04/05/06/07/08/13/15, không sửa các mục đợt3.
 
@@ -116,3 +116,7 @@ Ngày 2026-11-18, nhánh fix-review-recovery-security kế thừa fix-review-p1.
 Đợt2 provision đã tách core có fault injection, lưu journal và ghi env atomic theo thứ tự maintenance→runtime; DDL rollback/IO failure retry giữ nguyên credential đã kiểm, không sửa role password.
 
 Đợt2 tooling: classifier malformed-report negatives và recorder concurrent CLI test đã được nối vào CI nhánh, bao gồm PR base fix-*. Đang chờ kiểm chứng môi trường sạch trước đóng các finding đợt2.
+
+CI code `9428b3d8408c887826753db98274eb1ccf13784f` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44229307690 . Frozen install/lint/format/typecheck, migrate-empty/provision/seed rerun, unit113/integration29/E2E12, build production/guards, classifier5 và recorder6, dependency audit/mitigation gate và gitleaks đều đạt. PR #7 draft, base fix-review-p1: https://github.com/ducmanhletruong/Pharmacy-Study/pull/7 . Gitleaks local trước fixture test sửa cuối đã quét52commit, không có secret; CI kiểm code cuối cũng đạt.
+
+Đã xử lý RV-03/04/05/06/07/08/13/15 theo phạm vi đợt2. Quota cookie/global có giới hạn được ghi trong runbook, không tuyên bố chốngDDoS. Còn OPEN: RV-09/10/11/12/14/16 cho đợt3 và Google live P03 riêng. Chỉ bổ sung Markdown sau CI, không đổi code đã kiểm hoặc chạy lại local test/build; chưa merge/deploy.

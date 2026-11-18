@@ -30,3 +30,7 @@ Code và kiểm local bằng provider thử đã triển khai; không có Google
 ## CR-0001
 
 Không còn blocker hardening CR; xem kết quả và cổng CI trong docs/status.md. Quy tắc by_topic nhiều chủ đề vẫn OPEN trướcP05, không tự chọn trong CR. Các đề xuất workflow duyệt/P12 password guard được đưa vào phụ lục plan0.2, không thực hiện ngoài scope. PRs giữ draft, không merge/deploy.
+
+## Đợt2 phục hồi/bảo mật
+
+Không còn blocker trong scope đợt2; kết quả và finding còn OPEN của đợt3 ở docs/status.md. Runbook recovery-security ghi giới hạn quota, stale-lock/journal recovery. Google live vẫn là cổng riêng, không yêu cầu thêm ngày P01.

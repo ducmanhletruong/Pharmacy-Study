@@ -12,6 +12,7 @@ Nếu lock stale: kiểm không có CLI chạy, chỉ xóa lock rồi retry; gi�
 Recorder lock cùng capture: xác nhận không có writer trước khi xóa stale lock, không xóa capture.
 Xem docs/runbooks/recovery-security.md và Google runbook.
 
-Đang hoàn tất CI/PR; trạng thái mới nhất ở docs/status.md.
+PR #7 draft đã mở, CI code cuối đạt; bằng chứng/giới hạn ở docs/status.md.
+Đợt3 còn RV-09/10/11/12/14/16; không tự mở rộng scope.
 Không copy journal/maintenance env vào web hoặc gửi secret trong chat/Git.
 Không merge/deploy, đổi Google thật, chạy lại P01 hoặc mở P04.
