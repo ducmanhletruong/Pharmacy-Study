@@ -17,6 +17,7 @@ test('identity backend exception becomes a fixed public denial', async () => {
     AUTH_MODE: 'test',
     NODE_ENV: 'test',
     NEXTAUTH_URL: 'http://localhost:3001',
+    APP_ORIGIN: 'http://localhost:3001',
     NEXTAUTH_SECRET: 'synthetic-secret-for-identity-tests-only',
     AUTH_TEST_SECRET: 'synthetic-test-password-for-unit-tests',
     ADMIN_EMAILS: 'admin@example.invalid',
