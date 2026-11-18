@@ -1,9 +1,10 @@
 import { readFile } from 'node:fs/promises'
-import { evaluateCandidates } from './evaluate.mjs'
+import { evaluateCandidates, validateFixtures } from './evaluate.mjs'
 
 const fixtures = JSON.parse(
   await readFile(new URL('./fixtures.json', import.meta.url), 'utf8'),
 )
+validateFixtures(fixtures)
 
 if (process.argv.includes('--prompts')) {
   console.log(

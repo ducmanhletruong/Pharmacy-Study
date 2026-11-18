@@ -128,3 +128,5 @@ Nhánh fix-review-data-completion kế thừa đợt2. Scope RV-09/10/11/12/14/1
 Đợt3 DB local: migration0005 apply/seed/rerun đạt; upgradeprobe2legacyitems có originlegacy_backfill và submitted.result giữ nguyên. App không được INSERT/UPDATE ledger hoặc gọi mutator trực tiếp. Unit topic-tree1 và integration lịch sử7 đạt (RC23514/RR40001); full integration36/36 đạt, gồm concurrency choices cũ. Contract5/5 và evaluator7/7 đạt; 65cặp score và topic overlap vẫn hợp lệ. Đang chờ UI/fullCI trước đóng scope.
 
 Đợt3 local cuối: unit119/119, integration36/36, E2Etopic-depth1/1 đạt; chọn leaf cấp4 gửi đúngID. Lint/format/diff đạt; evaluator7test và reference self-check5/5 không inference đã được agent kiểm. Một E2E selector getByLabel exact không tìm select vì label bao options: sửa sang role combobox theo accessible name và kiểm lại đạt, không đổi hành vi để nới test. CI code cuối/build còn chờ.
+
+Đợt3 contract/evaluator/UI đã triển khai và kiểm local như trên; chờ CI môi trường sạch trước đóng các finding còn lại.
