@@ -79,3 +79,9 @@ Chủ dự án yêu cầu “sửa mục1 trước đi”, thực hiện đợt1
 ## Đợt2 — 2026-11-18
 
 User yêu cầu sửa logout/quota/UI/provision/audit/recorder. Thực hiện RV-03..08, RV-13, RV-15 theo kế hoạch review. Giữ auth provider/allowlist và CSRF; wrapper bảo đảm durable revoke trước khi trả response logout. Quota client dựa signed cookie, không tin X-Forwarded-For; signed logout tách global cap. Không tự sửa seal/cycle/topic rendering/taxonomy/result/evaluator của đợt3, không merge/deploy.
+
+## Đợt3 — 2026-11-18
+
+Sau đợt2, user yêu cầu bước tiếp theo Plan; thực hiện đợt3 của kế hoạch review RV-09/10/11/12/14/16. Không coi là mở P04 vì Google live P03 vẫn chưa được xác minh. Dùng lại đội đã được user lập để triển khai/kiểm các phần độc lập, không tạo agent mới.
+
+Snapshot topic mới cố định tại tạo attempt; attempt chưa nộp có sẵn chỉ backfill từ taxonomy hiện tại lúc migration, không giả định đó là dữ liệu lúc tạo. Kết quả submitted giữ nguyên. Seal legacy chỉ backfill phần lịch sử có bằng chứng hiện tại, không tự khóa draft chưa dùng hoặc bịa lịch sử đã rewind trước migration. Quy tắc multi-topic vẫn tính mỗi topic như hiện tại, không tự chọn chủ đề chính.

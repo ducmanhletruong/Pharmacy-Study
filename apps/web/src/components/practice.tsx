@@ -43,28 +43,22 @@ async function request(
     )
   return value
 }
-function TopicOptions({
-  items,
+function flattenTopics(
+  items: Topic[],
   depth = 0,
-}: {
-  items: Topic[]
-  depth?: number
-}) {
-  return (
-    <>
-      {items.map((item) => (
-        <optgroup key={item.id} label={`${'· '.repeat(depth)}${item.title}`}>
-          <option value={item.id}>{item.title}</option>
-          {item.children.map((child) => (
-            <option key={child.id} value={child.id}>
-              {'— '.repeat(depth + 1)}
-              {child.title}
-            </option>
-          ))}
-        </optgroup>
-      ))}
-    </>
-  )
+): { topic: Topic; depth: number }[] {
+  return items.flatMap((topic) => [
+    { topic, depth },
+    ...flattenTopics(topic.children, depth + 1),
+  ])
+}
+function TopicOptions({ items }: { items: Topic[] }) {
+  return flattenTopics(items).map(({ topic, depth }) => (
+    <option key={topic.id} value={topic.id}>
+      {'— '.repeat(depth)}
+      {topic.title}
+    </option>
+  ))
 }
 export function Practice({
   member,

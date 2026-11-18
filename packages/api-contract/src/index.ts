@@ -70,22 +70,72 @@ export const attemptSchema = z
 export const resultSchema = z
   .object({
     attempt_id: uuid,
-    total: z.number().int(),
-    correct: z.number().int(),
-    unanswered: z.number().int(),
+    total: z.number().int().nonnegative(),
+    correct: z.number().int().nonnegative(),
+    unanswered: z.number().int().nonnegative(),
     score: z.number().min(0).max(10),
     by_topic: z.array(
       z
         .object({
           topic_id: uuid,
           title: z.string(),
-          total: z.number().int(),
-          correct: z.number().int(),
+          total: z.number().int().nonnegative(),
+          correct: z.number().int().nonnegative(),
         })
-        .strict(),
+        .strict()
+        .refine((topic) => topic.correct <= topic.total, {
+          message: 'Topic correct count cannot exceed its total',
+          path: ['correct'],
+        }),
     ),
   })
   .strict()
+  .superRefine((result, context) => {
+    if (result.correct > result.total)
+      context.addIssue({
+        code: 'custom',
+        path: ['correct'],
+        message: 'Correct count cannot exceed total',
+      })
+    if (result.unanswered > result.total - result.correct)
+      context.addIssue({
+        code: 'custom',
+        path: ['unanswered'],
+        message: 'Correct and unanswered counts cannot exceed total',
+      })
+    const topicIds = new Set<string>()
+    for (const [index, topic] of result.by_topic.entries()) {
+      if (topic.total > result.total)
+        context.addIssue({
+          code: 'custom',
+          path: ['by_topic', index, 'total'],
+          message: 'Topic total cannot exceed attempt total',
+        })
+      if (topic.correct > result.correct)
+        context.addIssue({
+          code: 'custom',
+          path: ['by_topic', index, 'correct'],
+          message: 'Topic correct count cannot exceed attempt correct count',
+        })
+      const topicId = topic.topic_id.toLowerCase()
+      if (topicIds.has(topicId))
+        context.addIssue({
+          code: 'custom',
+          path: ['by_topic', index, 'topic_id'],
+          message: 'Topic IDs must be unique within a result',
+        })
+      topicIds.add(topicId)
+    }
+    const expectedScore = result.total
+      ? Math.round((result.correct / result.total) * 100) / 10
+      : 0
+    if (result.score !== expectedScore)
+      context.addIssue({
+        code: 'custom',
+        path: ['score'],
+        message: 'Score must match counts rounded to one decimal place',
+      })
+  })
 export type CreateAttempt = z.infer<typeof createAttemptSchema>
 export type Attempt = z.infer<typeof attemptSchema>
 export type Feedback = z.infer<typeof feedbackSchema>

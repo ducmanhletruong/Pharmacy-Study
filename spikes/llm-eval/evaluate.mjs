@@ -2,7 +2,50 @@ const nonempty = (value) => typeof value === 'string' && value.trim().length > 0
 const normalize = (value) =>
   value.trim().normalize('NFC').toLocaleLowerCase('vi')
 
+const identifier = (value) => nonempty(value) && !/\s/u.test(value)
+
+export function validateFixtures(fixtures) {
+  if (!Array.isArray(fixtures) || fixtures.length === 0)
+    throw new Error('Fixtures must be a nonempty JSON array')
+  const ids = new Set()
+  for (const fixture of fixtures) {
+    if (!fixture || typeof fixture !== 'object' || Array.isArray(fixture))
+      throw new Error('Each fixture must be an object')
+    if (!identifier(fixture.id) || !identifier(fixture.source_id))
+      throw new Error(
+        'Fixture and source IDs must be nonempty identifiers without whitespace',
+      )
+    if (ids.has(fixture.id)) throw new Error('Fixture IDs must be unique')
+    ids.add(fixture.id)
+    for (const field of [
+      'subject',
+      'source_location',
+      'source_text',
+      'task',
+      'expected_answer',
+    ])
+      if (!nonempty(fixture[field]))
+        throw new Error(`Fixture requires a nonempty ${field}`)
+    if (
+      !Array.isArray(fixture.distractors) ||
+      fixture.distractors.length !== 3 ||
+      !fixture.distractors.every(nonempty)
+    )
+      throw new Error('Fixture requires three nonempty distractors')
+    if (
+      new Set([fixture.expected_answer, ...fixture.distractors].map(normalize))
+        .size !== 4
+    )
+      throw new Error('Fixture answer and distractors must be distinct')
+    if (!fixture.source_text.includes(fixture.expected_answer))
+      throw new Error(
+        'Fixture source must contain the expected answer verbatim',
+      )
+  }
+}
+
 export function evaluateCandidates(fixtures, candidates) {
+  validateFixtures(fixtures)
   const issues = []
   const knownIds = new Set(fixtures.map((item) => item.id))
   if (!Array.isArray(candidates))

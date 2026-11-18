@@ -24,7 +24,12 @@ export class PracticeError extends Error {
   }
 }
 type Db = Pick<pg.PoolClient, 'query'>
-async function transaction<T>(run: (client: pg.PoolClient) => Promise<T>) {
+async function transaction<T>(
+  run: (client: pg.PoolClient) => Promise<T>,
+  context?: pg.PoolClient,
+) {
+  // Maintenance/tests can include the service in an existing transaction.
+  if (context) return run(context)
   const client = await getPool().connect()
   try {
     await client.query('BEGIN')
@@ -47,14 +52,13 @@ export async function subjects() {
     next_cursor: null,
   }
 }
-export async function topics(code: string) {
-  const subject = await getPool().query(
-    'SELECT id FROM subjects WHERE code=$1',
-    [code],
-  )
+export async function topics(code: string, db: Db = getPool()) {
+  const subject = await db.query('SELECT id FROM subjects WHERE code=$1', [
+    code,
+  ])
   if (!subject.rows[0])
     throw new PracticeError('not_found', 404, 'Không tìm thấy môn học')
-  const result = await getPool().query(
+  const result = await db.query(
     'SELECT id,parent_id,code,title,sort_order FROM topics WHERE subject_id=$1 ORDER BY sort_order,code',
     [subject.rows[0].id],
   )
@@ -68,6 +72,26 @@ export async function topics(code: string) {
     if (node.parent_id) nodes.get(node.parent_id)?.children.push(node)
     else roots.push(node)
   }
+  // A corrupted/orphaned component must not disappear silently from the API.
+  const reachable = new Set<string>(),
+    pending = [...roots]
+  for (let index = 0; index < pending.length; index++) {
+    const node = pending[index]!
+    if (reachable.has(node.id))
+      throw new PracticeError(
+        'invalid_topic_tree',
+        500,
+        'Cây chủ đề không hợp lệ',
+      )
+    reachable.add(node.id)
+    pending.push(...node.children)
+  }
+  if (reachable.size !== nodes.size)
+    throw new PracticeError(
+      'invalid_topic_tree',
+      500,
+      'Cây chủ đề không hợp lệ',
+    )
   return { items: roots, next_cursor: null }
 }
 async function owned(db: Db, id: string, userId: string, lock = false) {
@@ -125,6 +149,7 @@ export async function createAttempt(
   key: string,
   userId: string,
   requestId: string = randomUUID(),
+  context?: pg.PoolClient,
 ) {
   const normalized = {
     subject: input.subject,
@@ -211,7 +236,7 @@ export async function createAttempt(
       requestId,
     })
     return { attempt: await readAttempt(client, id, userId), replayed: false }
-  })
+  }, context)
 }
 
 export function answerItem(
@@ -288,6 +313,7 @@ export function submitAttempt(
   id: string,
   userId: string,
   requestId: string = randomUUID(),
+  context?: pg.PoolClient,
 ) {
   return transaction(async (client) => {
     const attempt = await owned(client, id, userId, true)
@@ -309,7 +335,12 @@ export function submitAttempt(
     )
     const count = counts.rows[0]!
     const topicCounts = await client.query(
-      `SELECT t.id topic_id,t.title,count(*)::int total,count(*) FILTER(WHERE i.is_correct)::int correct FROM attempt_items i JOIN question_revisions r ON r.id=i.question_revision_id JOIN question_topics qt ON qt.question_id=r.question_id JOIN topics t ON t.id=qt.topic_id WHERE i.attempt_id=$1 GROUP BY t.id ORDER BY t.sort_order,t.code`,
+      `SELECT t.topic_id,(array_agg(t.title ORDER BY i.position))[1] title,
+       count(*)::int total,count(*) FILTER(WHERE i.is_correct)::int correct
+       FROM attempt_items i CROSS JOIN LATERAL jsonb_to_recordset(i.topic_snapshot)
+         AS t(topic_id uuid,title text,sort_order integer,code text)
+       WHERE i.attempt_id=$1 GROUP BY t.topic_id
+       ORDER BY min(t.sort_order),min(t.code),t.topic_id`,
       [id],
     )
     const score = count.total
@@ -334,5 +365,5 @@ export function submitAttempt(
       requestId,
     })
     return summary
-  })
+  }, context)
 }

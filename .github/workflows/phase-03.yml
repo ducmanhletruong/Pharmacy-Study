@@ -64,7 +64,7 @@ jobs:
           APP_ORIGIN: https://study.example.invalid
       - run: node scripts/check-production-guard.mjs
       - name: Verify hardening and reject unhandled high/critical advisories
-        run: pnpm security:test && node --test spikes/notebooklm/record.test.mjs && pnpm audit:security
+        run: pnpm security:test && node --test spikes/notebooklm/record.test.mjs spikes/llm-eval/evaluate.test.mjs && node spikes/llm-eval/run.mjs && pnpm audit:security
       - name: Scan history for secrets
         run: |
           curl --fail --silent --show-error --location --retry 3 https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o "$RUNNER_TEMP/gitleaks.tar.gz"

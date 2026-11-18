@@ -429,3 +429,19 @@ Test auth route ban đầu đặt trong core không resolve Next dependency theo
 CI cần nhận PR base fix-* (base đợt1 không còn phase-*), nên mở trigger tương ứng; thêm recorder tests nhẹ vào job hiện hành để PR này không bỏ qua hồi quy tooling. Đây là sửa cổng cần thiết cho scope, không hợp nhất/nâng cấp toolchain. Không sửa migration hoặc các finding đợt3; rollback bằng revert code phù hợp, bảo toàn journal private đến khi provision hoàn tất.
 
 Bàn giao cuối đợt2: đã push năm commit theo nhóm auth/UI, provision, tooling, runbook và fixture test không phụ thuộc origin CI main; tạo và attach PR #7 draft base fix-review-p1. CI code cuối đạt, bằng chứng/giới hạn và các finding còn mở ở docs/status.md. Gitleaks local và CI đều không phát hiện secret; không thay raw advisory count thành0. Bổ sung sau CI chỉ sửa Markdown, kiểm format/diff và không chạy lại local suite/build. Chưa merge/deploy hoặc sửa đợt3; không suy rằng Google OAuth thật đã được kiểm.
+
+## 2026-11-18 — Đợt3 theo kế hoạch review
+
+Sau yêu cầu tiếp Plan, đối chiếu cổng cho thấy P03 Google live còn mở; thực hiện đợt3 review, không mở workflow P04. Dùng lại ba thành viên đội đã được user yêu cầu để sửa các vùng file độc lập DB, contract/evaluator và dropdown; không spawn agent mới. Root xem SQL trước apply và tổng hợp kiểm chứng ở docs/status.md.
+
+Phát sinh cần thiết: ledger seal và real write-version lock rows tránh stale snapshot ở RR, thay việc chỉ đọc/advisory lock; SECDEF ownership/search_path/execute ACL được giới hạn. Snapshot tạo ở BEFORE INSERT attempt item và chặn đổi identity/snapshot sau đó; legacy chỉ backfill trạng thái còn quan sát được và không sửa result đã nộp. Dọn fixture dùng rollback hoặc DELETE hợp lệ, không tắt guards. Test seam optional DB context cho create/submit chỉ nhận từ code nội bộ/test, HTTP không lấy từ payload.
+
+API tree phát hiện component không reachable thay vì bỏ im lặng; dropdown flatten đệ quy không lồng optgroup. Result contract thêm bounds từngtopic/uniqueID nhưng không ép tổng topic bằng tổng bài, giữ OPEN quy tắc multi-topic. Evaluator validate fixture trước cả prompts/self-check, testCLI dùng temp copies không sửa fixture chuẩn hoặc gọi provider. CI job hiện hành thêm evaluator test/self-check cơ học, không chạy inference hoặc nâng toolchain.
+
+Migration0005 đã áp giữ nguyênchecksum; không sửa migration cũ. Runbook data-history ghi rõ giới hạn lịch sử legacy và retry cả transaction40001/40P01. Không tự seal mọi draft legacy, không fabricate topic lịch sử. Chưa commit/push/mở phase khác ở thời điểm ghi này; trạng thái/kiểm chứng tiếp theo ghi ở status.
+
+Kiểm local chung đã chạy sau khi các vùng code được freeze. E2E topic-depth đầu dùng getByLabel exact không khớp text của label chứa options; đổi sang role combobox/accessiblename, kiểm lại đúng thứ tự/nội dung/ID và POST. Không tăng timeout hoặc bỏ assertion. Chỉ ca bị ảnh hưởng được chạy lại, không chạy lặp fullsuite. CI sẽ build vì dropdown và contract dùng trong bundle web đã thay đổi; không build local thêm cho cùng code.
+
+Root review cuối phát hiện BEFORE INSERT chưa thấy NEWrow có thể bỏ lọt cycle khi một statement INSERT nhiều topic. Agent tái hiện hai/ba node bằng rollback-only test; thêm0006 và9test lịch sử đạt sau sửa, giữ0005 checksum vì đã áp. Đây là phát sinh kiểm chứng trong scopeRV10, không mở tính năng mới hoặc đổi dữ liệu để vượt cổng. Bản sửa xét cả ancestor.id và ancestor.parent_id trỏNEW.id;0006 cũng preflight dữ liệu đang có.
+
+Bàn giao cuối: đã commit/push theo nhóm DB history, contracts/evaluator/dropdown, runbook và forward bulk-cycle correction; tạo/attach PR #8 draft base đợt2. CI code cuối thành công; mọi bằng chứng và giới hạn ở docs/status.md. Bổ sung cuối chỉ Markdown và kiểm format/diff, không chạy lại local suite/build. Không đóng Google live hoặc mở workflow P04; không merge/deploy.
