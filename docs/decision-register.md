@@ -91,3 +91,7 @@ Snapshot topic mới cố định tại tạo attempt; attempt chưa nộp có s
 User yêu cầu trực tiếp “làm PO4 đi”, cho phép thực hiện vòng đời nội dung local sau đợt hardening. Quyết định này cập nhật hạn chế mở P04 trong các mục lịch sử; Google live P03 vẫn pending riêng, không ghi đã kiểm OAuth thật. Không mở P05/AI pipeline, merge hay deploy.
 
 Bundle profile1 là JSON MCQ, default5MiB/configurable50MiB thay ngưỡng50MB PROPOSED để giới hạn bộ nhớ local. SVG theo allowlist hình học; raster decode/reencode bằng sharp, XML parse bằng saxes. Tài sản lưu private DB cho local, không cấu hình object storage/hosting mới. Chỉ nguồn có quyền chia sẻ đúng đối tượng mới được duyệt; quyền cá nhân P01 không mở rộng cho lớp.
+
+## Mở truy cập — 2026-11-19
+
+User yêu cầu bỏ whitelist người học, cho vào bằng tài khoản Google hoặc ẩn danh. Accepted cập nhật Q3/ADR-0008: email Google đã xác minh có learner mặc định; ADMIN_EMAILS chỉ cấp quyền quản trị, không cản người học khác. Phiên guest riêng từng lần đăng nhập, luôn learner, không cho client chọn identity/role, không merge tiến độ với Google. Thêm guest-only mode để dùng khi chưa có OAuth client; giữ CSRF, Origin, disabled/revoke, ownership và quota. Không mở P05/hosting hoặc quyền phân phối giáo trình. Google live vẫn cần kiểm riêng; không dùng test provider để kết luận OAuth thật.

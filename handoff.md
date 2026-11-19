@@ -1,23 +1,21 @@
-# Bàn giao P04
+# Bàn giao Google + ẩn danh
 
-Worktree `/workspace/pharmacy-study-cr0001`, branch `phase-04`, base `fix-review-data-completion`.
-Trạng thái và bằng chứng duy nhất: [docs/status.md](docs/status.md).
-User đã yêu cầu trực tiếp P04; Google live P03 vẫn pending riêng.
-Scope: bundle/import, sources/assets, lifecycle, admin review/edit và learner reports.
-Migration0007 đã áp DB verified; không sửa checksum hoặc tắt trigger.
-Nguồn/giáo trình thật chưa nhập; fixtures hoàn toàn tổng hợp.
-Runbook: [content review](docs/runbooks/content-review.md), [bundle format](docs/bundle-format.md).
+Worktree `/workspace/pharmacy-study-cr0001`, branch `feat-open-access`, base `phase-04`.
+Trạng thái và bằng chứng: [docs/status.md](docs/status.md).
+User yêu cầu bỏ whitelist learner; Google verified email vào học, ADMIN_EMAILS chỉ phân quyền admin.
+INVITED_EMAILS cũ không dùng. Guest luôn learner, identity UUID riêng do server tạo.
+Migration0008 đã áp DB verified; không sửa migration cũ hoặc xóa dữ liệu.
+Session ẩn danh tối đa8 giờ; logout/mất cookie không khôi phục, không tự ghép vào Google.
+Private env được giữ nguyên; Google OAuth thật vẫn chưa kiểm.
 
 ```sh
 pnpm db:migrate
-pnpm content:validate content/fixtures/p04-bundle.json
 pnpm dev
 ```
 
-Dùng pnpm store hiện có `/workspace/web-starter/.pnpm-store` ở Cloud.
-Admin mở `/admin`; duyệt nguồn trước verified → approved.
-Sửa tạo revision mới, report/source rejection quarantine; bài cũ giữ revision.
-Ảnh cùng hash khác provenance trả409; không vượt gate bằng SQL sửa lịch sử.
-Thu hồi import dùng transaction maintenance có review trong runbook.
-P04 đã đạt cổng local/CI; PR #9 draft. Xem status trước khi tiếp tục.
-Không merge/deploy, công khai giáo trình hoặc tự bắt đầu P05.
+AUTH_MODE=oidc cho Google + ẩn danh; AUTH_MODE=guest chỉ ẩn danh, không cần OAuth client/admin list.
+Cả hai cần NEXTAUTH_SECRET, NEXTAUTH_URL, APP_ORIGIN đúng; production HTTPS và app DB ít quyền.
+Xem [runbook](docs/runbooks/google-login.md), ADR-0008 và `.env.example`.
+Cloud dùng pnpm store `/workspace/web-starter/.pnpm-store`.
+Kiểm auth/config/ownership/guest/logout và CI đang chốt ở status.
+Không đổi giáo trình, merge/deploy hoặc tự mở P05.

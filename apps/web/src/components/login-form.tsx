@@ -5,17 +5,19 @@ import { useRouter } from 'next/navigation'
 
 export function LoginForm({
   google,
+  guest,
   test,
   error,
 }: {
   google: boolean
+  guest: boolean
   test: boolean
   error: boolean
 }) {
   const router = useRouter()
   const [message, setMessage] = useState(
     error
-      ? 'Không thể đăng nhập. Tài khoản cần được mời và còn quyền truy cập.'
+      ? 'Không thể đăng nhập. Vui lòng thử lại hoặc chọn chế độ ẩn danh.'
       : '',
   )
   const [email, setEmail] = useState(''),
@@ -43,13 +45,32 @@ export function LoginForm({
       setPassword('')
     }
   }
+  async function guestLogin() {
+    if (busy) return
+    setBusy(true)
+    setMessage('')
+    try {
+      const response = await signIn('guest', {
+        redirect: false,
+        callbackUrl: '/',
+      })
+      if (response?.ok && !response.error) {
+        router.replace('/')
+        router.refresh()
+      } else setMessage('Chưa thể tạo phiên ẩn danh. Vui lòng thử lại.')
+    } catch {
+      setMessage('Không thể kết nối. Vui lòng thử lại.')
+    } finally {
+      setBusy(false)
+    }
+  }
   return (
     <div className="panel login-panel">
-      <p className="eyebrow">PHARMACY STUDY · LỚP HỌC</p>
-      <h1>Vào lớp học của bạn.</h1>
+      <p className="eyebrow">PHARMACY STUDY</p>
+      <h1>Vào học ngay.</h1>
       <p>
-        Chỉ dành cho các thành viên đã được mời. Bài làm của bạn được lưu riêng
-        trong tài khoản.
+        Đăng nhập Google hoặc tiếp tục ẩn danh để bắt đầu học. Bài làm được lưu
+        riêng cho bạn.
       </p>
       {message && (
         <p role="alert" className="error">
@@ -70,6 +91,17 @@ export function LoginForm({
         >
           Tiếp tục với Google
         </button>
+      )}
+      {guest && (
+        <>
+          <button className="secondary" disabled={busy} onClick={guestLogin}>
+            Tiếp tục ẩn danh
+          </button>
+          <p className="sample-note">
+            Bài ẩn danh chỉ truy cập được trong phiên trình duyệt này, tối đa 8
+            giờ. Đăng xuất hoặc xóa cookie sẽ mất quyền truy cập bài đã làm.
+          </p>
+        </>
       )}
       {test && (
         <form onSubmit={login}>
@@ -104,7 +136,7 @@ export function LoginForm({
           </button>
         </form>
       )}
-      {!google && !test && (
+      {!google && !test && !guest && (
         <p>Đăng nhập chưa sẵn sàng. Vui lòng liên hệ quản trị viên lớp học.</p>
       )}
     </div>

@@ -10,7 +10,7 @@ try {
   if (error.code !== 'ENOENT') throw error
 }
 const config = readAuthConfig()
-if (config.AUTH_MODE === 'oidc' || config.AUTH_MODE === 'test') {
+if (['oidc', 'test', 'guest'].includes(config.AUTH_MODE)) {
   await assertRuntimeDatabase()
   await closeDb()
 }

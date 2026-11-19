@@ -1,6 +1,6 @@
 # Pharmacy-Study
 
-Web ôn thi cho 5 môn Dược. Có luồng luyện 10 câu tổng hợp và đăng nhập/phân quyền cho lớp được mời; tiến độ và kiểm chứng mới nhất chỉ ở [docs/status.md](docs/status.md). Chưa có ngân hàng đề chuyên môn hoặc hosting production. Plan gốc: `IMPLEMENTATION_PLAN.md`; tiến độ thực tế: `docs/status.md`.
+Web ôn thi cho 5 môn Dược. Có luồng luyện 10 câu tổng hợp và đăng nhập Google không cần whitelist hoặc tiếp tục ẩn danh; quản trị được phân quyền riêng; tiến độ và kiểm chứng mới nhất chỉ ở [docs/status.md](docs/status.md). Chưa có ngân hàng đề chuyên môn hoặc hosting production. Plan gốc: `IMPLEMENTATION_PLAN.md`; tiến độ thực tế: `docs/status.md`.
 
 ## Yêu cầu
 
@@ -22,7 +22,7 @@ pnpm db:seed
 pnpm dev
 ```
 
-Mở http://localhost:3000 trong trình duyệt của môi trường hoặc dùng preview/chuyển tiếp cổng 3000 của Codex. Dev server mặc định chỉ bind loopback; Cloud preview cần đặt DEV_HOST=0.0.0.0 riêng trong môi trường Cloud. Example mặc định AUTH_MODE=dev chỉ dùng local với user cố định. Để dùng Google cho lớp, cấu hình theo [runbook P03](docs/runbooks/google-login.md); endpoint `GET /api/v1/health` trả `200 { "status": "ok" }`.
+Mở http://localhost:3000 trong trình duyệt của môi trường hoặc dùng preview/chuyển tiếp cổng 3000 của Codex. Dev server mặc định chỉ bind loopback; Cloud preview cần đặt DEV_HOST=0.0.0.0 riêng trong môi trường Cloud. Example mặc định AUTH_MODE=dev chỉ dùng local với user cố định. Để dùng Google + ẩn danh, hoặc chỉ ẩn danh với AUTH_MODE=guest, cấu hình theo [runbook P03](docs/runbooks/google-login.md); endpoint `GET /api/v1/health` trả `200 { "status": "ok" }`.
 
 Launcher đọc `.env` ở gốc repo. Provision ghi credential runtime ít quyền vào `.env`, giữ maintenance trong `.env.db` riêng. Không đưa `.env.db` vào web/hosting, không đưa secret vào `NEXT_PUBLIC_*`. Với DB đang có dữ liệu, sao lưu và áp dụng migration, không xóa volume.
 
