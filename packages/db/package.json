@@ -8,7 +8,8 @@
     "./practice": "./src/practice.ts",
     "./auth": "./src/auth.ts",
     "./audit": "./src/audit.ts",
-    "./limits": "./src/limits.ts"
+    "./limits": "./src/limits.ts",
+    "./content": "./src/content.ts"
   },
   "scripts": {
     "migrate": "tsx src/migrate.ts",
@@ -16,10 +17,12 @@
     "provision": "tsx src/provision.ts"
   },
   "dependencies": {
+    "@pharmacy/api-contract": "workspace:*",
+    "@pharmacy/core": "workspace:*",
     "drizzle-orm": "0.45.4",
     "pg": "8.23.1",
-    "@pharmacy/core": "workspace:*",
-    "@pharmacy/api-contract": "workspace:*"
+    "saxes": "6.0.0",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "@types/pg": "8.23.1"

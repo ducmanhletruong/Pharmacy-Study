@@ -7,6 +7,12 @@ const schema = z.object({
   DEV_HOST: z
     .enum(['127.0.0.1', '0.0.0.0', 'localhost', '::1'])
     .default('127.0.0.1'),
+  MAX_IMPORT_BYTES: z.coerce
+    .number()
+    .int()
+    .min(1024)
+    .max(50 * 1024 * 1024)
+    .default(5 * 1024 * 1024),
   MAX_BODY_BYTES: z.coerce.number().int().min(1).max(1048576).default(16384),
   NEXTAUTH_URL: z.string().optional(),
   APP_ORIGIN: z.string().optional(),

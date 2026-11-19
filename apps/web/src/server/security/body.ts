@@ -1,7 +1,11 @@
 import { readAuthConfig } from '../../config'
 import { PracticeError } from '@pharmacy/db/practice'
-export async function readBody(request: Request, timeoutMs = 10000) {
-  const maxBodyBytes = readAuthConfig().MAX_BODY_BYTES
+export async function readBody(
+  request: Request,
+  timeoutMs = 10000,
+  maxBytes = readAuthConfig().MAX_BODY_BYTES,
+) {
+  const maxBodyBytes = maxBytes
   if (Number(request.headers.get('content-length') ?? 0) > maxBodyBytes)
     throw new PracticeError('payload_too_large', 413, 'Nội dung quá lớn')
   if (!request.body) return ''

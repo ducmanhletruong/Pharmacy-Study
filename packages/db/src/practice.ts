@@ -124,10 +124,13 @@ async function readAttempt(db: Db, id: string, userId: string) {
     answer: Label | null
     flagged: boolean
     choices: { label: Label; text: string }[]
+    assets: { id: string; url: string; mime: string; alt_text: string }[]
   }>(
     `SELECT i.position,r.question_id,r.id AS revision_id,r.stem,i.answer,i.flagged,
       (SELECT json_agg(json_build_object('label',c.label,'text',c.text) ORDER BY c.label)
-       FROM question_choices c WHERE c.revision_id=r.id) AS choices
+       FROM question_choices c WHERE c.revision_id=r.id) AS choices,
+      COALESCE((SELECT json_agg(json_build_object('id',a.id,'url','/api/v1/assets/'||a.id::text,'mime',a.mime,'alt_text',a.alt_text) ORDER BY a.id)
+      FROM assets a WHERE COALESCE(r.payload->'asset_ids','[]'::jsonb) ? a.id::text),'[]'::json) AS assets
      FROM attempt_items i JOIN question_revisions r ON r.id=i.question_revision_id
      WHERE i.attempt_id=$1 ORDER BY i.position`,
     [id],
