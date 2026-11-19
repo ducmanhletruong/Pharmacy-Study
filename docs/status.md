@@ -147,7 +147,7 @@ Chủ dự án yêu cầu trực tiếp “làm PO4 đi”. Tiếp tục P04 loc
 | P04-T02 | DONE        | JSON bundle profile1, schema/references, content:validate, fixture synthetic             |
 | P04-T03 | DONE        | Máy trạng thái, evidence nguồn/asset, quarantine                                         |
 | P04-T04 | DONE        | Import/API13–14, transaction/idempotency/hash/pg_trgm, SVG/raster private                |
-| P04-T05 | IMPLEMENTED | Admin list/filter/detail/source review/status/edit revision, expected_version            |
+| P04-T05 | DONE        | Admin list/filter/detail/source review/status/edit revision, expected_version            |
 | P04-T06 | IMPLEMENTED | Báo lỗi có ownership, quarantine, admin resolution; bài cũ giữ revision                  |
 
 Kiểm local: unit216/216, integration47/47, E2E P04 mục tiêu1/1 đạt. Lint/format/typecheck, CLI fixture và dependency audit gate đạt; audit raw moderate1/high0/critical0. Build production đã compile/typecheck thành công; đang chốt startup guard và CI toàn bộ. Chưa ghi phase DONE. Hướng dẫn: [content review](runbooks/content-review.md). Giới hạn: CLI chỉ kiểm cấu trúc, server kiểm bytes; ảnh cùng hash khác provenance bị409; resolve báo lỗi không tự approve; thu hồi import qua transaction maintenance có review, chưa có nút hàng loạt. Chỉ dữ liệu tổng hợp, không nhập giáo trình hoặc gọi AI/NotebookLM.
