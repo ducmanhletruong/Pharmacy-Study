@@ -141,13 +141,13 @@ RV-09/10/11/12/14/16 đã được xử lý theo scope; các finding của ba đ
 
 Chủ dự án yêu cầu trực tiếp “làm PO4 đi”. Tiếp tục P04 local theo yêu cầu này trong khi Google OAuth thật của P03 vẫn chưa kiểm chứng; không coi P03 DONE, không thay provider Google hoặc mở P05. Cổng nội dung được kiểm bằng provider synthetic nonproduction.
 
-| Task    | Trạng thái  | Kết quả                                                                                  |
-| ------- | ----------- | ---------------------------------------------------------------------------------------- |
-| P04-T01 | DONE        | Migration0007, provenance/source/assets/imports/reports; gate nguồn, seal, quyền runtime |
-| P04-T02 | DONE        | JSON bundle profile1, schema/references, content:validate, fixture synthetic             |
-| P04-T03 | DONE        | Máy trạng thái, evidence nguồn/asset, quarantine                                         |
-| P04-T04 | DONE        | Import/API13–14, transaction/idempotency/hash/pg_trgm, SVG/raster private                |
-| P04-T05 | DONE        | Admin list/filter/detail/source review/status/edit revision, expected_version            |
-| P04-T06 | IMPLEMENTED | Báo lỗi có ownership, quarantine, admin resolution; bài cũ giữ revision                  |
+| Task    | Trạng thái | Kết quả                                                                                  |
+| ------- | ---------- | ---------------------------------------------------------------------------------------- |
+| P04-T01 | DONE       | Migration0007, provenance/source/assets/imports/reports; gate nguồn, seal, quyền runtime |
+| P04-T02 | DONE       | JSON bundle profile1, schema/references, content:validate, fixture synthetic             |
+| P04-T03 | DONE       | Máy trạng thái, evidence nguồn/asset, quarantine                                         |
+| P04-T04 | DONE       | Import/API13–14, transaction/idempotency/hash/pg_trgm, SVG/raster private                |
+| P04-T05 | DONE       | Admin list/filter/detail/source review/status/edit revision, expected_version            |
+| P04-T06 | DONE       | Báo lỗi có ownership, quarantine, admin resolution; bài cũ giữ revision                  |
 
-Kiểm local: unit216/216, integration47/47, E2E P04 mục tiêu1/1 đạt. Lint/format/typecheck, CLI fixture và dependency audit gate đạt; audit raw moderate1/high0/critical0. Build production đã compile/typecheck thành công; đang chốt startup guard và CI toàn bộ. Chưa ghi phase DONE. Hướng dẫn: [content review](runbooks/content-review.md). Giới hạn: CLI chỉ kiểm cấu trúc, server kiểm bytes; ảnh cùng hash khác provenance bị409; resolve báo lỗi không tự approve; thu hồi import qua transaction maintenance có review, chưa có nút hàng loạt. Chỉ dữ liệu tổng hợp, không nhập giáo trình hoặc gọi AI/NotebookLM.
+Kiểm local: unit216/216, integration47/47, E2E P04 mục tiêu1/1 đạt. Lint/format/typecheck, CLI fixture và dependency audit gate đạt; audit raw moderate1/high0/critical0. Production build và startup guard dev/test đều đạt; HTTP size cap cũng chặn request thiếu/khai sai Content-Length. Chờ CI toàn bộ trên PR draft. Chưa ghi phase DONE. Hướng dẫn: [content review](runbooks/content-review.md). Giới hạn: CLI chỉ kiểm cấu trúc, server kiểm bytes; ảnh cùng hash khác provenance bị409; resolve báo lỗi không tự approve; thu hồi import qua transaction maintenance có review, chưa có nút hàng loạt. Chỉ dữ liệu tổng hợp, không nhập giáo trình hoặc gọi AI/NotebookLM.

@@ -46,7 +46,7 @@ Launcher đọc `.env` ở gốc repo. Provision ghi credential runtime ít quy�
 
 Chỉ chạy kiểm tra có liên quan theo `AGENTS.md`. Chuỗi lint/typecheck/test/build là kiểm chứng bắt buộc của P00; không phải quy trình mặc định sau mỗi chỉnh sửa. Không suy ra coverage tổng thể từ số test đã pass.
 
-Đã có `db:migrate`, `db:provision`, `db:seed`, `test:integration`, `e2e`, `security:test` và `audit:security`. Các lệnh `content:*` và AI runtime còn **to be established** ở phase tương ứng. E2E login dùng provider thử riêng, không chứng minh callback Google thật hoạt động.
+Đã có `db:migrate`, `db:provision`, `db:seed`, `test:integration`, `e2e`, `security:test` và `audit:security`. Đã có `content:validate <bundle.json>` và giao diện `/admin` cho import/duyệt/báo lỗi P04; xem [runbook nội dung](docs/runbooks/content-review.md). AI runtime còn **to be established** ở phase tương ứng. E2E login dùng provider thử riêng, không chứng minh callback Google thật hoạt động.
 
 ## Cấu trúc
 
