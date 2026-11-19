@@ -19,5 +19,5 @@ Admin mở `/admin`; duyệt nguồn trước verified → approved.
 Sửa tạo revision mới, report/source rejection quarantine; bài cũ giữ revision.
 Ảnh cùng hash khác provenance trả409; không vượt gate bằng SQL sửa lịch sử.
 Thu hồi import dùng transaction maintenance có review trong runbook.
-Đang chốt E2E và CI; xem status trước khi tiếp tục.
+P04 đã đạt cổng local/CI; PR #9 draft. Xem status trước khi tiếp tục.
 Không merge/deploy, công khai giáo trình hoặc tự bắt đầu P05.

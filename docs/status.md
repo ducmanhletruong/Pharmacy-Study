@@ -8,7 +8,7 @@ Cập nhật: 2026-11-18 (Asia/Saigon). P03 đã triển khai, CI đạt, còn k
 | P01   | DONE — phạm vi spike/local        | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có |
 | P02   | DONE                              | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                       |
 | P03   | IMPLEMENTED — LIVE GOOGLE PENDING | T01–T06 có code; local unit104/integration14/E2E8 đạt với test provider; CI44165851119 đạt; chờ Google OAuth thật                  |
-| P04   | IN PROGRESS                       | User yêu cầu trực tiếp; T01–T06 triển khai, đang kiểm chứng; Google live vẫn pending riêng                                         |
+| P04   | DONE — local workflow             | T01–T06 và AC-6 đạt; CI44437310878; PR #9 draft; Google live P03 vẫn pending riêng                                                 |
 | P05   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
 | P06   | NOT STARTED                       | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                   |
 | P07   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
@@ -150,4 +150,20 @@ Chủ dự án yêu cầu trực tiếp “làm PO4 đi”. Tiếp tục P04 loc
 | P04-T05 | DONE       | Admin list/filter/detail/source review/status/edit revision, expected_version            |
 | P04-T06 | DONE       | Báo lỗi có ownership, quarantine, admin resolution; bài cũ giữ revision                  |
 
-Kiểm local: unit216/216, integration47/47, E2E P04 mục tiêu1/1 đạt. Lint/format/typecheck, CLI fixture và dependency audit gate đạt; audit raw moderate1/high0/critical0. Production build và startup guard dev/test đều đạt; HTTP size cap cũng chặn request thiếu/khai sai Content-Length. Chờ CI toàn bộ trên PR draft. Chưa ghi phase DONE. Hướng dẫn: [content review](runbooks/content-review.md). Giới hạn: CLI chỉ kiểm cấu trúc, server kiểm bytes; ảnh cùng hash khác provenance bị409; resolve báo lỗi không tự approve; thu hồi import qua transaction maintenance có review, chưa có nút hàng loạt. Chỉ dữ liệu tổng hợp, không nhập giáo trình hoặc gọi AI/NotebookLM.
+Kiểm local: unit216/216, integration47/47, E2E P04 mục tiêu1/1 đạt. Lint/format/typecheck, CLI fixture và dependency audit gate đạt; audit raw moderate1/high0/critical0. Production build và startup guard dev/test đều đạt; HTTP size cap cũng chặn request thiếu/khai sai Content-Length. CI toàn bộ đã SUCCESS; P04 DONE trong phạm vi local workflow được user yêu cầu. Hướng dẫn: [content review](runbooks/content-review.md). Giới hạn: CLI chỉ kiểm cấu trúc, server kiểm bytes; ảnh cùng hash khác provenance bị409; resolve báo lỗi không tự approve; thu hồi import qua transaction maintenance có review, chưa có nút hàng loạt. Chỉ dữ liệu tổng hợp, không nhập giáo trình hoặc gọi AI/NotebookLM.
+
+### Cổng P04 đã đạt
+
+Code `d2140830b43acb6e4f8aeb1b5b7920f38d49c80b`: [CI44437310878 SUCCESS](https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44437310878). [PR #9](https://github.com/ducmanhletruong/Pharmacy-Study/pull/9) draft, base fix-review-data-completion. Job phase-03 hiện là superset có cả kiểm chứng P04, không thêm job trùng.
+
+| Kiểm chứng                        | Kết quả                                                                                                                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cài đặt/chất lượng                | Frozen install, lint/format, TypeScript đạt                                                                                                                                    |
+| DB mới và rerun                   | Migrations0001–0007, provision hai login, seed/migrate/seed đạt; runtime vẫn không DDL hoặc sửa/xóa audit                                                                      |
+| Bundle/lifecycle/assets/HTTP unit | 216/216 đạt; nguồn thiếu/chưa duyệt không phát hành, SVG script và raster giả bị từ chối, request vượt cap trả413 dù thiếu/khai sai Content-Length                             |
+| Integration/contract              | 47/47 đạt; import đồng thời/idempotent, exact dedup, near-duplicate warning, rollback lỗi giữa chừng, conflict version, ownership, quarantine, revision pin và fixture lịch sử |
+| Chromium E2E                      | 14/14 đạt; gồm admin import/source review/verified/approved → learner practice/ảnh/report → loại khỏi bài mới, bài cũ đọc được; learner import403                              |
+| Production                        | Build đạt; launcher từ chối AUTH_MODE=dev/test                                                                                                                                 |
+| Bảo mật                           | Classifier/recorder/evaluator/reference self-check, dependency gate và secret scan đạt; không có high/critical chưa xử lý                                                      |
+
+AC-6 và tiêu chí chấp nhận P04 đã đạt trên dữ liệu tổng hợp. P03 Google OAuth thật vẫn pending, không suy ra đã kiểm Google từ test provider. Không có giáo trình được nhập, AI/NotebookLM call, merge hoặc deploy. P05 chưa bắt đầu. Sau code đã kiểm chỉ cập nhật Markdown bàn giao/kết quả, không chạy lại local tests/build cho tài liệu.
