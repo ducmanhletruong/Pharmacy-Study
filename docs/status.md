@@ -145,7 +145,7 @@ Chủ dự án yêu cầu trực tiếp “làm PO4 đi”. Tiếp tục P04 loc
 | ------- | ----------- | ---------------------------------------------------------------------------------------- |
 | P04-T01 | DONE        | Migration0007, provenance/source/assets/imports/reports; gate nguồn, seal, quyền runtime |
 | P04-T02 | DONE        | JSON bundle profile1, schema/references, content:validate, fixture synthetic             |
-| P04-T03 | IMPLEMENTED | Máy trạng thái, evidence nguồn/asset, quarantine                                         |
+| P04-T03 | DONE        | Máy trạng thái, evidence nguồn/asset, quarantine                                         |
 | P04-T04 | IMPLEMENTED | Import/API13–14, transaction/idempotency/hash/pg_trgm, SVG/raster private                |
 | P04-T05 | IMPLEMENTED | Admin list/filter/detail/source review/status/edit revision, expected_version            |
 | P04-T06 | IMPLEMENTED | Báo lỗi có ownership, quarantine, admin resolution; bài cũ giữ revision                  |
