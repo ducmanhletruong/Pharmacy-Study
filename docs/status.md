@@ -8,7 +8,7 @@ Cập nhật: 2026-11-18 (Asia/Saigon). P03 đã triển khai, CI đạt, còn k
 | P01   | DONE — phạm vi spike/local        | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có |
 | P02   | DONE                              | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                       |
 | P03   | IMPLEMENTED — LIVE GOOGLE PENDING | T01–T06 có code; local unit104/integration14/E2E8 đạt với test provider; CI44165851119 đạt; chờ Google OAuth thật                  |
-| P04   | NOT STARTED                       | Sau P03                                                                                                                            |
+| P04   | IN PROGRESS                       | User yêu cầu trực tiếp; T01–T06 triển khai, đang kiểm chứng; Google live vẫn pending riêng                                         |
 | P05   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
 | P06   | NOT STARTED                       | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                   |
 | P07   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
@@ -136,3 +136,18 @@ Rà soát cuối bổ sung case bulk INSERT2/3topic có cycle: cả hai đỏ tr
 CI code `ce6791b723d9f2528a9ce54a1d71ec0df0a26129` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44232623121 . Frozen install/lint/format/typecheck, emptyDB migrations0001–0006/provision/seed-rerun, unit119/integration38/E2E13, production build/guards, classifier5/recorder6/evaluator7 và reference self-check5/5, audit/mitigation gate và gitleaks đều đạt. PR #8 draft: https://github.com/ducmanhletruong/Pharmacy-Study/pull/8 (base fix-review-recovery-security).
 
 RV-09/10/11/12/14/16 đã được xử lý theo scope; các finding của ba đợt review đều có bản sửa/kiểm chứng, không đồng nghĩa mọi lỗi tương lai đã bị loại bỏ. Giới hạn legacy và quota/hosting đã ghi runbooks. P03 Google live vẫn pending, P04 chưa bắt đầu. Bổ sung sau CI chỉ đổi Markdown; không merge/deploy hoặc chạy lại local tests/build cho tài liệu.
+
+## P04 — vòng đời nội dung — 2026-11-19
+
+Chủ dự án yêu cầu trực tiếp “làm PO4 đi”. Tiếp tục P04 local theo yêu cầu này trong khi Google OAuth thật của P03 vẫn chưa kiểm chứng; không coi P03 DONE, không thay provider Google hoặc mở P05. Cổng nội dung được kiểm bằng provider synthetic nonproduction.
+
+| Task    | Trạng thái  | Kết quả                                                                                  |
+| ------- | ----------- | ---------------------------------------------------------------------------------------- |
+| P04-T01 | DONE        | Migration0007, provenance/source/assets/imports/reports; gate nguồn, seal, quyền runtime |
+| P04-T02 | IMPLEMENTED | JSON bundle profile1, schema/references, content:validate, fixture synthetic             |
+| P04-T03 | IMPLEMENTED | Máy trạng thái, evidence nguồn/asset, quarantine                                         |
+| P04-T04 | IMPLEMENTED | Import/API13–14, transaction/idempotency/hash/pg_trgm, SVG/raster private                |
+| P04-T05 | IMPLEMENTED | Admin list/filter/detail/source review/status/edit revision, expected_version            |
+| P04-T06 | IMPLEMENTED | Báo lỗi có ownership, quarantine, admin resolution; bài cũ giữ revision                  |
+
+Kiểm local: unit216/216, integration47/47, E2E P04 mục tiêu1/1 đạt. Lint/format/typecheck, CLI fixture và dependency audit gate đạt; audit raw moderate1/high0/critical0. Build production đã compile/typecheck thành công; đang chốt startup guard và CI toàn bộ. Chưa ghi phase DONE. Hướng dẫn: [content review](runbooks/content-review.md). Giới hạn: CLI chỉ kiểm cấu trúc, server kiểm bytes; ảnh cùng hash khác provenance bị409; resolve báo lỗi không tự approve; thu hồi import qua transaction maintenance có review, chưa có nút hàng loạt. Chỉ dữ liệu tổng hợp, không nhập giáo trình hoặc gọi AI/NotebookLM.
