@@ -17,5 +17,5 @@ AUTH_MODE=oidc cho Google + ẩn danh; AUTH_MODE=guest chỉ ẩn danh, không c
 Cả hai cần NEXTAUTH_SECRET, NEXTAUTH_URL, APP_ORIGIN đúng; production HTTPS và app DB ít quyền.
 Xem [runbook](docs/runbooks/google-login.md), ADR-0008 và `.env.example`.
 Cloud dùng pnpm store `/workspace/web-starter/.pnpm-store`.
-Kiểm auth/config/ownership/guest/logout và CI đang chốt ở status.
+Đã chốt kiểm chứng và CI; PR #10 draft, bằng chứng ở status.
 Không đổi giáo trình, merge/deploy hoặc tự mở P05.

@@ -172,4 +172,16 @@ AC-6 và tiêu chí chấp nhận P04 đã đạt trên dữ liệu tổng hợp
 
 Branch feat-open-access, base phase-04. User yêu cầu Google hoặc ẩn danh, bỏ whitelist người học. Code mở email Google đã xác minh, giữ ADMIN_EMAILS phân quyền quản trị; INVITED_EMAILS không dùng. Thêm guest identity/session riêng, guest-only mode, migration0008; không sửa migration đã áp. ADR-0008 và runbook cập nhật theo quyết định mới, không tự mở P05.
 
-Local đạt:16 targeted unit auth/config/recovery/rate-client,8 integration auth/DB,12 Chromium E2E auth/guest/recovery và1 lượt guest-only riêng không có Google credentials/admin emails. Lint, TypeScript, format/diff đạt; migration0008 đã áp DB verified, giữ checksum0001–0007. CI toàn bộ đang chuẩn bị. Google OAuth thật chỉ kiểm callback bằng mock, chưa xác nhận live. Không đổi private env, không public tài liệu hoặc deploy.
+Local đạt:16 targeted unit auth/config/recovery/rate-client,8 integration auth/DB,12 Chromium E2E auth/guest/recovery và1 lượt guest-only riêng không có Google credentials/admin emails. Lint, TypeScript, format/diff đạt; migration0008 đã áp DB verified, giữ checksum0001–0007. CI toàn bộ đã SUCCESS; thay đổi truy cập DONE trong scope yêu cầu. Google OAuth thật chỉ kiểm callback bằng mock, chưa xác nhận live. Không đổi private env, không public tài liệu hoặc deploy.
+
+### Cổng mở truy cập đã đạt
+
+Code `9685363ba2f79fab123738bf7fdfb767c6f77173`: [CI44448319673 SUCCESS](https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44448319673). [PR #10](https://github.com/ducmanhletruong/Pharmacy-Study/pull/10) draft, base phase-04; chưa merge/deploy.
+
+- Frozen install, lint/format, TypeScript và bundle validator đạt.
+- Migrations0001–0008 trên DB rỗng, provision login runtime/maintenance, seed/migrate/seed rerun đạt.
+- Unit222/222, integration48/48, Chromium E2E16/16 đạt.
+- Guest-only E2E riêng1/1 đạt, không Google credentials/admin emails; provider duy nhất là guest. Kiểm CSRF, fake identity/role, tách bài giữa hai guest, reload/resume, admin403 và logout token replay.
+- Production build/startup guards, classifier/recorder/evaluator, dependency gate và secret scan đạt.
+
+Google verified callback được kiểm bằng mock, chưa kiểm OAuth Google thật. Phiên guest không đồng bộ/merge vào Google hoặc phục hồi sau logout/hết hạn/mất cookie; DB chưa có cleanup tự động. Không thay private env, nhập nội dung chuyên môn hoặc tự mở P05. Sau CI chỉ cập nhật Markdown kết quả/bàn giao, không chạy lại local tests/build cho tài liệu. Hướng dẫn cấu hình mới ở [runbook](runbooks/google-login.md).
