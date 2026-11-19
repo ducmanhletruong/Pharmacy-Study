@@ -62,6 +62,23 @@ export const attemptSchema = z
             .length(4),
           answer: label.nullable(),
           flagged: z.boolean(),
+          assets: z
+            .array(
+              z
+                .object({
+                  id: uuid,
+                  url: z.string().regex(/^\/api\/v1\/assets\/[a-f0-9-]{36}$/i),
+                  mime: z.enum([
+                    'image/svg+xml',
+                    'image/png',
+                    'image/jpeg',
+                    'image/webp',
+                  ]),
+                  alt_text: z.string(),
+                })
+                .strict(),
+            )
+            .default([]),
         })
         .strict(),
     ),
