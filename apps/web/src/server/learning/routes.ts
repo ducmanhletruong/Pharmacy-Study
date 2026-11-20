@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { blueprintInputSchema } from '@pharmacy/api-contract'
-import { PracticeError } from '@pharmacy/db/practice'
+import { blueprintInputSchema, reviewInputSchema } from '@pharmacy/api-contract'
+import { createAttempt, PracticeError } from '@pharmacy/db/practice'
 import { listBlueprints, saveBlueprint, progress } from '@pharmacy/db/learning'
 import { body, handle } from '../http'
 const querySchema = z
@@ -77,5 +77,27 @@ export function progressGET(request: Request) {
     if (!q.subject)
       throw new PracticeError('validation_failed', 400, 'Cần chọn môn học')
     return Response.json(await progress(actor.id, q.subject, q.cursor, q.limit))
+  })
+}
+export function reviewPOST(request: Request) {
+  return handle(request, async (actor, requestId) => {
+    const input = reviewInputSchema.parse(await body(request))
+    const key = request.headers.get('Idempotency-Key')
+    if (!key || key.length > 128)
+      throw new PracticeError(
+        'validation_failed',
+        400,
+        'Cần Idempotency-Key tối đa128ký tự',
+      )
+    const result = await createAttempt(
+      { ...input, mode: 'review', type: 'mcq' },
+      key,
+      actor.id,
+      requestId,
+    )
+    return Response.json(result.attempt, {
+      status: result.replayed ? 200 : 201,
+      headers: result.replayed ? { 'Idempotent-Replay': 'true' } : {},
+    })
   })
 }
