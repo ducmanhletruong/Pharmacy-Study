@@ -477,3 +477,41 @@ Playwright bỏ danh sách mời synthetic không còn dùng, thêm E2E_GUEST_ON
 Rà soát diff sau commit phát hiện script cập nhật tài liệu đã ghi nhầm nội dung example env vào docs/status.md. Đã khôi phục nguyên lịch sử từ base phase-04 và bổ sung đúng mục truy cập mới, ghi correction bằng commit riêng, không rewrite lịch sử Git đã push. Chỉ nội dung example công khai bị ghi nhầm, không có private env/secret. Kiểm lại diff và format tài liệu; không cần chạy lại test logic cho correction này.
 
 Chốt thay đổi mở truy cập: PR #10 draft đã tạo/attach, CI code cuối SUCCESS; bằng chứng chính thức ở docs/status.md. Sau user yêu cầu tiếp tục code, kiểm lại run/job logs đang dở và hoàn tất bàn giao. Bổ sung cuối chỉ Markdown, kiểm format/diff và lịch sử status vẫn giữ nguyên base; không chạy lại local tests/build. Không sửa private env Windows/Cloud, merge/deploy hay tự mở P05.
+
+## 2026-11-21 — Bổ sung bàn giao hỗ trợ OAuth/Windows bị thiếu
+
+Owner nhắc handoff.md chưa cập nhật sau các lượt hỗ trợ. Nhận thiếu sót và bổ sung canonical status trước, viết lại handoff ngắn theo blocker thực tế. Ghi tách bằng chứng Cloud startup đã đo với Google live chưa kiểm, kết quả queued/panel trống và SSH UI không thấy; không coi thao tác gọi công cụ là user đã xem được web. Ghi log Windows Docker/28P01, Node26 warning và đính chính không kết luận Node26 gây lỗi. Virtual Machine Platform/WSL là blocker mới nhất theo ảnh installer; lệnh cài/khởi động lại mới được hướng dẫn, chưa được xác nhận thực thi. DBport55432 vẫn là đề xuất.
+
+Chỉ sửa docs/status.md, handoff.md và nối nhật ký này; không sửa code/private env, cài phần mềm Windows, chạy lại web/Google hay mở phase. Kiểm diff, format đúng ba file và handoff tối đa40 dòng; không test/build cho tài liệu theo AGENTS.md. Các kết quả test/CI cũ giữ nguyên nguồn, không ghi thành vừa chạy. Có thể hoàn tác phần tài liệu bằng revert; không có thay đổi DB/runtime để rollback trong lượt này.
+
+## 2026-11-21 — Kết nối lại và chạy OAuth local Windows
+
+Theo yêu cầu đọc ba file và tiếp tục công việc, đối chiếu GitHub với bàn giao, kiểm WSL/Docker/repo/server hiện có. Phát hiện PR10 đã merge và Docker đã chạy, cập nhật bằng chứng mới ở docs/status.md trước. Nhãn Compose giúp tìm đúng repo Windows trong System32; không sửa repo đó hoặc bản phase-01 có thay đổi chưa commit.
+
+Tạo clone riêng feat-open-access trong thư mục work của chat, dùng Node24 có sẵn và frozen install pnpm11.25.0. Cấu hình private chỉ chuyển Google OAuth/admin cần thiết từ repo local, session secret và password DB cô lập sinh mới trực tiếp vào .env bị ignore; không lấy cookie NotebookLM/Google hoặc config Cloud. Dùng project/volume Compose mới ở55432 tránh PG Windows5432; migrate/provision/seed theo thứ tự, dừng nếu lỗi. Không đổi migration/checksum hoặc code sản phẩm. Không nâng dependency/build/test lại toàn suite.
+
+agent-desktop trong sandbox không enumerate được Windows; lượt chỉ đọc ngoài sandbox thấy đúng Chrome. Launch báo AMBIGUOUS_TARGET do nhiều process Chrome, nên chuyển cua_repl in-app browser để mở/quan sát trang đăng nhập. Không dùng physical-input fallback hoặc tự thao tác mật khẩu/Google authentication. Bằng chứng callback và bước tiếp ghi trong status/handoff khi có kết quả thực tế.
+
+Phát sinh môi trường nằm trong mục tiêu tiếp tục OAuth; không mở phase mới, merge/push/deploy hoặc xóa dữ liệu. Hoàn tác vận hành bằng dừng riêng server/project pharmacy-oauth-resume, giữ volume; không dùng down -v hoặc xóa repo/capture cũ. File setup-local.mjs ở work chỉ tạo cấu hình mới khi chưa tồn tại và không chứa credential.
+
+Browser đã chuyển từ nút Google sang trang chọn tài khoản của Google cho Pharmacy Study; dừng để owner xác thực trực tiếp. Không ghi email/clientID/state/OAuth URL hoặc token vào tài liệu. Cập nhật handoff cho server/DB đang chạy và hành động owner cần làm. Kiểm health/login/providers thực tế và Git ignore/diff; Google callback chưa đo, không báo DONE.
+
+## 2026-11-21 — Xác minh sau owner hoàn tất Google
+
+Owner báo đã đăng nhập; dùng lại tab cua_repl đã bàn giao, quan sát trang học và truy cập/reload quản trị. Query DB read-only bằng runtime credential, chỉ xuất aggregate provider/role/số phiên, không xuất email/ID/session token. Kiểm logout qua UI, đối chiếu DB revoke và audit, mở lại /admin bị404 rồi để tab cuối ở /login. Ảnh bằng chứng quản trị lưu riêng trong outputs, không đưa vào repo hoặc tài liệu public.
+
+Cập nhật canonical status trước, handoff và nối log này; phân biệt Google admin đã kiểm với ma trận learner/ownership/replay/disabled chưa thực hiện. Không sửa code/schema/dependency hoặc chạy lại fullsuite/build. Diff/format ba Markdown được kiểm; không đụng repo cũ, secret hoặc dữ liệu ngoài môi trường cô lập. Server/DB tiếp tục chạy cho owner sử dụng. Ngoài plan: không mở rộng chức năng; DB aggregate và audit là bằng chứng cần thiết để phân biệt cookie logout với thu hồi phiên thật.
+
+## 2026-11-21 — Ẩn Next DevTools cho người không phải admin
+
+Yêu cầu trực tiếp: loại DevTools khỏi login/guest/learner, chỉ admin thấy. Đọc AGENTS web và docs layout/devIndicators của Next đã cài trước sửa. Thay RootLayout async, lấy role bằng currentActor server trong development và CSS ẩn portal mặc định. Giữ API authorization nguyên vẹn; đây là thay đổi hiển thị, không biến next dev thành production hoặc chặn truy cập dev endpoints bằng role.
+
+Thêm đúng1E2E về khả năng thấy DevTools qua chuỗi khách/admin/logout/learner/guest và reload. Dừng riêng server OAuth để config E2E dùng provider synthetic hiện có; không thay private env hoặc secret, giữ DB cô lập. Lượt test đầu bị ERR_ABORTED ở lần goto/login dư trong helper; đổi test nhập vào form đang mở, không tăng timeout hoặc nới assertion, chạy lại đạt. Khôi phục server OAuth sau test. Lint/format file liên quan và diff được kiểm; không lặp fullsuite/build. Lượt shell đầu ghi test dùng sai relative path nên không tạo file, đã sửa đường dẫn; pnpm trong sandbox bị từ chối store lock, chạy lại đúng quyền theo phiên đã cho phép. Không thay đổi global pnpm config.
+
+Tab IAB cũ kẹt trang lỗi kết nối sau dừng server, API bị chặn vì error page data URL; đọc browser-troubleshooting, tạo tab mới trong cùng browser và quan sát login đã sửa. Không quan sát hydration warning trong tab sạch, chưa chứng minh nguyên nhân lỗi ở Chrome owner. Không thêm suppressHydrationWarning hoặc đổi code để che cảnh báo. Ảnh sau sửa lưu outputs; cập nhật status trước, handoff và bản outputs ba tài liệu. Không push/merge/deploy hoặc sửa repo System32/capture cũ. Hoàn tác bằng revert đúng layout/CSS/test, không cần thay DB/schema.
+
+## 2026-11-21 — Sửa cảnh báo body do Grammarly
+
+Owner gửi ảnh diff bổ sung với hai thuộc tính data-new-gr-c-s-check-loaded/data-gr-ext-installed. Không suy từ vị trí RootLayout/body rằng data-devtools gây mismatch; diff cho thấy marker admin vẫn khớp. Đọc hướng dẫn bundled Next về attribute thay trước hydration và suppressHydrationWarning, dùng ngoại lệ một cấp tại body vì đã có bằng chứng extension cụ thể. Điều này cập nhật quyết định lượt trước chưa dùng suppression khi chưa xác định nguyên nhân; không phải tắt warning toàn app.
+
+Tái hiện bằng MutationObserver addInitScript trong browser synthetic: test đỏ trước sửa và diff trùng ảnh. Sau sửa body, cả test Grammarly mới và test phân quyền DevTools cũ đạt; không nới assertion hoặc nâng timeout. Dừng server OAuth riêng trong lúc kiểm và khôi phục với private env cũ sau đó, không đổi secret. Log từ tab cũ còn kết nối server test được phân biệt với console page test, không tuyên bố mọi tab đã hết cảnh báo trước reload. Không dùng tài khoản Google thật trong test, không sửa extension/settings Chrome của owner. Các file/docs và kiểm chứng ở status; rollback chỉ bỏ body suppression cùng regression test có liên quan, không cần DB rollback.

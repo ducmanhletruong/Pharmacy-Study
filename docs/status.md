@@ -1,13 +1,13 @@
 # Trạng thái triển khai
 
-Cập nhật: 2026-11-18 (Asia/Saigon). P03 đã triển khai, CI đạt, còn kiểm Google thật. Không triển khai production.
+Cập nhật: 2026-11-18 (Asia/Saigon). P03 đã triển khai, CI đạt; Google thật đã kiểm admin/login/logout, còn ma trận nhiều người dùng. Không triển khai production.
 
 | Phase | Trạng thái                        | Bằng chứng / còn lại                                                                                                               |
 | ----- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | P00   | DONE                              | Next.js/pnpm/TS strict, PostgreSQL ghim digest; CI run 43074691952; PR #1 draft                                                    |
 | P01   | DONE — phạm vi spike/local        | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có |
 | P02   | DONE                              | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                       |
-| P03   | IMPLEMENTED — LIVE GOOGLE PENDING | T01–T06 có code; local unit104/integration14/E2E8 đạt với test provider; CI44165851119 đạt; chờ Google OAuth thật                  |
+| P03   | IMPLEMENTED — LIVE GOOGLE PARTIAL | T01–T06 có code; local unit104/integration14/E2E8 đạt với test provider; CI44165851119 đạt; chờ Google OAuth thật                  |
 | P04   | DONE — local workflow             | T01–T06 và AC-6 đạt; CI44437310878; PR #9 draft; Google live P03 vẫn pending riêng                                                 |
 | P05   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
 | P06   | NOT STARTED                       | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                   |
@@ -185,3 +185,55 @@ Code `9685363ba2f79fab123738bf7fdfb767c6f77173`: [CI44448319673 SUCCESS](https:/
 - Production build/startup guards, classifier/recorder/evaluator, dependency gate và secret scan đạt.
 
 Google verified callback được kiểm bằng mock, chưa kiểm OAuth Google thật. Phiên guest không đồng bộ/merge vào Google hoặc phục hồi sau logout/hết hạn/mất cookie; DB chưa có cleanup tự động. Không thay private env, nhập nội dung chuyên môn hoặc tự mở P05. Sau CI chỉ cập nhật Markdown kết quả/bàn giao, không chạy lại local tests/build cho tài liệu. Hướng dẫn cấu hình mới ở [runbook](runbooks/google-login.md).
+
+## Tiếp tục kiểm OAuth thực tế — 2026-11-21 (Asia/Saigon)
+
+Owner đã nhập cấu hình OAuth vào .env Cloud. Agent khởi động dev tại cổng3001 và quan sát login HTTP200, health OK, providers google/guest; trình duyệt Cloud hiện hai nút đăng nhập. Đây là bằng chứng khởi động trong lượt trước, không chứng minh server còn chạy sau resume hoặc Google callback thành công. Không ghi secret hoặc client ID vào tài liệu.
+
+Truy cập từ Windows chưa thành công: localhost Windows không trỏ Cloud; môi trường chỉ báo portal SSH22, chưa có HTTP preview. Yêu cầu mở panel/handoff trả queued hoặc không hiện phía user; ảnh xác nhận tab trống, user không tìm thấy mục SSH/Connect. Không coi yêu cầu mở panel là đã bàn giao thành công, không lặp hướng dẫn tìm nút chưa có bằng chứng.
+
+Chuyển sang hướng dẫn chạy local Windows theo nhánh feat-open-access. Log owner: Docker chưa nhận lệnh; migration/provision/seed/dev đều lỗi28P01 với pharmacy_dev; Node26.7.0 chỉ báo engine warning, chưa có bằng chứng là nguyên nhân lỗi. Dự án/CI vẫn kiểm trên Node24; chưa nâng dải hỗ trợ Node26. Đã đề xuất DB riêng cổng55432 tránh PG đang có, chưa xác nhận owner đã áp dụng.
+
+Blocker mới nhất: ảnh installer Docker Desktop báo Virtual Machine Platform chưa bật; per-user installer không thể bật vì cần quyền admin. Đã hướng dẫn PowerShell administrator chạy wsl --install, restart và cài lại Docker; chưa có kết quả thực hiện. Bước tiếp: kiểm wsl --status, docker --version và docker compose version; chỉ khi engine sẵn sàng mới compose/migrate/provision/seed/dev từng lệnh. Nếu .env.db local đã tồn tại, đối chiếu đúng DB/port trước migrate, không copy credential DB Cloud vào Windows. Google OAuth live vẫn PENDING, không merge/deploy hoặc mở P05.
+
+## Tiếp nối trên Windows — 2026-11-21
+
+Đọc đủ ba bản bàn giao người dùng cung cấp và kết nối GitHub. PR #10 hiện đã merged vào phase-04 ngày 2026-11-21 (Asia/Saigon), merge commit 12a2448db0c4edb227d9b754e5ac549c762ee983; trạng thái draft trong các mục trước là lịch sử, không còn hiện hành. Không thực hiện merge trong lượt này.
+
+Repo Windows đã dùng nằm ở C:/Windows/System32/Pharmacy-Study-local/Pharmacy-Study-local. Giữ nguyên repo đó, clone feat-open-access tại work/Pharmacy-Study của chat hiện tại, HEAD 355781419ebe5ad3a2bf411f88be211414ac6638. Repo phase-01 có thay đổi chưa commit và private capture ở chat cũ cũng được giữ nguyên.
+
+WSL đã có docker-desktop/default version2; Docker engine29.9.3 và Compose5.7.0 hoạt động qua executable trong AppData/Local/Programs/DockerDesktop/resources/bin. PATH của phiên chưa có docker. Node24.22.3 có sẵn trong Codex runtime; dùng cùng pnpm11.25.0, frozen install thành công. Không nâng Node hoặc dependency của dự án.
+
+Chuyển riêng cấu hình OAuth/admin local đã có sang .env private mới, giữ nguyên origin/callback localhost:3001, tạo session secret và bootstrap DB password mới cho môi trường cô lập. Không in hoặc commit credential. Compose project pharmacy-oauth-resume, volume riêng pharmacy-oauth-resume_postgres_data, bind127.0.0.1:55432; DB healthy. Migrations0001–0008, provision và seed1môn/10MCQ tổng hợp đạt. Không thay PG16 Windows cổng5432, container/volume pharmacy-study cũ hoặc DB Cloud.
+
+pnpm dev chạy tại localhost:3001; GET/api/v1/health trả200 với status=ok, GET/login200, providers gồm google/guest. Đây là startup và cấu hình local, chưa phải kết quả Google callback. Không chạy lại full tests/build vì không sửa code sản phẩm; không mở P05 hoặc deploy.
+
+Browser local đã hiển thị Pharmacy Study với hai nút Google/ẩn danh. Nhấn Google chuyển đến accounts.google.com và trang chọn tài khoản cho ứng dụng Pharmacy Study, redirect_uri đúng localhost:3001/api/auth/callback/google. Dừng trước chọn tài khoản/xác thực và bàn giao cho owner; chưa có callback/session thành công. Google live vẫn PENDING. Không lưu URL OAuth/state/code, client ID, email, cookie hoặc token trong báo cáo.
+
+## Google OAuth live — admin/login/logout đã xác minh — 2026-11-21
+
+Owner hoàn tất Google trực tiếp trong tab bàn giao, agent quan sát callback trở về localhost:3001 và trang học hiển thị người dùng đã đăng nhập cùng liên kết Quản trị. /admin truy cập được, tải lại vẫn giữ phiên và ngân hàng10câu tổng hợp tải thành công. Đối chiếu DB chỉ xuất aggregate: provider google, role admin, sessions1/active1/revoked0 trước logout.
+
+Nhấn Đăng xuất từ UI: về /login, DB chuyển sessions1/active0/revoked1; audit có auth.sign_in1 và auth.sign_out1. Truy cập /admin sau logout trả trang404 theo cơ chế che route; không còn truy cập khu vực quản trị. Không copy/replay cookie thật nên không claim đã kiểm cookie replay bằng Google thật. Server và DB giữ chạy, tab cuối mở /login để owner đăng nhập lại khi cần.
+
+Kết quả: Google OAuth thật và phân quyền admin/reload/logout/DB revoke đã đạt trong môi trường local này. P03 chưa đóng toàn bộ: chưa kiểm Google learner ngoài danh sách admin, hai learner cách ly attempt, admin không đọc attempt người khác, disabled user hoặc replay cookie thật. Các kiểm synthetic/CI cũ giữ nguyên bằng chứng, không ghi thành live mới. Không sửa app/schema/dependency, không chạy lại full suite/build, không push/merge/deploy hoặc mởP05.
+
+## Giao diện DevTools theo quyền — 2026-11-21
+
+Theo yêu cầu owner từ bốn ảnh Chrome: Next.js DevTools trên trang login/guest/learner phải ẩn, admin vẫn thấy trong development. RootLayout đọc currentActor phía server chỉ trong NODE_ENV=development, đánh dấu body khi role admin; CSS mặc định ẩn nextjs-portal với mọi phiên khác, gồm trước hydration và sau logout. Production không đánh dấu admin/devtools. Không thay đổi quyền API, OAuth, session hoặc schema. Đây là điều khiển hiển thị của development UI, không phải ACL cho dev server hoặc cơ chế loại mã phát triển khỏi client; dev server vẫn chỉ bind local.
+
+Đọc hướng dẫn bundled của Next16.4.6: devIndicators chỉ là cấu hình toàn dự án, không hỗ trợ role theo request. Không dùng devIndicators=false vì sẽ tắt cả admin; không sửa dependency/node_modules. File sửa: apps/web/src/app/layout.tsx, globals.css; thêm tests/e2e/devtools.spec.ts.
+
+Kiểm chứng: format và ESLint file liên quan đạt. E2E Chromium đúng1test đạt, gồm khách/login ẩn, admin thấy sau login/reload, logout ẩn ngay, learner ẩn sau login/reload, guest ẩn sau login/reload. Lượt đầu ERR_ABORTED do helper điều hướng /login trùng; bỏ điều hướng dư trong test rồi kiểm lại, giữ nguyên assertion. Không tính lượt đầu là pass. Dùng tài khoản synthetic provider test, không nhận là kiểm lại Google live. Server OAuth private đã được khôi phục tại localhost:3001, session35115 của executor hiện tại.
+
+Tab mới IAB xác nhận login không có DevTools trong accessibility tree; không quan sát hydration error ở log của tab sạch này. Chưa xác định căn nguyên hydration warning từ ảnh Chrome owner, không khẳng định cảnh báo đó đã sửa; không dùng suppressHydrationWarning. Ảnh sau sửa ở outputs/login-without-devtools.jpg. Không build/fullsuite vì thay đổi hẹp đã kiểm bằng dev E2E thực tế; không push/merge/deploy hoặc mởphase mới.
+
+## Hydration do Grammarly — 2026-11-21
+
+Ảnh owner bổ sung đã xác định diff ở body: data-new-gr-c-s-check-loaded và data-gr-ext-installed được extension thêm trước hydration; data-devtools=admin không lệch. Đính chính mục trước: nguyên nhân cảnh báo này giờ đã xác định và tái hiện có kiểm soát.
+
+Thêm E2E addInitScript/MutationObserver chèn đúng hai thuộc tính trước React hydration, thu console error. Trước sửa, test thất bại đúng assertion hydrationErrors với diff trùng ảnh owner ở /login và reload trang học. Sau sửa, thêm suppressHydrationWarning chỉ trên body cùng comment giải thích extension; không thêm trên html hoặc component con, không đổi role/server auth/CSS DevTools.
+
+Hai test trong devtools.spec.ts đạt: ma trận admin/logout/learner/guest/reload và ca Grammarly/guest/reload không có hydration console error trong page test. ESLint/Prettier hai file liên quan đạt. Có log warning từ client cũ kết nối server test trong lượt kiểm chung; không suy mọi browser đang mở đều đã tải mã mới. Owner cần tải lại trang để bỏ overlay/bundle cũ. Không claim extension Grammarly đã được sửa hoặc đã kiểm mọi extension; body-level exception chỉ chấp nhận attribute drift tại body và không áp dụng cho nội dung component bên trong.
+
+Đã khôi phục server OAuth bằng .env private hiện có. Không đổi secret, DB/schema/dependency hoặc quyền người dùng; không chạy fullsuite/build, không push/merge/deploy. RootLayout và tests/e2e/devtools.spec.ts là phần code thay đổi trong lượt này.
