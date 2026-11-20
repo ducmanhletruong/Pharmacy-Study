@@ -136,11 +136,17 @@ test('server deadline ends a mock without revealing answers early or requiring a
   })
   expect(response.status()).toBe(201)
   const blueprint = await response.json()
+  // Isolate this scenario from the shared admin's rate budget in the full suite.
+  await signInAs(page, `expiry-${crypto.randomUUID()}@example.invalid`)
   await page.goto('/study')
   await page.getByLabel('Cấu hình thi').selectOption(blueprint.id)
+  const started = page.waitForResponse(
+    (r) => r.url().endsWith('/api/v1/attempts') && r.request().method() === 'POST',
+  )
   await page
     .getByRole('button', { name: 'Bắt đầu thi thử', exact: true })
     .click()
+  expect((await started).status()).toBe(201)
   await expect(
     page.getByRole('heading', { name: 'Kết quả bài làm' }),
   ).toBeVisible({ timeout: 10000 })
