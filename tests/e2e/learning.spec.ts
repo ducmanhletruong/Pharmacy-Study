@@ -137,6 +137,7 @@ test('server deadline ends a mock without revealing answers early or requiring a
   expect(response.status()).toBe(201)
   const blueprint = await response.json()
   // Isolate this scenario from the shared admin's rate budget in the full suite.
+  await page.context().clearCookies()
   await signInAs(page, `expiry-${crypto.randomUUID()}@example.invalid`)
   await page.goto('/study')
   await page.getByLabel('Cấu hình thi').selectOption(blueprint.id)
