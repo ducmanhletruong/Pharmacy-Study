@@ -15,6 +15,7 @@ export async function handle(
   request: Request,
   run: (actor: Member, requestId: string) => Promise<Response>,
   action: Action = 'practice:use',
+  bodyLimit: 'default' | 'import' = 'default',
 ) {
   const requestId = randomUUID()
   let actor: Member | null = null
@@ -30,7 +31,9 @@ export async function handle(
       assertOrigin(request)
       if (
         Number(request.headers.get('content-length') ?? 0) >
-        config.MAX_BODY_BYTES
+        (bodyLimit === 'import'
+          ? config.MAX_IMPORT_BYTES
+          : config.MAX_BODY_BYTES)
       )
         throw new PracticeError('payload_too_large', 413, 'Nội dung quá lớn')
       const path = new URL(request.url).pathname

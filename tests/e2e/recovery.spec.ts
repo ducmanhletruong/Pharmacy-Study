@@ -102,7 +102,7 @@ test('logout failure is shown without claiming success and retry works', async (
   fail = false
   await page.getByRole('button', { name: 'Đăng xuất' }).click()
   await expect(
-    page.getByRole('heading', { name: 'Vào lớp học của bạn.' }),
+    page.getByRole('heading', { name: 'Vào học ngay.' }),
   ).toBeVisible()
   expect((await page.request.get('/api/v1/me')).status()).toBe(401)
 })

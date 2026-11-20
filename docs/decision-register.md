@@ -85,3 +85,13 @@ User yêu cầu sửa logout/quota/UI/provision/audit/recorder. Thực hiện RV
 Sau đợt2, user yêu cầu bước tiếp theo Plan; thực hiện đợt3 của kế hoạch review RV-09/10/11/12/14/16. Không coi là mở P04 vì Google live P03 vẫn chưa được xác minh. Dùng lại đội đã được user lập để triển khai/kiểm các phần độc lập, không tạo agent mới.
 
 Snapshot topic mới cố định tại tạo attempt; attempt chưa nộp có sẵn chỉ backfill từ taxonomy hiện tại lúc migration, không giả định đó là dữ liệu lúc tạo. Kết quả submitted giữ nguyên. Seal legacy chỉ backfill phần lịch sử có bằng chứng hiện tại, không tự khóa draft chưa dùng hoặc bịa lịch sử đã rewind trước migration. Quy tắc multi-topic vẫn tính mỗi topic như hiện tại, không tự chọn chủ đề chính.
+
+## P04 — 2026-11-19
+
+User yêu cầu trực tiếp “làm PO4 đi”, cho phép thực hiện vòng đời nội dung local sau đợt hardening. Quyết định này cập nhật hạn chế mở P04 trong các mục lịch sử; Google live P03 vẫn pending riêng, không ghi đã kiểm OAuth thật. Không mở P05/AI pipeline, merge hay deploy.
+
+Bundle profile1 là JSON MCQ, default5MiB/configurable50MiB thay ngưỡng50MB PROPOSED để giới hạn bộ nhớ local. SVG theo allowlist hình học; raster decode/reencode bằng sharp, XML parse bằng saxes. Tài sản lưu private DB cho local, không cấu hình object storage/hosting mới. Chỉ nguồn có quyền chia sẻ đúng đối tượng mới được duyệt; quyền cá nhân P01 không mở rộng cho lớp.
+
+## Mở truy cập — 2026-11-19
+
+User yêu cầu bỏ whitelist người học, cho vào bằng tài khoản Google hoặc ẩn danh. Accepted cập nhật Q3/ADR-0008: email Google đã xác minh có learner mặc định; ADMIN_EMAILS chỉ cấp quyền quản trị, không cản người học khác. Phiên guest riêng từng lần đăng nhập, luôn learner, không cho client chọn identity/role, không merge tiến độ với Google. Thêm guest-only mode để dùng khi chưa có OAuth client; giữ CSRF, Origin, disabled/revoke, ownership và quota. Không mở P05/hosting hoặc quyền phân phối giáo trình. Google live vẫn cần kiểm riêng; không dùng test provider để kết luận OAuth thật.

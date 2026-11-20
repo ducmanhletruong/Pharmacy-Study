@@ -23,7 +23,8 @@
     "e2e": "playwright test",
     "db:provision": "pnpm --filter @pharmacy/db provision",
     "security:test": "node --test scripts/audit-report.test.mjs",
-    "audit:security": "node scripts/audit-security.mjs"
+    "audit:security": "node scripts/audit-security.mjs",
+    "content:validate": "tsx packages/api-contract/src/bundle/validate-cli.ts"
   },
   "devDependencies": {
     "@types/node": "24.19.2",

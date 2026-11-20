@@ -1,12 +1,20 @@
 import { z } from 'zod'
 
 const schema = z.object({
-  AUTH_MODE: z.enum(['dev', 'disabled', 'oidc', 'test']).default('disabled'),
+  AUTH_MODE: z
+    .enum(['dev', 'disabled', 'oidc', 'test', 'guest'])
+    .default('disabled'),
   NODE_ENV: z.string().default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   DEV_HOST: z
     .enum(['127.0.0.1', '0.0.0.0', 'localhost', '::1'])
     .default('127.0.0.1'),
+  MAX_IMPORT_BYTES: z.coerce
+    .number()
+    .int()
+    .min(1024)
+    .max(50 * 1024 * 1024)
+    .default(5 * 1024 * 1024),
   MAX_BODY_BYTES: z.coerce.number().int().min(1).max(1048576).default(16384),
   NEXTAUTH_URL: z.string().optional(),
   APP_ORIGIN: z.string().optional(),
@@ -15,7 +23,6 @@ const schema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   AUTH_TEST_SECRET: z.string().optional(),
   ADMIN_EMAILS: z.string().default(''),
-  INVITED_EMAILS: z.string().default(''),
   RATE_LIMIT_AUTH_GLOBAL: z.coerce
     .number()
     .int()
@@ -41,7 +48,7 @@ function emails(value: string) {
     ),
   ]
   if (values.some((email) => !z.email().safeParse(email).success))
-    throw new Error('Invalid invitation email configuration')
+    throw new Error('Invalid admin email configuration')
   return values
 }
 export function readAuthConfig(
@@ -79,18 +86,14 @@ export function readAuthConfig(
         'APP_ORIGIN must be an origin without credentials or path',
       )
   }
-  const admins = emails(config.ADMIN_EMAILS),
-    invited = emails(config.INVITED_EMAILS)
-  if (config.AUTH_MODE === 'oidc' || config.AUTH_MODE === 'test') {
+  const admins = emails(config.ADMIN_EMAILS)
+  if (['oidc', 'test', 'guest'].includes(config.AUTH_MODE)) {
     if (
       !config.NEXTAUTH_SECRET ||
       config.NEXTAUTH_SECRET.length < 32 ||
-      !config.NEXTAUTH_URL ||
-      admins.length === 0
+      !config.NEXTAUTH_URL
     )
-      throw new Error(
-        'Configure NEXTAUTH_SECRET, NEXTAUTH_URL and ADMIN_EMAILS privately',
-      )
+      throw new Error('Configure NEXTAUTH_SECRET and NEXTAUTH_URL privately')
     let url: URL
     try {
       url = new URL(config.NEXTAUTH_URL)
@@ -125,7 +128,7 @@ export function readAuthConfig(
         'Test authentication requires an explicit test-only secret',
       )
   }
-  return { ...config, admins, invited }
+  return { ...config, admins }
 }
 export function assertAuthMode(
   env: Record<string, string | undefined> = process.env,

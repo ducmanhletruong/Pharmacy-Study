@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
+import { QuestionReport } from './question-report'
 import { getCsrfToken } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import {
@@ -136,6 +138,7 @@ export function Practice({
     setBusy(true)
     setError('')
     setSelected(subject)
+    setCount(Math.max(1, Math.min(10, subject.question_count)))
     setTopics([])
     setTopic('')
     try {
@@ -404,6 +407,25 @@ export function Practice({
               <h2>
                 <RichText text={item.stem} />
               </h2>
+              {(item.assets ?? []).map((asset) => (
+                <Image
+                  key={asset.id}
+                  unoptimized
+                  src={asset.url}
+                  alt={asset.alt_text}
+                  width={600}
+                  height={400}
+                  style={{
+                    maxWidth: '100%',
+                    height: 'auto',
+                    objectFit: 'contain',
+                  }}
+                />
+              ))}
+              <QuestionReport
+                questionId={item.question_id}
+                revisionId={item.revision_id}
+              />
               <fieldset disabled={busy || item.answer !== null}>
                 <legend className="sr-only">Chọn một đáp án</legend>
                 {item.choices.map((choice) => (
@@ -551,8 +573,13 @@ export function Practice({
                     onChange={(event) => setCount(Number(event.target.value))}
                     disabled={busy}
                   >
-                    <option value={10}>10 câu</option>
-                    <option value={5}>5 câu</option>
+                    {Array.from({ length: 10 }, (_, index) => index + 1).map(
+                      (value) => (
+                        <option key={value} value={value}>
+                          {value} câu
+                        </option>
+                      ),
+                    )}
                   </select>
                 </label>
                 <button className="primary" onClick={start} disabled={busy}>

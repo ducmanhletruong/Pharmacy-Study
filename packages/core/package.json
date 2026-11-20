@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/grading/mcq.ts",
-    "./authz": "./src/authz/index.ts"
+    "./authz": "./src/authz/index.ts",
+    "./lifecycle": "./src/lifecycle/index.ts"
   }
 }

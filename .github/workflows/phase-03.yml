@@ -55,9 +55,15 @@ jobs:
         run: pnpm db:provision -- --write-local-env
       - name: Seed and verify migration role reruns
         run: pnpm db:seed && pnpm db:migrate && pnpm db:seed
+      - name: Validate P04 synthetic bundle profile
+        run: pnpm content:validate content/fixtures/p04-bundle.json
       - run: pnpm test && pnpm test:integration
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm e2e
+      - name: Verify guest-only login without Google credentials or admin emails
+        run: pnpm e2e tests/e2e/guest.spec.ts
+        env:
+          E2E_GUEST_ONLY: '1'
       - run: pnpm build
         env:
           AUTH_MODE: disabled

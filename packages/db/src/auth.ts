@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { uuid } from '@pharmacy/api-contract'
 import type { Actor, Role } from '@pharmacy/core/authz'
 import { getPool } from './client'
 import { appendAudit } from './audit'
@@ -12,12 +13,19 @@ type UserRow = {
   status: 'active' | 'disabled'
 }
 export async function registerIdentity(input: {
-  provider: 'google' | 'test'
+  provider: 'google' | 'test' | 'guest'
   subject: string
   email: string
   name: string
   role: Role
 }): Promise<Member | null> {
+  if (
+    input.provider === 'guest' &&
+    (!uuid.safeParse(input.subject).success ||
+      input.email !== `${input.subject}@guest.invalid`)
+  )
+    return null
+  const role = input.provider === 'guest' ? 'learner' : input.role
   const client = await getPool().connect()
   try {
     await client.query('BEGIN')
@@ -54,7 +62,7 @@ export async function registerIdentity(input: {
       } else {
         const created = await client.query<UserRow>(
           'INSERT INTO users(email,display_name,role) VALUES($1,$2,$3) RETURNING *',
-          [input.email, input.name.slice(0, 200), input.role],
+          [input.email, input.name.slice(0, 200), role],
         )
         user = created.rows[0]!
       }
@@ -65,14 +73,14 @@ export async function registerIdentity(input: {
     }
     await client.query(
       'UPDATE users SET display_name=$2,role=$3,last_login_at=now() WHERE id=$1',
-      [user.id, input.name.slice(0, 200), input.role],
+      [user.id, input.name.slice(0, 200), role],
     )
     await client.query('COMMIT')
     return {
       id: user.id,
       email: input.email,
       name: input.name.slice(0, 200),
-      role: input.role,
+      role,
       status: 'active',
     }
   } catch (error) {

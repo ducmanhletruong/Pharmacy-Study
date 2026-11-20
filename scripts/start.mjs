@@ -10,7 +10,7 @@ import { assertAuthMode } from '../apps/web/src/config.ts'
 const runtimeEnv = runtimeEnvironment(process.env)
 assertAuthMode({ ...runtimeEnv, NODE_ENV: 'production' })
 const config = readAuthConfig({ ...process.env, NODE_ENV: 'production' })
-if (config.AUTH_MODE === 'oidc') {
+if (config.AUTH_MODE === 'oidc' || config.AUTH_MODE === 'guest') {
   await assertRuntimeDatabase()
   await closeDb()
 }

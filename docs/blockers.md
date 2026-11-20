@@ -38,3 +38,7 @@ Không còn blocker trong scope đợt2; kết quả và finding còn OPEN của
 ## Đợt3 review
 
 Không còn blocker trong scope sáu finding đợt3, xem docs/status.md và runbook data-history. Giới hạn backfill lịch sử cũ vẫn được ghi rõ. Bước sản phẩm P04 chưa mở: cần hoàn tất Google OAuth live của P03; không yêu cầu chạy lại P01 hoặc gửi secret trong chat.
+
+## Cập nhật P04 — 2026-11-19
+
+User đã yêu cầu trực tiếp thực hiện P04; các câu “P04 chưa mở” phía trên là lịch sử trước yêu cầu này. P04 được triển khai/kiểm local độc lập, không đóng GOOGLE-LIVE của P03. Không cần gửi secret qua chat; Google OAuth thật vẫn cần owner cấu hình và kiểm riêng trước sử dụng lớp. Trạng thái kiểm chứng mới nhất ở docs/status.md.

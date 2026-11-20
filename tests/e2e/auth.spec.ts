@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { signInAs } from './sign-in'
 import { admin, learnerA, learnerB, limited, testPassword } from './fixtures'
 
-test('invited member signs in/out, cookies are protected and logged-out token cannot be reused', async ({
+test('member signs in/out, cookies are protected and logged-out token cannot be reused', async ({
   page,
   context,
 }) => {
@@ -18,18 +18,20 @@ test('invited member signs in/out, cookies are protected and logged-out token ca
   expect((await page.request.get('/api/v1/me')).status()).toBe(200)
   await page.getByRole('button', { name: 'Đăng xuất' }).click()
   await expect(
-    page.getByRole('heading', { name: 'Vào lớp học của bạn.' }),
+    page.getByRole('heading', { name: 'Vào học ngay.' }),
   ).toBeVisible()
   expect((await page.request.get('/api/v1/me')).status()).toBe(401)
   await context.addCookies(session)
   expect((await page.request.get('/api/v1/me')).status()).toBe(401)
 })
-test('outsiders and missing CSRF cannot establish a session', async ({
+test('wrong passwords and missing CSRF cannot establish a session', async ({
   page,
 }) => {
   await page.goto('/login')
   await page.getByLabel('Email kiểm thử').fill('outsider@example.invalid')
-  await page.getByLabel('Mật khẩu kiểm thử').fill(testPassword)
+  await page
+    .getByLabel('Mật khẩu kiểm thử')
+    .fill('incorrect-synthetic-password')
   await page
     .getByRole('button', { name: 'Đăng nhập kiểm thử', exact: true })
     .click()
@@ -141,7 +143,7 @@ test('security headers, nonce CSP and Origin checks survive the real HTTP server
     ).status(),
   ).toBe(403)
   const providers = await (await page.request.get('/api/auth/providers')).json()
-  expect(Object.keys(providers)).toEqual(['test'])
+  expect(Object.keys(providers)).toEqual(['test', 'guest'])
 })
 test('creation quota is enforced over HTTP with Retry-After', async ({
   page,
@@ -166,4 +168,13 @@ test('creation quota is enforced over HTTP with Retry-After', async ({
   })
   expect(denied.status()).toBe(429)
   expect(Number(denied.headers()['retry-after'])).toBeGreaterThan(0)
+})
+
+test('a learner outside the old invitation list can sign in without admin access', async ({
+  page,
+}) => {
+  await signInAs(page, 'outside-open-access@example.invalid')
+  const me = await (await page.request.get('/api/v1/me')).json()
+  expect(me.role).toBe('learner')
+  expect((await page.request.get('/api/v1/admin/access')).status()).toBe(403)
 })

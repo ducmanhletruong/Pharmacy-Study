@@ -47,6 +47,15 @@ async function questionFixture(c: Client) {
     revision,
     question,
   ])
+  const source = randomUUID()
+  await c.query(
+    "INSERT INTO sources(id,subject_id,kind,title,locator,license,review_status,retrieved_at,fingerprint) VALUES($1,$2,'manual','history fixture','fixture','CC0','approved',now(),$3)",
+    [source, subject, randomUUID()],
+  )
+  await c.query(
+    "INSERT INTO question_sources(revision_id,source_id,locator) VALUES($1,$2,'fixture')",
+    [revision, source],
+  )
   return { subject, question, revision, code }
 }
 async function addRevision(
@@ -279,6 +288,9 @@ test('attempt snapshots preserve all original topic names and membership across 
         'INSERT INTO question_topics(question_id,topic_id,subject_id) VALUES($1,$2,$3)',
         [f.question, topic, f.subject],
       )
+    await c.query("UPDATE questions SET status='verified' WHERE id=$1", [
+      f.question,
+    ])
     await c.query("UPDATE questions SET status='approved' WHERE id=$1", [
       f.question,
     ])

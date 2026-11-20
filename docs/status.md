@@ -8,7 +8,7 @@ Cập nhật: 2026-11-18 (Asia/Saigon). P03 đã triển khai, CI đạt, còn k
 | P01   | DONE — phạm vi spike/local        | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có |
 | P02   | DONE                              | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                       |
 | P03   | IMPLEMENTED — LIVE GOOGLE PENDING | T01–T06 có code; local unit104/integration14/E2E8 đạt với test provider; CI44165851119 đạt; chờ Google OAuth thật                  |
-| P04   | NOT STARTED                       | Sau P03                                                                                                                            |
+| P04   | DONE — local workflow             | T01–T06 và AC-6 đạt; CI44437310878; PR #9 draft; Google live P03 vẫn pending riêng                                                 |
 | P05   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
 | P06   | NOT STARTED                       | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                   |
 | P07   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
@@ -136,3 +136,52 @@ Rà soát cuối bổ sung case bulk INSERT2/3topic có cycle: cả hai đỏ tr
 CI code `ce6791b723d9f2528a9ce54a1d71ec0df0a26129` SUCCESS: https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44232623121 . Frozen install/lint/format/typecheck, emptyDB migrations0001–0006/provision/seed-rerun, unit119/integration38/E2E13, production build/guards, classifier5/recorder6/evaluator7 và reference self-check5/5, audit/mitigation gate và gitleaks đều đạt. PR #8 draft: https://github.com/ducmanhletruong/Pharmacy-Study/pull/8 (base fix-review-recovery-security).
 
 RV-09/10/11/12/14/16 đã được xử lý theo scope; các finding của ba đợt review đều có bản sửa/kiểm chứng, không đồng nghĩa mọi lỗi tương lai đã bị loại bỏ. Giới hạn legacy và quota/hosting đã ghi runbooks. P03 Google live vẫn pending, P04 chưa bắt đầu. Bổ sung sau CI chỉ đổi Markdown; không merge/deploy hoặc chạy lại local tests/build cho tài liệu.
+
+## P04 — vòng đời nội dung — 2026-11-19
+
+Chủ dự án yêu cầu trực tiếp “làm PO4 đi”. Tiếp tục P04 local theo yêu cầu này trong khi Google OAuth thật của P03 vẫn chưa kiểm chứng; không coi P03 DONE, không thay provider Google hoặc mở P05. Cổng nội dung được kiểm bằng provider synthetic nonproduction.
+
+| Task    | Trạng thái | Kết quả                                                                                  |
+| ------- | ---------- | ---------------------------------------------------------------------------------------- |
+| P04-T01 | DONE       | Migration0007, provenance/source/assets/imports/reports; gate nguồn, seal, quyền runtime |
+| P04-T02 | DONE       | JSON bundle profile1, schema/references, content:validate, fixture synthetic             |
+| P04-T03 | DONE       | Máy trạng thái, evidence nguồn/asset, quarantine                                         |
+| P04-T04 | DONE       | Import/API13–14, transaction/idempotency/hash/pg_trgm, SVG/raster private                |
+| P04-T05 | DONE       | Admin list/filter/detail/source review/status/edit revision, expected_version            |
+| P04-T06 | DONE       | Báo lỗi có ownership, quarantine, admin resolution; bài cũ giữ revision                  |
+
+Kiểm local: unit216/216, integration47/47, E2E P04 mục tiêu1/1 đạt. Lint/format/typecheck, CLI fixture và dependency audit gate đạt; audit raw moderate1/high0/critical0. Production build và startup guard dev/test đều đạt; HTTP size cap cũng chặn request thiếu/khai sai Content-Length. CI toàn bộ đã SUCCESS; P04 DONE trong phạm vi local workflow được user yêu cầu. Hướng dẫn: [content review](runbooks/content-review.md). Giới hạn: CLI chỉ kiểm cấu trúc, server kiểm bytes; ảnh cùng hash khác provenance bị409; resolve báo lỗi không tự approve; thu hồi import qua transaction maintenance có review, chưa có nút hàng loạt. Chỉ dữ liệu tổng hợp, không nhập giáo trình hoặc gọi AI/NotebookLM.
+
+### Cổng P04 đã đạt
+
+Code `d2140830b43acb6e4f8aeb1b5b7920f38d49c80b`: [CI44437310878 SUCCESS](https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44437310878). [PR #9](https://github.com/ducmanhletruong/Pharmacy-Study/pull/9) draft, base fix-review-data-completion. Job phase-03 hiện là superset có cả kiểm chứng P04, không thêm job trùng.
+
+| Kiểm chứng                        | Kết quả                                                                                                                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cài đặt/chất lượng                | Frozen install, lint/format, TypeScript đạt                                                                                                                                    |
+| DB mới và rerun                   | Migrations0001–0007, provision hai login, seed/migrate/seed đạt; runtime vẫn không DDL hoặc sửa/xóa audit                                                                      |
+| Bundle/lifecycle/assets/HTTP unit | 216/216 đạt; nguồn thiếu/chưa duyệt không phát hành, SVG script và raster giả bị từ chối, request vượt cap trả413 dù thiếu/khai sai Content-Length                             |
+| Integration/contract              | 47/47 đạt; import đồng thời/idempotent, exact dedup, near-duplicate warning, rollback lỗi giữa chừng, conflict version, ownership, quarantine, revision pin và fixture lịch sử |
+| Chromium E2E                      | 14/14 đạt; gồm admin import/source review/verified/approved → learner practice/ảnh/report → loại khỏi bài mới, bài cũ đọc được; learner import403                              |
+| Production                        | Build đạt; launcher từ chối AUTH_MODE=dev/test                                                                                                                                 |
+| Bảo mật                           | Classifier/recorder/evaluator/reference self-check, dependency gate và secret scan đạt; không có high/critical chưa xử lý                                                      |
+
+AC-6 và tiêu chí chấp nhận P04 đã đạt trên dữ liệu tổng hợp. P03 Google OAuth thật vẫn pending, không suy ra đã kiểm Google từ test provider. Không có giáo trình được nhập, AI/NotebookLM call, merge hoặc deploy. P05 chưa bắt đầu. Sau code đã kiểm chỉ cập nhật Markdown bàn giao/kết quả, không chạy lại local tests/build cho tài liệu.
+
+## Thay đổi truy cập theo yêu cầu — 2026-11-19
+
+Branch feat-open-access, base phase-04. User yêu cầu Google hoặc ẩn danh, bỏ whitelist người học. Code mở email Google đã xác minh, giữ ADMIN_EMAILS phân quyền quản trị; INVITED_EMAILS không dùng. Thêm guest identity/session riêng, guest-only mode, migration0008; không sửa migration đã áp. ADR-0008 và runbook cập nhật theo quyết định mới, không tự mở P05.
+
+Local đạt:16 targeted unit auth/config/recovery/rate-client,8 integration auth/DB,12 Chromium E2E auth/guest/recovery và1 lượt guest-only riêng không có Google credentials/admin emails. Lint, TypeScript, format/diff đạt; migration0008 đã áp DB verified, giữ checksum0001–0007. CI toàn bộ đã SUCCESS; thay đổi truy cập DONE trong scope yêu cầu. Google OAuth thật chỉ kiểm callback bằng mock, chưa xác nhận live. Không đổi private env, không public tài liệu hoặc deploy.
+
+### Cổng mở truy cập đã đạt
+
+Code `9685363ba2f79fab123738bf7fdfb767c6f77173`: [CI44448319673 SUCCESS](https://github.com/ducmanhletruong/Pharmacy-Study/actions/runs/44448319673). [PR #10](https://github.com/ducmanhletruong/Pharmacy-Study/pull/10) draft, base phase-04; chưa merge/deploy.
+
+- Frozen install, lint/format, TypeScript và bundle validator đạt.
+- Migrations0001–0008 trên DB rỗng, provision login runtime/maintenance, seed/migrate/seed rerun đạt.
+- Unit222/222, integration48/48, Chromium E2E16/16 đạt.
+- Guest-only E2E riêng1/1 đạt, không Google credentials/admin emails; provider duy nhất là guest. Kiểm CSRF, fake identity/role, tách bài giữa hai guest, reload/resume, admin403 và logout token replay.
+- Production build/startup guards, classifier/recorder/evaluator, dependency gate và secret scan đạt.
+
+Google verified callback được kiểm bằng mock, chưa kiểm OAuth Google thật. Phiên guest không đồng bộ/merge vào Google hoặc phục hồi sau logout/hết hạn/mất cookie; DB chưa có cleanup tự động. Không thay private env, nhập nội dung chuyên môn hoặc tự mở P05. Sau CI chỉ cập nhật Markdown kết quả/bàn giao, không chạy lại local tests/build cho tài liệu. Hướng dẫn cấu hình mới ở [runbook](runbooks/google-login.md).

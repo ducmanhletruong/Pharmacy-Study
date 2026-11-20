@@ -146,6 +146,15 @@ test('a draft revision stays editable until the question leaves draft', async ()
       "UPDATE question_revisions SET explanation='edited' WHERE id=$1",
       [rid],
     )
+    const source = randomUUID()
+    await client.query(
+      "INSERT INTO sources(id,subject_id,kind,title,locator,license,review_status,retrieved_at,fingerprint) VALUES($1,$2,'manual','integrity fixture','fixture','CC0','approved',now(),$3)",
+      [source, q.subject_id, randomUUID()],
+    )
+    await client.query(
+      "INSERT INTO question_sources(revision_id,source_id,locator) VALUES($1,$2,'fixture')",
+      [rid, source],
+    )
     await client.query("UPDATE questions SET status='verified' WHERE id=$1", [
       question,
     ])

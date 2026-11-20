@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "manifest": {
+    "subject": "synthetic",
+    "label": "P04 — dữ liệu tổng hợp tự viết, không phải giáo trình Dược",
+    "generator": {
+      "name": "pharmacy-study-synthetic-fixture",
+      "version": "1.0.0"
+    },
+    "created_at": "2026-11-19T00:00:00Z"
+  },
+  "topics": [
+    {
+      "code": "p04-root",
+      "parent_code": null,
+      "title": "Ví dụ nhập nội dung tổng hợp",
+      "sort_order": 0
+    },
+    {
+      "code": "p04-addition",
+      "parent_code": "p04-root",
+      "title": "Cộng các số mẫu",
+      "sort_order": 1
+    }
+  ],
+  "sources": [
+    {
+      "ref": "p04-source",
+      "kind": "manual",
+      "title": "Nguồn tổng hợp do dự án tự viết",
+      "locator": "P04 fixture, đoạn 1",
+      "license": "CC0-1.0 — synthetic project-authored example",
+      "retrieved_at": "2026-11-19T00:00:00Z"
+    }
+  ],
+  "assets": [
+    {
+      "ref": "p04-figure",
+      "kind": "svg",
+      "data_base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA0MCI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjQwIiBmaWxsPSJsaWdodGJsdWUiLz48dGV4dCB4PSI4IiB5PSIyNSI+MiArIDM8L3RleHQ+PC9zdmc+",
+      "license": "CC0-1.0",
+      "attribution": "Synthetic figure authored for Pharmacy Study tests",
+      "alt_text": "Hình tổng hợp minh họa phép cộng 2 + 3",
+      "source_ref": "p04-source"
+    }
+  ],
+  "questions": [
+    {
+      "external_id": "p04-sum-001",
+      "type": "mcq",
+      "difficulty": 1,
+      "topic_codes": ["p04-addition"],
+      "stem": "Trong ví dụ tổng hợp, hộp A có 2 nhãn và hộp B có 3 nhãn. Tổng cộng có bao nhiêu nhãn?",
+      "choices": [
+        {
+          "label": "A",
+          "text": "4",
+          "is_correct": false
+        },
+        {
+          "label": "B",
+          "text": "5",
+          "is_correct": true
+        },
+        {
+          "label": "C",
+          "text": "6",
+          "is_correct": false
+        },
+        {
+          "label": "D",
+          "text": "7",
+          "is_correct": false
+        }
+      ],
+      "explanation": "Cộng các số mẫu: 2 + 3 = 5. Đây là dữ liệu kiểm thử tổng hợp, không phải kiến thức chuyên môn Dược.",
+      "sources": [
+        {
+          "source_ref": "p04-source",
+          "locator": "P04 fixture, đoạn 1: hộp A có 2 nhãn, hộp B có 3 nhãn."
+        }
+      ],
+      "asset_refs": ["p04-figure"],
+      "accepted_answers": []
+    }
+  ]
+}

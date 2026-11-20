@@ -4,7 +4,7 @@ export function assertHost(request: Request) {
   target.host = request.headers.get('host') ?? target.host
   const configured =
     process.env.APP_ORIGIN ??
-    (process.env.AUTH_MODE === 'oidc' || process.env.AUTH_MODE === 'test'
+    (['oidc', 'test', 'guest'].includes(process.env.AUTH_MODE ?? '')
       ? process.env.NEXTAUTH_URL
       : undefined)
   const expected = configured ? new URL(configured).origin : target.origin
