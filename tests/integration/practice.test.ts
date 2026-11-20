@@ -56,6 +56,8 @@ async function newAttempt(key = randomUUID(), extra = {}) {
   return { response, value }
 }
 beforeAll(() => {
+  // This suite explicitly verifies the local loopback/Host fallback.
+  delete process.env.APP_ORIGIN
   process.env.RATE_LIMIT_ATTEMPT_CREATE = '10000'
   process.env.RATE_LIMIT_ITEM_WRITE = '10000'
   process.env.AUTH_MODE = 'dev'

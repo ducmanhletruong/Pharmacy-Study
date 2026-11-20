@@ -269,3 +269,5 @@ ESLint và format file thay đổi đạt. Format checkout Windows phải dùng 
 Commit boundary T01: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
 
 Commit boundary T02: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
+
+Commit boundary T03: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
