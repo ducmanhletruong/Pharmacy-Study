@@ -267,3 +267,5 @@ Production build Next16.4.6 đạt compile/TypeScript/routes, startup guard từ
 ESLint và format file thay đổi đạt. Format checkout Windows phải dùng --end-of-line auto vì baseline CRLF; CI Linux vẫn dùng lệnh chuẩn. Secret scan, commit/PR và CI remote sẽ ghi nối sau kết quả; không gọi các bước chưa chạy là đạt. OAuth server được khôi phục bằng private env cũ sau kiểm, health/login sẽ đối chiếu trước bàn giao.
 
 Commit boundary T01: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
+
+Commit boundary T02: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
