@@ -141,7 +141,8 @@ test('server deadline ends a mock without revealing answers early or requiring a
   await page.goto('/study')
   await page.getByLabel('Cấu hình thi').selectOption(blueprint.id)
   const started = page.waitForResponse(
-    (r) => r.url().endsWith('/api/v1/attempts') && r.request().method() === 'POST',
+    (r) =>
+      r.url().endsWith('/api/v1/attempts') && r.request().method() === 'POST',
   )
   await page
     .getByRole('button', { name: 'Bắt đầu thi thử', exact: true })
