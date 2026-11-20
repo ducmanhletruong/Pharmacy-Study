@@ -3,7 +3,7 @@ export async function register() {
   assertAuthMode()
   const config = readAuthConfig()
   if (
-    (config.AUTH_MODE === 'oidc' || config.AUTH_MODE === 'test') &&
+    ['oidc', 'test', 'guest'].includes(config.AUTH_MODE) &&
     process.env.NEXT_RUNTIME === 'nodejs'
   ) {
     await (await import('@pharmacy/db')).assertRuntimeDatabase()

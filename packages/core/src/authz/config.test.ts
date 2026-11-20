@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vitest'
 import { readAuthConfig } from '../../../../apps/web/src/config'
-import { invitedRole } from '../../../../apps/web/src/server/auth/membership'
+import { loginRole } from '../../../../apps/web/src/server/auth/membership'
 import { authOptions } from '../../../../apps/web/src/server/auth/options'
 import { securityHeaders } from '../../../../apps/web/src/server/security/headers'
 
@@ -16,13 +16,17 @@ const base = {
   INVITED_EMAILS: ' learner@example.invalid ',
 }
 afterEach(() => vi.unstubAllEnvs())
-test('invitation is exact, case-insensitive and admin list takes precedence', () => {
+test('public learners need no invitation; admin mapping is exact and case-insensitive', () => {
   for (const [key, value] of Object.entries({ ...base, NODE_ENV: 'test' }))
     vi.stubEnv(key, value)
-  expect(invitedRole(' ADMIN@EXAMPLE.INVALID ')).toBe('admin')
-  expect(invitedRole('learner@example.invalid')).toBe('learner')
-  expect(invitedRole('outside@example.invalid')).toBeNull()
+  expect(loginRole(' ADMIN@EXAMPLE.INVALID ')).toBe('admin')
+  expect(loginRole('learner@example.invalid')).toBe('learner')
+  expect(loginRole('outside@example.invalid')).toBe('learner')
+  expect(loginRole('not-an-email')).toBeNull()
+  expect(loginRole('admin@example.invalid.attacker.com')).toBe('learner')
   vi.stubEnv('INVITED_EMAILS', '*@example.invalid')
+  expect(readAuthConfig().admins).toEqual(['admin@example.invalid'])
+  vi.stubEnv('ADMIN_EMAILS', '*@example.invalid')
   expect(() => readAuthConfig()).toThrow(/email/)
 })
 test('production rejects dev/test modes, missing secrets and non-HTTPS OIDC', () => {
@@ -31,7 +35,6 @@ test('production rejects dev/test modes, missing secrets and non-HTTPS OIDC', ()
   for (const change of [
     { NEXTAUTH_SECRET: '' },
     { GOOGLE_CLIENT_SECRET: '' },
-    { ADMIN_EMAILS: '' },
     { NEXTAUTH_URL: 'http://study.example.invalid' },
     { APP_ORIGIN: 'https://other.invalid' },
   ])
@@ -41,14 +44,16 @@ test('production rejects dev/test modes, missing secrets and non-HTTPS OIDC', ()
     readAuthConfig({ ...base, APP_ORIGIN: 'private-config-sentinel' }),
   ).toThrow(/^Invalid APP_ORIGIN configuration$/)
 })
-test('only Google is registered for production even when a test secret is present', () => {
+test('production enables Google and guests but never the test provider', () => {
   for (const [key, value] of Object.entries({
     ...base,
     AUTH_TEST_SECRET: 'synthetic-test-only-password-value',
   }))
     vi.stubEnv(key, value)
   const options = authOptions()
-  expect(options.providers.map((provider) => provider.id)).toEqual(['google'])
+  expect(
+    options.providers.map((provider) => provider.options?.id ?? provider.id),
+  ).toEqual(['google', 'guest'])
   expect(options.session?.strategy).toBe('jwt')
   expect(options.useSecureCookies).toBe(true)
 })
@@ -79,4 +84,24 @@ test('runtime limits reject invalid values and production requires an explicit o
   expect(() => readAuthConfig({ DEV_HOST: 'untrusted.invalid' })).toThrow(
     /DEV_HOST/,
   )
+})
+
+test('guest-only mode works without Google credentials/admin list but requires secure session config', () => {
+  const config = {
+    ...base,
+    AUTH_MODE: 'guest',
+    ADMIN_EMAILS: '',
+    GOOGLE_CLIENT_ID: '',
+    GOOGLE_CLIENT_SECRET: '',
+  }
+  expect(readAuthConfig(config).admins).toEqual([])
+  expect(readAuthConfig({ ...base, ADMIN_EMAILS: '' }).admins).toEqual([])
+  expect(() => readAuthConfig({ ...config, NEXTAUTH_SECRET: '' })).toThrow()
+  expect(() =>
+    readAuthConfig({ ...config, NEXTAUTH_URL: 'http://study.example.invalid' }),
+  ).toThrow(/HTTPS/)
+  for (const [key, value] of Object.entries(config)) vi.stubEnv(key, value)
+  const options = authOptions()
+  expect(options.providers.map((p) => p.options?.id ?? p.id)).toEqual(['guest'])
+  expect(options.useSecureCookies).toBe(true)
 })

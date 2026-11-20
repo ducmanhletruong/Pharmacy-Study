@@ -21,7 +21,7 @@ async function handler(request: NextRequest, context: Context) {
   }
   try {
     const config = readAuthConfig()
-    if (config.AUTH_MODE !== 'oidc' && config.AUTH_MODE !== 'test')
+    if (!['oidc', 'test', 'guest'].includes(config.AUTH_MODE))
       return Response.json(
         { error: 'Đăng nhập chưa sẵn sàng' },
         { status: 503 },

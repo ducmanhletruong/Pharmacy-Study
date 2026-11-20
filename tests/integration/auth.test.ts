@@ -229,3 +229,42 @@ test('stream body limit works without trusting Content-Length', async () => {
     ),
   ).toBe('{"ok":true}')
 })
+
+test('guest identities are isolated, cannot claim another email and are forced to learner', async () => {
+  const subject = randomUUID(),
+    otherSubject = randomUUID()
+  for (const sub of [subject, otherSubject]) {
+    const user = await registerIdentity({
+      provider: 'guest',
+      subject: sub,
+      email: `${sub}@guest.invalid`,
+      name: 'Synthetic guest',
+      role: 'admin',
+    })
+    expect(user).not.toBeNull()
+    users.push(user!.id)
+    expect(user!.role).toBe('learner')
+  }
+  expect(users.at(-1)).not.toBe(users.at(-2))
+  expect(
+    await registerIdentity({
+      provider: 'guest',
+      subject: randomUUID(),
+      email: 'admin@example.invalid',
+      name: 'Fake admin',
+      role: 'admin',
+    }),
+  ).toBeNull()
+  const rid = randomUUID()
+  requests.push(rid)
+  const id = users.at(-1)!
+  const sid = await createSession(id, 'guest', rid)
+  expect((await sessionMember(id, sid))?.role).toBe('learner')
+  const audit = await getPool().query(
+    "SELECT diff FROM audit_logs WHERE request_id=$1 AND action='auth.sign_in'",
+    [rid],
+  )
+  expect(audit.rows[0].diff).toEqual({ provider: 'guest' })
+  await revokeSession(id, sid, rid)
+  expect(await sessionMember(id, sid)).toBeNull()
+})

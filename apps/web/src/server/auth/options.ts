@@ -12,7 +12,7 @@ import {
 import { getPool } from '@pharmacy/db'
 import { appendAudit } from '@pharmacy/db/audit'
 import { readAuthConfig } from '../../config'
-import { invitedRole } from './membership'
+import { loginRole } from './membership'
 
 export function authOptions(requestId: string = randomUUID()): NextAuthOptions {
   const config = readAuthConfig()
@@ -48,8 +48,21 @@ export function authOptions(requestId: string = randomUUID()): NextAuthOptions {
           )
             return null
           const email = credentials.email.trim().toLowerCase()
-          if (!invitedRole(email)) return null
+          if (!loginRole(email)) return null
           return { id: email, email, name: 'Thành viên kiểm thử' }
+        },
+      }),
+    )
+  if (['oidc', 'test', 'guest'].includes(config.AUTH_MODE))
+    providers.push(
+      Credentials({
+        id: 'guest',
+        name: 'Tiếp tục ẩn danh',
+        credentials: {},
+        async authorize() {
+          // Never accept a client-selected identity or role for a guest.
+          const id = randomUUID()
+          return { id, email: `${id}@guest.invalid`, name: 'Khách ẩn danh' }
         },
       }),
     )
@@ -87,27 +100,36 @@ export function authOptions(requestId: string = randomUUID()): NextAuthOptions {
     callbacks: {
       async signIn({ user, account, profile }) {
         const email = user.email?.trim().toLowerCase()
-        const role = email ? invitedRole(email) : null
         const provider = account?.provider
+        const role =
+          provider === 'guest' ? 'learner' : email ? loginRole(email) : null
         const verified =
           provider === 'google'
-            ? (profile as { email_verified?: boolean } | undefined)
+            ? config.AUTH_MODE === 'oidc' &&
+              (profile as { email_verified?: boolean } | undefined)
                 ?.email_verified === true
-            : provider === 'test' &&
-              config.AUTH_MODE === 'test' &&
-              config.NODE_ENV !== 'production'
+            : provider === 'guest'
+              ? ['oidc', 'test', 'guest'].includes(config.AUTH_MODE) &&
+                uuid.safeParse(user.id).success &&
+                email === `${user.id}@guest.invalid` &&
+                account?.providerAccountId === user.id
+              : provider === 'test' &&
+                config.AUTH_MODE === 'test' &&
+                config.NODE_ENV !== 'production'
         if (
           !email ||
           !role ||
           !verified ||
-          (provider !== 'google' && provider !== 'test') ||
+          (provider !== 'google' &&
+            provider !== 'test' &&
+            provider !== 'guest') ||
           !account?.providerAccountId
         ) {
           await appendAudit(getPool(), {
             actorId: null,
             action: 'auth.denied',
             entityType: 'identity',
-            details: { reason: 'not_invited_or_unverified' },
+            details: { reason: 'invalid_or_unverified_identity' },
             requestId,
           })
           return false
@@ -151,7 +173,7 @@ export function authOptions(requestId: string = randomUUID()): NextAuthOptions {
         )
           return { ...session, user: undefined }
         const member = await sessionMember(token.sub, token.sid)
-        const configuredRole = member ? invitedRole(member.email) : null
+        const configuredRole = member ? loginRole(member.email) : null
         if (!member || !configuredRole) return { ...session, user: undefined }
         const role =
           member.role === 'admin' && configuredRole === 'admin'

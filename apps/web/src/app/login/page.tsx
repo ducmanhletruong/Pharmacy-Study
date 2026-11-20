@@ -13,6 +13,7 @@ export default async function LoginPage({
     <main className="workspace">
       <LoginForm
         google={config.AUTH_MODE === 'oidc'}
+        guest={['oidc', 'test', 'guest'].includes(config.AUTH_MODE)}
         test={config.AUTH_MODE === 'test' && config.NODE_ENV !== 'production'}
         error={Boolean((await searchParams).error)}
       />
