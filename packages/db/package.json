@@ -10,7 +10,8 @@
     "./audit": "./src/audit.ts",
     "./limits": "./src/limits.ts",
     "./content": "./src/content.ts",
-    "./learning": "./src/learning.ts"
+    "./learning": "./src/learning.ts",
+    "./written": "./src/written.ts"
   },
   "scripts": {
     "migrate": "tsx src/migrate.ts",
