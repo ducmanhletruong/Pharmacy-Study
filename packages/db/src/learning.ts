@@ -155,3 +155,32 @@ export async function saveBlueprint(
     client.release()
   }
 }
+export async function progress(
+  userId: string,
+  subject: string,
+  cursor?: string,
+  limit = 20,
+) {
+  const result = await getPool().query(
+    `SELECT t.topic_id,(array_agg(t.title ORDER BY a.submitted_at DESC,a.id DESC))[1] title,
+    count(*)::int total,count(*) FILTER(WHERE i.is_correct IS TRUE)::int correct,
+    count(*) FILTER(WHERE i.answer IS NOT NULL AND i.is_correct IS FALSE)::int wrong,
+    count(*) FILTER(WHERE i.answer IS NULL)::int unanswered
+    FROM attempts a JOIN subjects s ON s.id=a.subject_id JOIN attempt_items i ON i.attempt_id=a.id
+    CROSS JOIN LATERAL jsonb_to_recordset(i.topic_snapshot) AS t(topic_id uuid,title text)
+    WHERE a.user_id=$1 AND s.code=$2 AND a.status IN ('submitted','expired') AND ($3::uuid IS NULL OR t.topic_id>$3)
+    GROUP BY t.topic_id ORDER BY t.topic_id LIMIT $4`,
+    [userId, subject, cursor ?? null, limit + 1],
+  )
+  const items = result.rows.slice(0, limit).map((row) => ({
+    ...row,
+    accuracy: row.total
+      ? Math.round((row.correct / row.total) * 1000) / 10
+      : null,
+  }))
+  return {
+    subject,
+    items,
+    next_cursor: result.rows.length > limit ? items.at(-1)!.topic_id : null,
+  }
+}

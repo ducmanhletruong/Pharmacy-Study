@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { blueprintInputSchema } from '@pharmacy/api-contract'
-import { listBlueprints, saveBlueprint } from '@pharmacy/db/learning'
+import { PracticeError } from '@pharmacy/db/practice'
+import { listBlueprints, saveBlueprint, progress } from '@pharmacy/db/learning'
 import { body, handle } from '../http'
 const querySchema = z
   .object({
@@ -69,4 +70,12 @@ export function blueprintPATCH(
       ),
     'content:manage',
   )
+}
+export function progressGET(request: Request) {
+  return handle(request, async (actor) => {
+    const q = query(request)
+    if (!q.subject)
+      throw new PracticeError('validation_failed', 400, 'Cần chọn môn học')
+    return Response.json(await progress(actor.id, q.subject, q.cursor, q.limit))
+  })
 }
