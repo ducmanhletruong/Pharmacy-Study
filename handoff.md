@@ -24,7 +24,9 @@ Không cần provision/seed lại nếu DB còn nguyên; không sửa migration 
 .env/.env.db private/ignore; không in hoặc commit credential/cookie/email/PDF thật.
 Giữ nguyên repo System32, bản phase-01/private capture cũ, PG16 Windows5432 và volume/DB khác.
 
-Bước tiếp trong scope hiện tại: đối chiếu secret scan/commit/CI ở status và phản ánh bàn giao.
+Bước tiếp: owner duyệt xuất metadata OAuth/DB/local/security trong tài liệu lên GitHub để PR nháp/CI.
+Auto-review đã chặn blob trạng thái; chưa tạo remote branch/ref/PR, không đi đường khác vượt chặn.
+Các kiểm local/secret scan đạt, server health/login/providers đã đối chiếu; CI remote chưa chạy.
 Sau P05 dừng ở cổng; không tự bắt đầu P06–P12, merge hoặc deploy.
 KTCT, quy tắc làm tròn/danh pháp/rubric và phân bố GPSL còn OPEN cho phase sau.
 Rollback app bằng revert code có review; DB dùng forward migration, không drop dữ liệu owner.

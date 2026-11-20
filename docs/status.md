@@ -264,7 +264,7 @@ Kiểm đã đạt: unit225, integrationP05 sáu ca MCQ và bốn ca tự luận
 
 Production build Next16.4.6 đạt compile/TypeScript/routes, startup guard từ chối dev/test trong production đạt. Dependency security gate đạt: high0/critical0, moderate1, unmitigated0. Lượt đầu checksum patch thất bại do Windows autocrlf; thêm .gitattributes chỉ ghim *.patch LF, khôi phục đúng byte/checksum gốc, không thay policy/checksum hoặc dependency. Cả hai phiên bản picomatch qua probe hardening trước audit. Lượt E2E đầu khi resume thiếu biến executable Chrome nên không launch được; dùng Chrome đã có rồi kiểm đạt, không cài thêm browser hay tính lượt lỗi là pass.
 
-ESLint và format file thay đổi đạt. Format checkout Windows phải dùng --end-of-line auto vì baseline CRLF; CI Linux vẫn dùng lệnh chuẩn. Secret scan, commit/PR và CI remote sẽ ghi nối sau kết quả; không gọi các bước chưa chạy là đạt. OAuth server được khôi phục bằng private env cũ sau kiểm, health/login sẽ đối chiếu trước bàn giao.
+ESLint và format file thay đổi đạt. Format checkout Windows phải dùng --end-of-line auto vì baseline CRLF; CI Linux vẫn dùng lệnh chuẩn. Gitleaks8.30.1 checksum official đã đối chiếu; staged scan và lịch sử78commit trước cập nhật Markdown cuối không phát hiện secret. PDF fixture được đánh dấu binary để Git giữ nguyên xref bytes, không sửa PDF chỉ để bỏ whitespace đúng chuẩn PDF. OAuth server đã khôi phục bằng private env cũ; health=ok, /login200 và providers google/guest đã đối chiếu sau build/test.
 
 Commit boundary T01: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
 
@@ -281,3 +281,7 @@ Commit boundary T06: phần chức năng tương ứng đã ghi; các helper dù
 Commit boundary T07: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
 
 Commit boundary WRITTEN: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
+
+## Xuất bản P05 — chờ xác nhận về metadata vận hành
+
+Local phase-05 có commit theo T01–T07 và phần mở rộng tự luận. Git CLI không có credential push; chuyển sang GitHub connector. Một số blob Git đã tạo nhưng chưa tạo tree/commit remote/ref/PR. Bộ kiểm duyệt tự động từ chối blob tài liệu trạng thái vì có metadata vận hành OAuth, DB, local, CI và bảo mật chưa được user cho phép xuất cụ thể lên GitHub. Không thử đường khác để vượt từ chối. Đối chiếu ls-remote không có branch phase-05; CI remote chưa chạy, không coi là pass hoặc lỗi sản phẩm. Đã hoàn tất các bước local độc lập và chuẩn bị patch/bản tài liệu review trong outputs của chat. Cần owner xác nhận cho phép đưa code cùng các tài liệu vận hành đã xem lên repo ducmanhletruong/Pharmacy-Study để tạo PR nháp và chạy CI; không merge/deploy.
