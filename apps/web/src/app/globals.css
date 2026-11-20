@@ -739,3 +739,14 @@ progress {
 body:not([data-devtools='admin']) nextjs-portal {
   display: none !important;
 }
+
+textarea {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  font: inherit;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  resize: vertical;
+}
