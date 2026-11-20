@@ -1,22 +1,22 @@
 # Trạng thái triển khai
 
-Cập nhật: 2026-11-18 (Asia/Saigon). P03 đã triển khai, CI đạt; Google thật đã kiểm admin/login/logout, còn ma trận nhiều người dùng. Không triển khai production.
+Cập nhật: 2026-11-21 (Asia/Saigon). P03 và P05 đã hoàn tất các cổng local; CI remote được ghi riêng khi có kết quả. Không triển khai production.
 
-| Phase | Trạng thái                        | Bằng chứng / còn lại                                                                                                               |
-| ----- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| P00   | DONE                              | Next.js/pnpm/TS strict, PostgreSQL ghim digest; CI run 43074691952; PR #1 draft                                                    |
-| P01   | DONE — phạm vi spike/local        | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có |
-| P02   | DONE                              | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                       |
-| P03   | IMPLEMENTED — LIVE GOOGLE PARTIAL | T01–T06 có code; local unit104/integration14/E2E8 đạt với test provider; CI44165851119 đạt; chờ Google OAuth thật                  |
-| P04   | DONE — local workflow             | T01–T06 và AC-6 đạt; CI44437310878; PR #9 draft; Google live P03 vẫn pending riêng                                                 |
-| P05   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
-| P06   | NOT STARTED                       | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                   |
-| P07   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
-| P08   | NOT STARTED                       | Sau P04; RDKit spike đã đạt, Q2                                                                                                    |
-| P09   | NOT STARTED                       | Sau P04 và quyền hình ảnh                                                                                                          |
-| P10   | NOT STARTED                       | Sau P06/P07/P08/P09, taxonomy và Q2                                                                                                |
-| P11   | NOT STARTED                       | Sau P05/P10                                                                                                                        |
-| P12   | NOT STARTED                       | Sau P11 và quyết định hosting/phát hành                                                                                            |
+| Phase | Trạng thái                 | Bằng chứng / còn lại                                                                                                                          |
+| ----- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| P00   | DONE                       | Next.js/pnpm/TS strict, PostgreSQL ghim digest; CI run 43074691952; PR #1 draft                                                               |
+| P01   | DONE — phạm vi spike/local | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có            |
+| P02   | DONE                       | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                                  |
+| P03   | DONE — local               | Ma trận quyền, owner/Origin/DB/audit và E2E đạt; Google callback/admin/logout đã kiểm, DB có Google learner; xem bằng chứng mới nhất bên dưới |
+| P04   | DONE — local workflow      | T01–T06 và AC-6 đạt; CI44437310878; PR #9 draft; Google live P03 vẫn pending riêng                                                            |
+| P05   | DONE — local               | T01–T07 và tự luận private/chấm tay đạt; p95 HTTP10câu193ms/120câu284ms, build/security đạt; CI remote chưa chạy                              |
+| P06   | NOT STARTED                | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                              |
+| P07   | NOT STARTED                | Sau P04, Q2                                                                                                                                   |
+| P08   | NOT STARTED                | Sau P04; RDKit spike đã đạt, Q2                                                                                                               |
+| P09   | NOT STARTED                | Sau P04 và quyền hình ảnh                                                                                                                     |
+| P10   | NOT STARTED                | Sau P06/P07/P08/P09, taxonomy và Q2                                                                                                           |
+| P11   | NOT STARTED                | Sau P05/P10                                                                                                                                   |
+| P12   | NOT STARTED                | Sau P11 và quyết định hosting/phát hành                                                                                                       |
 
 ## Tasks P02
 
@@ -237,3 +237,33 @@ Thêm E2E addInitScript/MutationObserver chèn đúng hai thuộc tính trước
 Hai test trong devtools.spec.ts đạt: ma trận admin/logout/learner/guest/reload và ca Grammarly/guest/reload không có hydration console error trong page test. ESLint/Prettier hai file liên quan đạt. Có log warning từ client cũ kết nối server test trong lượt kiểm chung; không suy mọi browser đang mở đều đã tải mã mới. Owner cần tải lại trang để bỏ overlay/bundle cũ. Không claim extension Grammarly đã được sửa hoặc đã kiểm mọi extension; body-level exception chỉ chấp nhận attribute drift tại body và không áp dụng cho nội dung component bên trong.
 
 Đã khôi phục server OAuth bằng .env private hiện có. Không đổi secret, DB/schema/dependency hoặc quyền người dùng; không chạy fullsuite/build, không push/merge/deploy. RootLayout và tests/e2e/devtools.spec.ts là phần code thay đổi trong lượt này.
+
+## Đóng P03 theo tiêu chí plan — 2026-11-21
+
+User yêu cầu hoàn thành P03 và tiếp tục P05. Đối chiếu tiêu chí gốc: ma trận quyền100% đạt, owner isolation, admin denial, audit append-only/DB runtime privilege và Origin được kiểm bằng unit/integration/E2E. Lượt hiện tại unit225đạt; integration auth/security/integrity thuộc các suite cũ đạt, E2E auth7 và guest1 đạt. Đây là cookie-session thật qua Next HTTP với provider synthetic nonproduction cho các ca A/B, cookie replay, quota, CSRF và admin guards.
+
+Google provider live được xác minh ở phần trước qua admin đăng nhập/callback/reload/logout/DB revoke. Đối chiếu chỉ đọc DB local hiện có thêm identity/session Google learner đã đăng nhập và thu hồi; không xuất email/token. Kết hợp bằng chứng live provider và ma trận quyền cùng code đã kiểm, P03 DONE trong phạm vi local. Không nhận rằng tất cả ca ownership/disabled/replay đã chạy bằng nhiều tài khoản Google thật; các ca đó dùng fixture synthetic, còn checklist Google nhiều account là kiểm vận hành bổ sung chứ không tự nâng thành cổng mới ngoài plan. Không yêu cầu owner đăng nhập lặp lại để chứng minh lại cùng callback.
+
+## P05 — triển khai và phạm vi mở rộng — 2026-11-21
+
+User chốt multi-topic tính mỗi câu ở từng chủ đề đã gắn. Sau khi đọc bộ40PDF Q2, user trực tiếp chọn bổ sung thi tự luận/chấm tay theo đề gốc. Phụ lục phạm vi: implementation-plan-v0.3-p05.md. Không mởP06/P07/P08/P09 hoặc dùng AI chấm tự luận.
+
+- T01: forward0009 exam_blueprints, version/expected_version/idempotency, form admin; blueprint nháp GPSL120/3600giây. Không sửa checksum0001–0008.
+- T02: matching theo seed, không trùng, xử lý topic chồng nhau và thiếu câu fail atomic. Khóa kiểm lại selected revisions approved trước khi ghi.
+- T03: mock hạn giờ DB/server, snapshot blueprint/seed/deadline, đáp án đổi được trước hạn; response trước nộp chỉ xác nhận lưu, submit/expiry mới có giải thích. GET/sau hạn tự finalize, late answer không ghi.
+- T04: API07 thống kê owner, chỉ bài đã nộp/expired, dùng topic_snapshot; phân trang, không trộn điểm tự chấm với correctness MCQ.
+- T05: API08 chọn câu sai/chưa trả lời hoặc flagged từ lần làm gần nhất của từng câu, chỉ owner và current revision còn approved; tạo review có idempotency.
+- T06: /study có đồng hồ, resume, kết quả/lời giải, thống kê, ôn lại; Practice có đánh dấu. /written bổ sung theo yêu cầu trực tiếp: PDF/bài viết private owner, hạn giờ, lưu từng câu, resume/history, nộp/expired và nhập điểm từng câu trong thang điểm; luôn self_assessed, không tự chấm bằng AI.
+- Mở rộng tự luận: forward0010 tách written_papers/written_attempts/written_answers khỏi ngân hàng approved. PDF chỉ tải dạng attachment, no-store/nosniff/sandbox, owner guard cả đối với admin khác. Reference PDF chỉ mở sau nộp/hết hạn. Không nới trigger MCQ hoặc công khai đề người dùng.
+
+Ba đề K79 HPT/HHC2/VSKS mới nhất đã được nạp riêng vào DB local cho Google admin hiện có. HPT được tách trang đề và trang hướng dẫn đáp án; HHC2/VSKS không tự tạo đáp án thiếu. Bản scan có thể có ghi chú gốc; không tuyên bố ghi chú đã được kiểm chuyên môn. PDF gốc, trang trích và JSON/base64 private nằm ngoài repo; repo chỉ lưu metadata cấu trúc và fixturePDF tự viết.
+
+Hiệu năng: báo cáo giữ cả lượt chưa đạt. Handler10câu từ20.000câu: p95ban đầu1126,79ms, sau cache seed-rank/batch SQL/bỏ query thừa174,46ms. Đo HTTP thật qua Next dev/loopback sau cache eligibility theo nhóm và ưu tiên free candidate: p95cho10câu192,93ms, cho120câu283,78ms (30request sau3warmup mỗi lượt). Trước tối ưu nhóm,120câu742,75ms; báo cáo before vẫn giữ. Không suy đây là p95 production/4G, không tách riêng đóng góp từng tối ưu. DB benchmark synthetic riêng, không copy DB thật; report ở performance/.
+
+Kiểm đã đạt: unit225, integrationP05 sáu ca MCQ và bốn ca tự luận, baseline integration48 (suite practice cần fixture bỏ APP_ORIGIN private để kiểm fallback Host đúng; không nới guard). Đây là kết quả các lượt có mục tiêu cộng lại, không phải một lần full integration58. E2E hành trìnhMCQ, deadline và tự luận đã đạt theo từng lượt; ca dài admin+learner được tách thành hai hành vi thay vì tăng timeout sau timeout ở đóng context. Hai test sau tách đạt6,2s/12,2s. E2E tự luận kiểm upload vượt16KiB/resume/owner/khóa reference/điểm tự chấm. Bổ sung assertion history không lộ cho owner khác đã đạt riêng1test,3skipped.
+
+Production build Next16.4.6 đạt compile/TypeScript/routes, startup guard từ chối dev/test trong production đạt. Dependency security gate đạt: high0/critical0, moderate1, unmitigated0. Lượt đầu checksum patch thất bại do Windows autocrlf; thêm .gitattributes chỉ ghim *.patch LF, khôi phục đúng byte/checksum gốc, không thay policy/checksum hoặc dependency. Cả hai phiên bản picomatch qua probe hardening trước audit. Lượt E2E đầu khi resume thiếu biến executable Chrome nên không launch được; dùng Chrome đã có rồi kiểm đạt, không cài thêm browser hay tính lượt lỗi là pass.
+
+ESLint và format file thay đổi đạt. Format checkout Windows phải dùng --end-of-line auto vì baseline CRLF; CI Linux vẫn dùng lệnh chuẩn. Secret scan, commit/PR và CI remote sẽ ghi nối sau kết quả; không gọi các bước chưa chạy là đạt. OAuth server được khôi phục bằng private env cũ sau kiểm, health/login sẽ đối chiếu trước bàn giao.
+
+Commit boundary T01: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.

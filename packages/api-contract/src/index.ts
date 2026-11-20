@@ -157,3 +157,5 @@ export type CreateAttempt = z.infer<typeof createAttemptSchema>
 export type Attempt = z.infer<typeof attemptSchema>
 export type Feedback = z.infer<typeof feedbackSchema>
 export type Result = z.infer<typeof resultSchema>
+
+export * from './learning'

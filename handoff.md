@@ -1,38 +1,30 @@
-# Bàn giao — Google OAuth local đã vào được
+# Bàn giao — P03/P05 local
 
-Trạng thái/bằng chứng: docs/status.md; checklist: docs/runbooks/google-login.md.
+Trạng thái duy nhất/bằng chứng: docs/status.md; phạm vi mở rộng: docs/implementation-plan-v0.3-p05.md.
+Yêu cầu owner: đóng P03, làm P05; multi-topic tính mỗi topic, GPSL120/60; thêm tự luận/chấm tay.
 Repo: C:/Users/ADMIN/Documents/Codex/2026-11-21/github-plugin-github-openai-curated-remote/work/Pharmacy-Study.
-Branch feat-open-access, HEAD3557814; PR10 đã merge vào phase-04 theo GitHub.
-Repo System32 và repo phase-01/private capture cũ giữ nguyên.
-Google thật: admin vào trang học và /admin, reload giữ phiên, logout thu hồi DB đã kiểm.
-Google learner thứ hai/cách ly attempt/disabled/replay cookie thật chưa kiểm; P03 chưa đóng toàn bộ.
-Tab đang mở http://localhost:3001/login; owner đã được logout để kiểm revoke.
-Server pnpm dev và DB vẫn chạy; server session35115 chỉ dùng trong lượt hiện tại.
-Không cần chạy lại migration/provision/seed khi resume nếu DB hiện tại còn nguyên.
+Branch phase-05; base feat-open-access3557814; PR10 đã merge phase-04; chưa merge/deploy thay đổi hiện tại.
+P03 đóng local: Google callback/admin/logout thật + ma trận synthetic; không nhận mọi ca là nhiều account Google live.
+P05 T01–T07 và tự luận private đã đạt cổng local; xem status cho kiểm chứng/CI chính xác.
+Luồng /study: blueprint, mock/hạn giờ server, progress, review; /written: PDF private, lưu, nộp, tự chấm/history.
+GPSL120/3600giây còn draft vì chưa có bank đủ approved; không tự tạo nội dung hoặc tỉ lệ môn.
+Ba đề K79 HPT/HHC2/VSKS nạp riêng cho Google admin; PDF/text/ảnh/base64 nguồn nằm ngoài Git.
+HPT reference chỉ tải sau nộp; HHC2/VSKS không tự sinh đáp án thiếu. Điểm self_assessed không phải AI.
+Runbook: docs/runbooks/learner-workflows.md; Q2: docs/q2-exam-profiles.md.
+Handler p95=174ms là đề10câu từ20k, chưa có TCP; HTTP local mới nhất10câu193ms/120câu284ms.
+Không coi benchmark local là SLA production; báo cáo before vẫn giữ trong docs/performance/.
 
-Node24 có sẵn:
-C:/Users/ADMIN/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe.
-Prepend thư mục Node này vào PATH trong phiên; pnpm trong repo dùng11.25.0.
-Nếu web dừng: vào repo rồi pnpm dev (localhost:3001).
-Docker CLI: C:/Users/ADMIN/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe.
-DB: Compose project pharmacy-oauth-resume, volume riêng, bind127.0.0.1:55432.
-Nếu DB dừng: docker compose --env-file .env -p pharmacy-oauth-resume -f infra/docker-compose.yml up -d --wait.
-.env/.env.db/.env.provision.json private và bị ignore; không in/commit secret.
-Không đổi PG Windows5432, DB Cloud hoặc volume pharmacy-study cũ.
+Runtime Node24: C:/Users/ADMIN/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin.
+Prepend Node vào PATH, pnpm trong repo11.25.0; không dùng Node26 global.
+Server OAuth pnpm dev đang chạy localhost:3001; executor session1034 chỉ có giá trị lượt hiện tại.
+Nếu server dừng: cd repo rồi pnpm dev, dùng private env hiện có; không đặt AUTH_MODE=test.
+Docker: C:/Users/ADMIN/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe.
+Compose project pharmacy-oauth-resume, volume riêng, bind127.0.0.1:55432; migrations0001–0010 đã áp.
+Không cần provision/seed lại nếu DB còn nguyên; không sửa migration đã áp/xóa volume.
+.env/.env.db private/ignore; không in hoặc commit credential/cookie/email/PDF thật.
+Giữ nguyên repo System32, bản phase-01/private capture cũ, PG16 Windows5432 và volume/DB khác.
 
-Bước tiếp: owner đăng nhập Google bằng tài khoản learner không thuộc ADMIN_EMAILS.
-Sau đó kiểm learner không vào admin, ownership giữa hai learner và admin/learner theo runbook.
-Chỉ ghi pass khi đã đo đúng trường hợp, không suy live từ CI/mock.
-Không xóa volume/sửa migration đã áp, merge/deploy hoặc tự mởP05.
-
-## Thay đổi mới nhất — DevTools
-
-Chỉ admin có dấu data-devtools từ server trong development; login/guest/learner ẩn portal.
-File sửa: apps/web/src/app/layout.tsx, globals.css; test: tests/e2e/devtools.spec.ts.
-E2E mục tiêu1/1 đạt qua admin/logout/learner/guest/reload; không kiểm Google lại.
-OAuth server đã khôi phục, executor session35115; /login không còn DevTools.
-Hydration trong ảnh đã tái hiện: Grammarly thêm hai thuộc tính body; đã sửa tại body.
-Đây là điều khiển hiển thị; không coi next dev endpoints đã có ACL admin.
-
-Grammarly regression đỏ trước sửa, xanh sau sửa; hai E2E DevTools đạt, xem status.
-Owner tải lại trang để loại overlay/bundle cũ; OAuth server đã khôi phục.
+Bước tiếp trong scope hiện tại: đối chiếu secret scan/commit/CI ở status và phản ánh bàn giao.
+Sau P05 dừng ở cổng; không tự bắt đầu P06–P12, merge hoặc deploy.
+KTCT, quy tắc làm tròn/danh pháp/rubric và phân bố GPSL còn OPEN cho phase sau.
+Rollback app bằng revert code có review; DB dùng forward migration, không drop dữ liệu owner.
