@@ -292,6 +292,7 @@ export function Practice({
           <span className="brand-symbol">P</span>Pharmacy<span>Study</span>
         </Link>
         <div className="account">
+          <Link href="/study">Thi thử · Thống kê · Ôn tập</Link>
           <span title={member.name}>{member.name}</span>
           {member.role === 'admin' && <Link href="/admin">Quản trị</Link>}
           {canSignOut ? (
@@ -422,6 +423,32 @@ export function Practice({
                   }}
                 />
               ))}
+              <button
+                className="secondary"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true)
+                  setError('')
+                  try {
+                    await request(
+                      `/attempts/${attempt.id}/items/${item.position}`,
+                      'PUT',
+                      { flagged: !item.flagged },
+                    )
+                    setAttempt(
+                      attemptSchema.parse(
+                        await request(`/attempts/${attempt.id}`),
+                      ),
+                    )
+                  } catch (reason) {
+                    setError((reason as Error).message)
+                  } finally {
+                    setBusy(false)
+                  }
+                }}
+              >
+                {item.flagged ? 'Bỏ đánh dấu' : 'Đánh dấu ôn lại'}
+              </button>
               <QuestionReport
                 questionId={item.question_id}
                 revisionId={item.revision_id}

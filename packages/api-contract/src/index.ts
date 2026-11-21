@@ -23,16 +23,32 @@ export const topicSchema = z
 export const createAttemptSchema = z
   .object({
     subject: z.string().min(1).max(80),
-    mode: z.literal('practice'),
+    mode: z.enum(['practice', 'mock', 'review']),
     topic_ids: z.array(uuid).max(100).optional(),
     type: z.literal('mcq').default('mcq'),
     difficulty: z.number().int().min(1).max(3).optional(),
     count: z.number().int().min(1).max(10).default(10),
+    blueprint_id: uuid.optional(),
+    source: z.enum(['wrong', 'flagged']).optional(),
   })
   .strict()
+  .superRefine((value, ctx) => {
+    if (
+      (value.mode === 'mock') !== Boolean(value.blueprint_id) ||
+      (value.mode === 'review') !== Boolean(value.source)
+    )
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Mode requires its matching blueprint or review source',
+      })
+  })
 export const answerSchema = z
-  .object({ answer: label, flagged: z.boolean().optional() })
+  .object({ answer: label.optional(), flagged: z.boolean().optional() })
   .strict()
+  .refine(
+    (value) => value.answer !== undefined || value.flagged !== undefined,
+    'Answer or flag required',
+  )
 export const sourceSchema = z
   .object({ title: z.string(), locator: z.string() })
   .strict()
@@ -48,8 +64,10 @@ export const attemptSchema = z
   .object({
     id: uuid,
     subject: z.string(),
-    mode: z.literal('practice'),
+    mode: z.enum(['practice', 'mock', 'review']),
     status: z.enum(['in_progress', 'submitted', 'expired']),
+    deadline_at: z.string().nullable().optional(),
+    server_time: z.string().optional(),
     items: z.array(
       z
         .object({
@@ -91,6 +109,17 @@ export const resultSchema = z
     correct: z.number().int().nonnegative(),
     unanswered: z.number().int().nonnegative(),
     score: z.number().min(0).max(10),
+    outcome: z.enum(['submitted', 'expired']).optional(),
+    feedback: z
+      .array(
+        z
+          .object({
+            position: z.number().int().positive(),
+            feedback: feedbackSchema,
+          })
+          .strict(),
+      )
+      .optional(),
     by_topic: z.array(
       z
         .object({
@@ -157,3 +186,7 @@ export type CreateAttempt = z.infer<typeof createAttemptSchema>
 export type Attempt = z.infer<typeof attemptSchema>
 export type Feedback = z.infer<typeof feedbackSchema>
 export type Result = z.infer<typeof resultSchema>
+
+export * from './learning'
+
+export * from './written'

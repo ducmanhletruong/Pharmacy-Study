@@ -110,6 +110,34 @@ try {
       [qid, id(2, fixture.topic + 1), id(1, 1)],
     )
   }
+  await client.query(
+    `INSERT INTO exam_blueprints(id,subject_id,name,status,spec)
+    VALUES('00000000-0000-4000-8000-000000000505',$1,'Đề tổng hợp minh họa','active',$2::jsonb)
+    ON CONFLICT(id) DO NOTHING`,
+    [
+      id(1, 1),
+      JSON.stringify({
+        duration_seconds: 600,
+        deadline_policy: 'expired_grade_saved',
+        slots: [{ count: 10 }],
+      }),
+    ],
+  )
+  await client.query(
+    `INSERT INTO subjects(code,name) VALUES('gpsl','Giải phẫu sinh lý') ON CONFLICT(code) DO NOTHING`,
+  )
+  await client.query(
+    `INSERT INTO exam_blueprints(id,subject_id,name,status,spec)
+    SELECT '00000000-0000-4000-8000-000000000506',id,'GPSL — cấu hình 120 câu / 60 phút (chờ ngân hàng phù hợp)','draft',$1::jsonb
+    FROM subjects WHERE code='gpsl' ON CONFLICT(id) DO NOTHING`,
+    [
+      JSON.stringify({
+        duration_seconds: 3600,
+        deadline_policy: 'expired_grade_saved',
+        slots: [{ count: 120 }],
+      }),
+    ],
+  )
   await client.query('COMMIT')
   console.log(
     'Seed ready: 1 synthetic subject, 10 MCQs; existing attempts preserved.',

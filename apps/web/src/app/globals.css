@@ -732,3 +732,21 @@ progress {
   padding-top: 16px;
   border-top: 1px solid var(--line);
 }
+
+/* Next.js development UI is visible only for the server-verified admin.
+   Hide the portal by default, including before hydration and after logout.
+   This controls presentation; development servers are still local-only. */
+body:not([data-devtools='admin']) nextjs-portal {
+  display: none !important;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  font: inherit;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  resize: vertical;
+}

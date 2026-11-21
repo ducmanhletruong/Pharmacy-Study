@@ -1,22 +1,22 @@
 # Trạng thái triển khai
 
-Cập nhật: 2026-11-18 (Asia/Saigon). P03 đã triển khai, CI đạt, còn kiểm Google thật. Không triển khai production.
+Cập nhật: 2026-11-21 (Asia/Saigon). P03 và P05 đã hoàn tất các cổng local; CI remote được ghi riêng khi có kết quả. Không triển khai production.
 
-| Phase | Trạng thái                        | Bằng chứng / còn lại                                                                                                               |
-| ----- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| P00   | DONE                              | Next.js/pnpm/TS strict, PostgreSQL ghim digest; CI run 43074691952; PR #1 draft                                                    |
-| P01   | DONE — phạm vi spike/local        | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có |
-| P02   | DONE                              | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                       |
-| P03   | IMPLEMENTED — LIVE GOOGLE PENDING | T01–T06 có code; local unit104/integration14/E2E8 đạt với test provider; CI44165851119 đạt; chờ Google OAuth thật                  |
-| P04   | DONE — local workflow             | T01–T06 và AC-6 đạt; CI44437310878; PR #9 draft; Google live P03 vẫn pending riêng                                                 |
-| P05   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
-| P06   | NOT STARTED                       | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                   |
-| P07   | NOT STARTED                       | Sau P04, Q2                                                                                                                        |
-| P08   | NOT STARTED                       | Sau P04; RDKit spike đã đạt, Q2                                                                                                    |
-| P09   | NOT STARTED                       | Sau P04 và quyền hình ảnh                                                                                                          |
-| P10   | NOT STARTED                       | Sau P06/P07/P08/P09, taxonomy và Q2                                                                                                |
-| P11   | NOT STARTED                       | Sau P05/P10                                                                                                                        |
-| P12   | NOT STARTED                       | Sau P11 và quyết định hosting/phát hành                                                                                            |
+| Phase | Trạng thái                 | Bằng chứng / còn lại                                                                                                                          |
+| ----- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| P00   | DONE                       | Next.js/pnpm/TS strict, PostgreSQL ghim digest; CI run 43074691952; PR #1 draft                                                               |
+| P01   | DONE — phạm vi spike/local | 15 observation trên 12/11, 13/11, 17/11; owner duyệt grounding/điều khoản; ADR-0006 local và ADR-0007 OpenAI theo quyết định đã có            |
+| P02   | DONE                       | 10 câu tổng hợp, API-01..06, PostgreSQL, UI; local và CI run 44133096057 đạt                                                                  |
+| P03   | DONE — local               | Ma trận quyền, owner/Origin/DB/audit và E2E đạt; Google callback/admin/logout đã kiểm, DB có Google learner; xem bằng chứng mới nhất bên dưới |
+| P04   | DONE — local workflow      | T01–T06 và AC-6 đạt; CI44437310878; PR #9 draft; Google live P03 vẫn pending riêng                                                            |
+| P05   | DONE — local               | T01–T07 và tự luận private/chấm tay đạt; p95 HTTP10câu193ms/120câu284ms, build/security đạt; CI remote chưa chạy                              |
+| P06   | NOT STARTED                | Sau P04/P01; đường cấp quyền AI, Q6 và adapter còn phải xác minh                                                                              |
+| P07   | NOT STARTED                | Sau P04, Q2                                                                                                                                   |
+| P08   | NOT STARTED                | Sau P04; RDKit spike đã đạt, Q2                                                                                                               |
+| P09   | NOT STARTED                | Sau P04 và quyền hình ảnh                                                                                                                     |
+| P10   | NOT STARTED                | Sau P06/P07/P08/P09, taxonomy và Q2                                                                                                           |
+| P11   | NOT STARTED                | Sau P05/P10                                                                                                                                   |
+| P12   | NOT STARTED                | Sau P11 và quyết định hosting/phát hành                                                                                                       |
 
 ## Tasks P02
 
@@ -185,3 +185,103 @@ Code `9685363ba2f79fab123738bf7fdfb767c6f77173`: [CI44448319673 SUCCESS](https:/
 - Production build/startup guards, classifier/recorder/evaluator, dependency gate và secret scan đạt.
 
 Google verified callback được kiểm bằng mock, chưa kiểm OAuth Google thật. Phiên guest không đồng bộ/merge vào Google hoặc phục hồi sau logout/hết hạn/mất cookie; DB chưa có cleanup tự động. Không thay private env, nhập nội dung chuyên môn hoặc tự mở P05. Sau CI chỉ cập nhật Markdown kết quả/bàn giao, không chạy lại local tests/build cho tài liệu. Hướng dẫn cấu hình mới ở [runbook](runbooks/google-login.md).
+
+## Tiếp tục kiểm OAuth thực tế — 2026-11-21 (Asia/Saigon)
+
+Owner đã nhập cấu hình OAuth vào .env Cloud. Agent khởi động dev tại cổng3001 và quan sát login HTTP200, health OK, providers google/guest; trình duyệt Cloud hiện hai nút đăng nhập. Đây là bằng chứng khởi động trong lượt trước, không chứng minh server còn chạy sau resume hoặc Google callback thành công. Không ghi secret hoặc client ID vào tài liệu.
+
+Truy cập từ Windows chưa thành công: localhost Windows không trỏ Cloud; môi trường chỉ báo portal SSH22, chưa có HTTP preview. Yêu cầu mở panel/handoff trả queued hoặc không hiện phía user; ảnh xác nhận tab trống, user không tìm thấy mục SSH/Connect. Không coi yêu cầu mở panel là đã bàn giao thành công, không lặp hướng dẫn tìm nút chưa có bằng chứng.
+
+Chuyển sang hướng dẫn chạy local Windows theo nhánh feat-open-access. Log owner: Docker chưa nhận lệnh; migration/provision/seed/dev đều lỗi28P01 với pharmacy_dev; Node26.7.0 chỉ báo engine warning, chưa có bằng chứng là nguyên nhân lỗi. Dự án/CI vẫn kiểm trên Node24; chưa nâng dải hỗ trợ Node26. Đã đề xuất DB riêng cổng55432 tránh PG đang có, chưa xác nhận owner đã áp dụng.
+
+Blocker mới nhất: ảnh installer Docker Desktop báo Virtual Machine Platform chưa bật; per-user installer không thể bật vì cần quyền admin. Đã hướng dẫn PowerShell administrator chạy wsl --install, restart và cài lại Docker; chưa có kết quả thực hiện. Bước tiếp: kiểm wsl --status, docker --version và docker compose version; chỉ khi engine sẵn sàng mới compose/migrate/provision/seed/dev từng lệnh. Nếu .env.db local đã tồn tại, đối chiếu đúng DB/port trước migrate, không copy credential DB Cloud vào Windows. Google OAuth live vẫn PENDING, không merge/deploy hoặc mở P05.
+
+## Tiếp nối trên Windows — 2026-11-21
+
+Đọc đủ ba bản bàn giao người dùng cung cấp và kết nối GitHub. PR #10 hiện đã merged vào phase-04 ngày 2026-11-21 (Asia/Saigon), merge commit 12a2448db0c4edb227d9b754e5ac549c762ee983; trạng thái draft trong các mục trước là lịch sử, không còn hiện hành. Không thực hiện merge trong lượt này.
+
+Repo Windows đã dùng nằm ở C:/Windows/System32/Pharmacy-Study-local/Pharmacy-Study-local. Giữ nguyên repo đó, clone feat-open-access tại work/Pharmacy-Study của chat hiện tại, HEAD 355781419ebe5ad3a2bf411f88be211414ac6638. Repo phase-01 có thay đổi chưa commit và private capture ở chat cũ cũng được giữ nguyên.
+
+WSL đã có docker-desktop/default version2; Docker engine29.9.3 và Compose5.7.0 hoạt động qua executable trong AppData/Local/Programs/DockerDesktop/resources/bin. PATH của phiên chưa có docker. Node24.22.3 có sẵn trong Codex runtime; dùng cùng pnpm11.25.0, frozen install thành công. Không nâng Node hoặc dependency của dự án.
+
+Chuyển riêng cấu hình OAuth/admin local đã có sang .env private mới, giữ nguyên origin/callback localhost:3001, tạo session secret và bootstrap DB password mới cho môi trường cô lập. Không in hoặc commit credential. Compose project pharmacy-oauth-resume, volume riêng pharmacy-oauth-resume_postgres_data, bind127.0.0.1:55432; DB healthy. Migrations0001–0008, provision và seed1môn/10MCQ tổng hợp đạt. Không thay PG16 Windows cổng5432, container/volume pharmacy-study cũ hoặc DB Cloud.
+
+pnpm dev chạy tại localhost:3001; GET/api/v1/health trả200 với status=ok, GET/login200, providers gồm google/guest. Đây là startup và cấu hình local, chưa phải kết quả Google callback. Không chạy lại full tests/build vì không sửa code sản phẩm; không mở P05 hoặc deploy.
+
+Browser local đã hiển thị Pharmacy Study với hai nút Google/ẩn danh. Nhấn Google chuyển đến accounts.google.com và trang chọn tài khoản cho ứng dụng Pharmacy Study, redirect_uri đúng localhost:3001/api/auth/callback/google. Dừng trước chọn tài khoản/xác thực và bàn giao cho owner; chưa có callback/session thành công. Google live vẫn PENDING. Không lưu URL OAuth/state/code, client ID, email, cookie hoặc token trong báo cáo.
+
+## Google OAuth live — admin/login/logout đã xác minh — 2026-11-21
+
+Owner hoàn tất Google trực tiếp trong tab bàn giao, agent quan sát callback trở về localhost:3001 và trang học hiển thị người dùng đã đăng nhập cùng liên kết Quản trị. /admin truy cập được, tải lại vẫn giữ phiên và ngân hàng10câu tổng hợp tải thành công. Đối chiếu DB chỉ xuất aggregate: provider google, role admin, sessions1/active1/revoked0 trước logout.
+
+Nhấn Đăng xuất từ UI: về /login, DB chuyển sessions1/active0/revoked1; audit có auth.sign_in1 và auth.sign_out1. Truy cập /admin sau logout trả trang404 theo cơ chế che route; không còn truy cập khu vực quản trị. Không copy/replay cookie thật nên không claim đã kiểm cookie replay bằng Google thật. Server và DB giữ chạy, tab cuối mở /login để owner đăng nhập lại khi cần.
+
+Kết quả: Google OAuth thật và phân quyền admin/reload/logout/DB revoke đã đạt trong môi trường local này. P03 chưa đóng toàn bộ: chưa kiểm Google learner ngoài danh sách admin, hai learner cách ly attempt, admin không đọc attempt người khác, disabled user hoặc replay cookie thật. Các kiểm synthetic/CI cũ giữ nguyên bằng chứng, không ghi thành live mới. Không sửa app/schema/dependency, không chạy lại full suite/build, không push/merge/deploy hoặc mởP05.
+
+## Giao diện DevTools theo quyền — 2026-11-21
+
+Theo yêu cầu owner từ bốn ảnh Chrome: Next.js DevTools trên trang login/guest/learner phải ẩn, admin vẫn thấy trong development. RootLayout đọc currentActor phía server chỉ trong NODE_ENV=development, đánh dấu body khi role admin; CSS mặc định ẩn nextjs-portal với mọi phiên khác, gồm trước hydration và sau logout. Production không đánh dấu admin/devtools. Không thay đổi quyền API, OAuth, session hoặc schema. Đây là điều khiển hiển thị của development UI, không phải ACL cho dev server hoặc cơ chế loại mã phát triển khỏi client; dev server vẫn chỉ bind local.
+
+Đọc hướng dẫn bundled của Next16.4.6: devIndicators chỉ là cấu hình toàn dự án, không hỗ trợ role theo request. Không dùng devIndicators=false vì sẽ tắt cả admin; không sửa dependency/node_modules. File sửa: apps/web/src/app/layout.tsx, globals.css; thêm tests/e2e/devtools.spec.ts.
+
+Kiểm chứng: format và ESLint file liên quan đạt. E2E Chromium đúng1test đạt, gồm khách/login ẩn, admin thấy sau login/reload, logout ẩn ngay, learner ẩn sau login/reload, guest ẩn sau login/reload. Lượt đầu ERR_ABORTED do helper điều hướng /login trùng; bỏ điều hướng dư trong test rồi kiểm lại, giữ nguyên assertion. Không tính lượt đầu là pass. Dùng tài khoản synthetic provider test, không nhận là kiểm lại Google live. Server OAuth private đã được khôi phục tại localhost:3001, session35115 của executor hiện tại.
+
+Tab mới IAB xác nhận login không có DevTools trong accessibility tree; không quan sát hydration error ở log của tab sạch này. Chưa xác định căn nguyên hydration warning từ ảnh Chrome owner, không khẳng định cảnh báo đó đã sửa; không dùng suppressHydrationWarning. Ảnh sau sửa ở outputs/login-without-devtools.jpg. Không build/fullsuite vì thay đổi hẹp đã kiểm bằng dev E2E thực tế; không push/merge/deploy hoặc mởphase mới.
+
+## Hydration do Grammarly — 2026-11-21
+
+Ảnh owner bổ sung đã xác định diff ở body: data-new-gr-c-s-check-loaded và data-gr-ext-installed được extension thêm trước hydration; data-devtools=admin không lệch. Đính chính mục trước: nguyên nhân cảnh báo này giờ đã xác định và tái hiện có kiểm soát.
+
+Thêm E2E addInitScript/MutationObserver chèn đúng hai thuộc tính trước React hydration, thu console error. Trước sửa, test thất bại đúng assertion hydrationErrors với diff trùng ảnh owner ở /login và reload trang học. Sau sửa, thêm suppressHydrationWarning chỉ trên body cùng comment giải thích extension; không thêm trên html hoặc component con, không đổi role/server auth/CSS DevTools.
+
+Hai test trong devtools.spec.ts đạt: ma trận admin/logout/learner/guest/reload và ca Grammarly/guest/reload không có hydration console error trong page test. ESLint/Prettier hai file liên quan đạt. Có log warning từ client cũ kết nối server test trong lượt kiểm chung; không suy mọi browser đang mở đều đã tải mã mới. Owner cần tải lại trang để bỏ overlay/bundle cũ. Không claim extension Grammarly đã được sửa hoặc đã kiểm mọi extension; body-level exception chỉ chấp nhận attribute drift tại body và không áp dụng cho nội dung component bên trong.
+
+Đã khôi phục server OAuth bằng .env private hiện có. Không đổi secret, DB/schema/dependency hoặc quyền người dùng; không chạy fullsuite/build, không push/merge/deploy. RootLayout và tests/e2e/devtools.spec.ts là phần code thay đổi trong lượt này.
+
+## Đóng P03 theo tiêu chí plan — 2026-11-21
+
+User yêu cầu hoàn thành P03 và tiếp tục P05. Đối chiếu tiêu chí gốc: ma trận quyền100% đạt, owner isolation, admin denial, audit append-only/DB runtime privilege và Origin được kiểm bằng unit/integration/E2E. Lượt hiện tại unit225đạt; integration auth/security/integrity thuộc các suite cũ đạt, E2E auth7 và guest1 đạt. Đây là cookie-session thật qua Next HTTP với provider synthetic nonproduction cho các ca A/B, cookie replay, quota, CSRF và admin guards.
+
+Google provider live được xác minh ở phần trước qua admin đăng nhập/callback/reload/logout/DB revoke. Đối chiếu chỉ đọc DB local hiện có thêm identity/session Google learner đã đăng nhập và thu hồi; không xuất email/token. Kết hợp bằng chứng live provider và ma trận quyền cùng code đã kiểm, P03 DONE trong phạm vi local. Không nhận rằng tất cả ca ownership/disabled/replay đã chạy bằng nhiều tài khoản Google thật; các ca đó dùng fixture synthetic, còn checklist Google nhiều account là kiểm vận hành bổ sung chứ không tự nâng thành cổng mới ngoài plan. Không yêu cầu owner đăng nhập lặp lại để chứng minh lại cùng callback.
+
+## P05 — triển khai và phạm vi mở rộng — 2026-11-21
+
+User chốt multi-topic tính mỗi câu ở từng chủ đề đã gắn. Sau khi đọc bộ40PDF Q2, user trực tiếp chọn bổ sung thi tự luận/chấm tay theo đề gốc. Phụ lục phạm vi: implementation-plan-v0.3-p05.md. Không mởP06/P07/P08/P09 hoặc dùng AI chấm tự luận.
+
+- T01: forward0009 exam_blueprints, version/expected_version/idempotency, form admin; blueprint nháp GPSL120/3600giây. Không sửa checksum0001–0008.
+- T02: matching theo seed, không trùng, xử lý topic chồng nhau và thiếu câu fail atomic. Khóa kiểm lại selected revisions approved trước khi ghi.
+- T03: mock hạn giờ DB/server, snapshot blueprint/seed/deadline, đáp án đổi được trước hạn; response trước nộp chỉ xác nhận lưu, submit/expiry mới có giải thích. GET/sau hạn tự finalize, late answer không ghi.
+- T04: API07 thống kê owner, chỉ bài đã nộp/expired, dùng topic_snapshot; phân trang, không trộn điểm tự chấm với correctness MCQ.
+- T05: API08 chọn câu sai/chưa trả lời hoặc flagged từ lần làm gần nhất của từng câu, chỉ owner và current revision còn approved; tạo review có idempotency.
+- T06: /study có đồng hồ, resume, kết quả/lời giải, thống kê, ôn lại; Practice có đánh dấu. /written bổ sung theo yêu cầu trực tiếp: PDF/bài viết private owner, hạn giờ, lưu từng câu, resume/history, nộp/expired và nhập điểm từng câu trong thang điểm; luôn self_assessed, không tự chấm bằng AI.
+- Mở rộng tự luận: forward0010 tách written_papers/written_attempts/written_answers khỏi ngân hàng approved. PDF chỉ tải dạng attachment, no-store/nosniff/sandbox, owner guard cả đối với admin khác. Reference PDF chỉ mở sau nộp/hết hạn. Không nới trigger MCQ hoặc công khai đề người dùng.
+
+Ba đề K79 HPT/HHC2/VSKS mới nhất đã được nạp riêng vào DB local cho Google admin hiện có. HPT được tách trang đề và trang hướng dẫn đáp án; HHC2/VSKS không tự tạo đáp án thiếu. Bản scan có thể có ghi chú gốc; không tuyên bố ghi chú đã được kiểm chuyên môn. PDF gốc, trang trích và JSON/base64 private nằm ngoài repo; repo chỉ lưu metadata cấu trúc và fixturePDF tự viết.
+
+Hiệu năng: báo cáo giữ cả lượt chưa đạt. Handler10câu từ20.000câu: p95ban đầu1126,79ms, sau cache seed-rank/batch SQL/bỏ query thừa174,46ms. Đo HTTP thật qua Next dev/loopback sau cache eligibility theo nhóm và ưu tiên free candidate: p95cho10câu192,93ms, cho120câu283,78ms (30request sau3warmup mỗi lượt). Trước tối ưu nhóm,120câu742,75ms; báo cáo before vẫn giữ. Không suy đây là p95 production/4G, không tách riêng đóng góp từng tối ưu. DB benchmark synthetic riêng, không copy DB thật; report ở performance/.
+
+Kiểm đã đạt: unit225, integrationP05 sáu ca MCQ và bốn ca tự luận, baseline integration48 (suite practice cần fixture bỏ APP_ORIGIN private để kiểm fallback Host đúng; không nới guard). Đây là kết quả các lượt có mục tiêu cộng lại, không phải một lần full integration58. E2E hành trìnhMCQ, deadline và tự luận đã đạt theo từng lượt; ca dài admin+learner được tách thành hai hành vi thay vì tăng timeout sau timeout ở đóng context. Hai test sau tách đạt6,2s/12,2s. E2E tự luận kiểm upload vượt16KiB/resume/owner/khóa reference/điểm tự chấm. Bổ sung assertion history không lộ cho owner khác đã đạt riêng1test,3skipped.
+
+Production build Next16.4.6 đạt compile/TypeScript/routes, startup guard từ chối dev/test trong production đạt. Dependency security gate đạt: high0/critical0, moderate1, unmitigated0. Lượt đầu checksum patch thất bại do Windows autocrlf; thêm .gitattributes chỉ ghim *.patch LF, khôi phục đúng byte/checksum gốc, không thay policy/checksum hoặc dependency. Cả hai phiên bản picomatch qua probe hardening trước audit. Lượt E2E đầu khi resume thiếu biến executable Chrome nên không launch được; dùng Chrome đã có rồi kiểm đạt, không cài thêm browser hay tính lượt lỗi là pass.
+
+ESLint và format file thay đổi đạt. Format checkout Windows phải dùng --end-of-line auto vì baseline CRLF; CI Linux vẫn dùng lệnh chuẩn. Gitleaks8.30.1 checksum official đã đối chiếu; staged scan và lịch sử78commit trước cập nhật Markdown cuối không phát hiện secret. PDF fixture được đánh dấu binary để Git giữ nguyên xref bytes, không sửa PDF chỉ để bỏ whitespace đúng chuẩn PDF. OAuth server đã khôi phục bằng private env cũ; health=ok, /login200 và providers google/guest đã đối chiếu sau build/test.
+
+Commit boundary T01: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
+
+Commit boundary T02: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
+
+Commit boundary T03: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
+
+Commit boundary T04: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
+
+Commit boundary T05: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
+
+Commit boundary T06: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
+
+Commit boundary T07: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
+
+Commit boundary WRITTEN: phần chức năng tương ứng đã ghi; các helper dùng chung được đưa trước khi route/UI sử dụng. Bằng chứng local ở mục P05, CI ghi riêng khi có kết quả.
+
+## Xuất bản P05 — chờ xác nhận về metadata vận hành
+
+Local phase-05 có commit theo T01–T07 và phần mở rộng tự luận. Git CLI không có credential push; chuyển sang GitHub connector. Một số blob Git đã tạo nhưng chưa tạo tree/commit remote/ref/PR. Bộ kiểm duyệt tự động từ chối blob tài liệu trạng thái vì có metadata vận hành OAuth, DB, local, CI và bảo mật chưa được user cho phép xuất cụ thể lên GitHub. Không thử đường khác để vượt từ chối. Đối chiếu ls-remote không có branch phase-05; CI remote chưa chạy, không coi là pass hoặc lỗi sản phẩm. Đã hoàn tất các bước local độc lập và chuẩn bị patch/bản tài liệu review trong outputs của chat. Cần owner xác nhận cho phép đưa code cùng các tài liệu vận hành đã xem lên repo ducmanhletruong/Pharmacy-Study để tạo PR nháp và chạy CI; không merge/deploy.

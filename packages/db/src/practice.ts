@@ -1,3 +1,9 @@
+import {
+  assembleExam,
+  InsufficientQuestions,
+  type Candidate,
+} from '@pharmacy/core/exam'
+import { blueprintSpecSchema } from '@pharmacy/api-contract'
 import { createHash, randomUUID } from 'node:crypto'
 import { appendAudit } from './audit'
 import type pg from 'pg'
@@ -99,6 +105,9 @@ async function owned(db: Db, id: string, userId: string, lock = false) {
     id: string
     subject_id: string
     status: 'in_progress' | 'submitted' | 'expired'
+    mode: 'practice' | 'mock' | 'review'
+    deadline_at: Date | null
+    blueprint_snapshot: unknown
     result: unknown
     request_hash: string
   }>(
@@ -111,7 +120,15 @@ async function owned(db: Db, id: string, userId: string, lock = false) {
   return attempt
 }
 async function readAttempt(db: Db, id: string, userId: string) {
-  const attempt = await owned(db, id, userId)
+  let attempt = await owned(db, id, userId)
+  if (
+    attempt.mode === 'mock' &&
+    attempt.status === 'in_progress' &&
+    (await passedDeadline(db, attempt.deadline_at))
+  ) {
+    await finalize(db, id, userId, randomUUID())
+    attempt = await owned(db, id, userId)
+  }
   const subject = await db.query<{ code: string }>(
     'SELECT code FROM subjects WHERE id=$1',
     [attempt.subject_id],
@@ -138,13 +155,22 @@ async function readAttempt(db: Db, id: string, userId: string) {
   return attemptSchema.parse({
     id,
     subject: subject.rows[0]?.code,
-    mode: 'practice',
+    mode: attempt.mode,
     status: attempt.status,
+    ...(attempt.mode === 'mock'
+      ? {
+          deadline_at: attempt.deadline_at?.toISOString(),
+          server_time: new Date().toISOString(),
+        }
+      : {}),
     items: result.rows,
   })
 }
 export function getAttempt(id: string, userId: string, db: Db = getPool()) {
-  return readAttempt(db, id, userId)
+  return transaction(
+    (client) => readAttempt(client, id, userId),
+    db === getPool() ? undefined : (db as pg.PoolClient),
+  )
 }
 
 export async function createAttempt(
@@ -158,6 +184,8 @@ export async function createAttempt(
     subject: input.subject,
     mode: input.mode,
     type: input.type,
+    ...(input.mode === 'mock' ? { blueprint_id: input.blueprint_id } : {}),
+    ...(input.mode === 'review' ? { source: input.source } : {}),
     difficulty: input.difficulty ?? null,
     count: input.count,
     topic_ids: [...new Set(input.topic_ids ?? [])].sort(),
@@ -205,32 +233,125 @@ export async function createAttempt(
           'Chủ đề không thuộc môn học',
         )
     }
-    const available = await client.query<{ current_revision_id: string }>(
-      `WITH RECURSIVE selected_topics AS (
+    let available: { rows: { current_revision_id: string }[] } =
+      input.mode === 'practice'
+        ? await client.query<{ current_revision_id: string }>(
+            `WITH RECURSIVE selected_topics AS (
    SELECT id FROM topics WHERE subject_id=$1 AND id=ANY($2::uuid[])
    UNION SELECT t.id FROM topics t JOIN selected_topics st ON t.parent_id=st.id WHERE t.subject_id=$1
   ) SELECT q.current_revision_id FROM questions q WHERE q.subject_id=$1 AND q.status='approved' AND q.type='mcq'
     AND ($3::int IS NULL OR q.difficulty=$3)
     AND (cardinality($2::uuid[])=0 OR EXISTS(SELECT 1 FROM question_topics qt WHERE qt.question_id=q.id AND qt.topic_id IN (SELECT id FROM selected_topics)))
     ORDER BY random() LIMIT $4`,
-      [subject.id, normalized.topic_ids, input.difficulty ?? null, input.count],
-    )
-    if (available.rows.length < input.count)
+            [
+              subject.id,
+              normalized.topic_ids,
+              input.difficulty ?? null,
+              input.count,
+            ],
+          )
+        : { rows: [] }
+    let blueprint: { id: string; spec: unknown } | undefined
+    let duration: number | null = null
+    let snapshot: unknown = null
+    let seed: string | null = null
+    let required = input.count
+    if (input.mode === 'mock') {
+      const bp = await client.query<{
+        id: string
+        spec: unknown
+        version: number
+      }>(
+        "SELECT id,spec,version FROM exam_blueprints WHERE id=$1 AND subject_id=$2 AND status='active' FOR SHARE",
+        [input.blueprint_id, subject.id],
+      )
+      blueprint = bp.rows[0]
+      if (!blueprint)
+        throw new PracticeError(
+          'not_found',
+          404,
+          'Không tìm thấy cấu hình thi đang áp dụng',
+        )
+      const spec = blueprintSpecSchema.parse(blueprint.spec)
+      duration = spec.duration_seconds
+      snapshot = { ...spec, version: bp.rows[0]!.version }
+      seed = randomUUID()
+      const candidates = await client.query<Candidate>(
+        `WITH RECURSIVE ancestry AS (
+        SELECT id,id AS ancestor_id,parent_id FROM topics WHERE subject_id=$1
+        UNION ALL SELECT a.id,t.id,t.parent_id FROM ancestry a JOIN topics t ON t.id=a.parent_id
+      ) SELECT q.id,q.current_revision_id AS revision_id,q.difficulty,
+        COALESCE(array_agg(DISTINCT a.ancestor_id) FILTER(WHERE a.ancestor_id IS NOT NULL),'{}'::uuid[]) topic_ids
+        FROM questions q LEFT JOIN question_topics qt ON qt.question_id=q.id LEFT JOIN ancestry a ON a.id=qt.topic_id
+        WHERE q.subject_id=$1 AND q.status='approved' AND q.type='mcq' GROUP BY q.id`,
+        [subject.id],
+      )
+      try {
+        const selected = assembleExam(candidates.rows, spec.slots, seed)
+        available = {
+          ...available,
+          rows: selected.map((c) => ({ current_revision_id: c.revision_id })),
+        }
+      } catch (error) {
+        if (error instanceof InsufficientQuestions)
+          throw new PracticeError(
+            'insufficient_questions',
+            422,
+            'Chưa đủ câu hỏi cho cấu hình thi; không tạo bài thiếu câu',
+          )
+        throw error
+      }
+      required = spec.slots.reduce((sum, slot) => sum + slot.count, 0)
+    } else if (input.mode === 'review') {
+      available = await client.query<{ current_revision_id: string }>(
+        `WITH latest AS (
+        SELECT DISTINCT ON (r.question_id) r.question_id,i.is_correct,i.flagged,i.answer
+        FROM attempt_items i JOIN attempts a ON a.id=i.attempt_id JOIN question_revisions r ON r.id=i.question_revision_id
+        WHERE a.user_id=$1 AND a.subject_id=$2 AND a.status IN ('submitted','expired')
+        ORDER BY r.question_id,a.submitted_at DESC,a.id DESC,i.position DESC
+      ) SELECT q.current_revision_id FROM latest l JOIN questions q ON q.id=l.question_id
+      WHERE q.status='approved' AND q.type='mcq' AND
+        (($3='wrong' AND (l.is_correct IS NOT TRUE OR l.answer IS NULL)) OR ($3='flagged' AND l.flagged))
+      ORDER BY q.id LIMIT $4`,
+        [userId, subject.id, input.source, input.count],
+      )
+    }
+    if (available.rows.length < required)
       throw new PracticeError(
         'insufficient_questions',
         422,
         'Chưa đủ câu hỏi cho bộ lọc đã chọn',
       )
+    const locked = await client.query(
+      `SELECT current_revision_id FROM questions WHERE current_revision_id=ANY($1::uuid[]) AND status='approved' FOR SHARE`,
+      [available.rows.map((q) => q.current_revision_id)],
+    )
+    if (locked.rowCount !== required)
+      throw new PracticeError(
+        'insufficient_questions',
+        422,
+        'Ngân hàng câu hỏi vừa thay đổi; vui lòng thử lại',
+      )
     const saved = await client.query<{ id: string }>(
-      'INSERT INTO attempts(user_id,subject_id,mode,idempotency_key,request_hash) VALUES($1,$2,$3,$4,$5) RETURNING id',
-      [userId, subject.id, input.mode, key, hash],
+      `INSERT INTO attempts(user_id,subject_id,mode,idempotency_key,request_hash,blueprint_id,blueprint_snapshot,random_seed,deadline_at)
+       VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8,CASE WHEN $9::int IS NULL THEN NULL ELSE clock_timestamp()+$9*interval '1 second' END) RETURNING id`,
+      [
+        userId,
+        subject.id,
+        input.mode,
+        key,
+        hash,
+        blueprint?.id ?? null,
+        snapshot ? JSON.stringify(snapshot) : null,
+        seed,
+        duration,
+      ],
     )
     const id = saved.rows[0]!.id
-    for (const [index, question] of available.rows.entries())
-      await client.query(
-        'INSERT INTO attempt_items(attempt_id,position,question_revision_id) VALUES($1,$2,$3)',
-        [id, index + 1, question.current_revision_id],
-      )
+    await client.query(
+      'INSERT INTO attempt_items(attempt_id,position,question_revision_id) SELECT $1,n::int,revision FROM unnest($2::uuid[]) WITH ORDINALITY AS entries(revision,n)',
+      [id, available.rows.map((q) => q.current_revision_id)],
+    )
     await appendAudit(client, {
       actorId: userId,
       action: 'attempt.created',
@@ -242,10 +363,83 @@ export async function createAttempt(
   }, context)
 }
 
+async function passedDeadline(db: Db, deadline: Date | null) {
+  if (!deadline) return false
+  const result = await db.query<{ expired: boolean }>(
+    'SELECT clock_timestamp()>=$1::timestamptz AS expired',
+    [deadline],
+  )
+  return result.rows[0]!.expired
+}
+async function finalize(db: Db, id: string, userId: string, requestId: string) {
+  const attempt = await owned(db, id, userId, true)
+  if (attempt.status !== 'in_progress')
+    return resultSchema.parse(attempt.result)
+  const outcome =
+    attempt.mode === 'mock' && (await passedDeadline(db, attempt.deadline_at))
+      ? 'expired'
+      : 'submitted'
+  const counts = await db.query<{
+    total: number
+    correct: number
+    unanswered: number
+  }>(
+    'SELECT count(*)::int total,count(*) FILTER(WHERE is_correct)::int correct,count(*) FILTER(WHERE answer IS NULL)::int unanswered FROM attempt_items WHERE attempt_id=$1',
+    [id],
+  )
+  const count = counts.rows[0]!
+  const topicCounts = await db.query(
+    `SELECT t.topic_id,(array_agg(t.title ORDER BY i.position))[1] title,
+    count(*)::int total,count(*) FILTER(WHERE i.is_correct)::int correct
+    FROM attempt_items i CROSS JOIN LATERAL jsonb_to_recordset(i.topic_snapshot) AS t(topic_id uuid,title text,sort_order integer,code text)
+    WHERE i.attempt_id=$1 GROUP BY t.topic_id ORDER BY min(t.sort_order),min(t.code),t.topic_id`,
+    [id],
+  )
+  let feedback: unknown[] | undefined
+  if (attempt.mode === 'mock') {
+    const rows = await db.query(
+      `SELECT i.position,i.is_correct,r.explanation,r.payload,
+      (SELECT label FROM question_choices WHERE revision_id=r.id AND is_correct) correct_answer
+      FROM attempt_items i JOIN question_revisions r ON r.id=i.question_revision_id WHERE i.attempt_id=$1 ORDER BY i.position`,
+      [id],
+    )
+    feedback = rows.rows.map((row) => ({
+      position: row.position,
+      feedback: feedbackSchema.parse({
+        is_correct: row.is_correct === true,
+        correct_answer: row.correct_answer,
+        explanation: row.explanation,
+        sources: row.payload.sources,
+      }),
+    }))
+  }
+  const summary = resultSchema.parse({
+    attempt_id: id,
+    ...count,
+    score: count.total
+      ? Math.round((count.correct / count.total) * 100) / 10
+      : 0,
+    by_topic: topicCounts.rows,
+    ...(attempt.mode === 'mock' ? { outcome, feedback } : {}),
+  })
+  await db.query(
+    'UPDATE attempts SET status=$2,submitted_at=clock_timestamp(),result=$3::jsonb WHERE id=$1',
+    [id, outcome, JSON.stringify(summary)],
+  )
+  await appendAudit(db, {
+    actorId: userId,
+    action: 'attempt.submitted',
+    entityType: 'attempt',
+    entityId: id,
+    details: { status: outcome },
+    requestId,
+  })
+  return summary
+}
 export function answerItem(
   id: string,
   position: number,
-  answer: Label,
+  answer: Label | undefined,
   flagged: boolean | undefined,
   userId: string,
   requestId: string = randomUUID(),
@@ -265,51 +459,95 @@ export function answerItem(
     if (!item)
       throw new PracticeError('not_found', 404, 'Không tìm thấy câu hỏi')
     if (
-      (item.answer !== null && item.answer !== answer) ||
-      (attempt.status !== 'in_progress' &&
-        (item.answer !== answer ||
-          (flagged !== undefined && flagged !== item.flagged)))
+      attempt.mode === 'mock' &&
+      attempt.status === 'in_progress' &&
+      (await passedDeadline(client, attempt.deadline_at))
     )
-      throw new PracticeError(
-        'invalid_state_transition',
-        422,
-        'Đáp án đã lưu hoặc bài đã kết thúc',
+      return {
+        saved: false,
+        status: 'expired',
+        result: await finalize(client, id, userId, requestId),
+      }
+    if (attempt.status !== 'in_progress') {
+      if (
+        attempt.mode === 'mock' ||
+        (answer !== undefined && item.answer !== answer) ||
+        (flagged !== undefined && flagged !== item.flagged)
       )
+        throw new PracticeError(
+          'invalid_state_transition',
+          422,
+          'Bài làm đã kết thúc',
+        )
+    }
+    if (
+      attempt.mode !== 'mock' &&
+      answer !== undefined &&
+      item.answer !== null &&
+      item.answer !== answer
+    )
+      throw new PracticeError('invalid_state_transition', 422, 'Đáp án đã lưu')
+    if (answer === undefined) {
+      if (attempt.status !== 'in_progress')
+        throw new PracticeError(
+          'invalid_state_transition',
+          422,
+          'Bài làm đã kết thúc',
+        )
+      await client.query(
+        'UPDATE attempt_items SET flagged=COALESCE($2,flagged) WHERE id=$1',
+        [item.id, flagged ?? null],
+      )
+      return { saved: true }
+    }
     const choices = await client.query<Choice>(
       'SELECT label,text,is_correct FROM question_choices WHERE revision_id=$1 ORDER BY label',
       [item.question_revision_id],
     )
     const grade = gradeMcq(choices.rows, answer)
+    if (
+      attempt.status === 'in_progress' &&
+      (item.answer !== answer ||
+        (flagged !== undefined && flagged !== item.flagged))
+    ) {
+      const updated = await client.query(
+        `UPDATE attempt_items SET answer=$2::jsonb,is_correct=$3,answered_at=clock_timestamp(),flagged=COALESCE($4,flagged)
+        WHERE id=$1 AND ($5::timestamptz IS NULL OR clock_timestamp()<$5::timestamptz) RETURNING id`,
+        [
+          item.id,
+          JSON.stringify(answer),
+          grade.is_correct,
+          flagged ?? null,
+          attempt.mode === 'mock' ? attempt.deadline_at : null,
+        ],
+      )
+      if (!updated.rowCount)
+        return {
+          saved: false,
+          status: 'expired',
+          result: await finalize(client, id, userId, requestId),
+        }
+      await appendAudit(client, {
+        actorId: userId,
+        action: 'attempt.answered',
+        entityType: 'attempt',
+        entityId: id,
+        details: { position },
+        requestId,
+      })
+    }
+    if (attempt.mode === 'mock') return { saved: true }
     const revision = await client.query<{
       explanation: string
       payload: { sources: unknown }
     }>('SELECT explanation,payload FROM question_revisions WHERE id=$1', [
       item.question_revision_id,
     ])
-    const feedback = feedbackSchema.parse({
+    return feedbackSchema.parse({
       ...grade,
       explanation: revision.rows[0]!.explanation,
       sources: revision.rows[0]!.payload.sources,
     })
-    if (
-      attempt.status === 'in_progress' &&
-      (item.answer === null ||
-        (flagged !== undefined && flagged !== item.flagged))
-    ) {
-      await client.query(
-        'UPDATE attempt_items SET answer=$2::jsonb,is_correct=$3,answered_at=COALESCE(answered_at,now()),flagged=COALESCE($4,flagged) WHERE id=$1',
-        [item.id, JSON.stringify(answer), grade.is_correct, flagged ?? null],
-      )
-      await appendAudit(client, {
-        actorId: userId,
-        action: item.answer === null ? 'attempt.answered' : 'attempt.flagged',
-        entityType: 'attempt',
-        entityId: id,
-        details: { position, is_correct: grade.is_correct },
-        requestId,
-      })
-    }
-    return feedback
   })
 }
 export function submitAttempt(
@@ -318,55 +556,8 @@ export function submitAttempt(
   requestId: string = randomUUID(),
   context?: pg.PoolClient,
 ) {
-  return transaction(async (client) => {
-    const attempt = await owned(client, id, userId, true)
-    if (attempt.status === 'submitted')
-      return resultSchema.parse(attempt.result)
-    if (attempt.status !== 'in_progress')
-      throw new PracticeError(
-        'invalid_state_transition',
-        422,
-        'Bài làm đã kết thúc',
-      )
-    const counts = await client.query<{
-      total: number
-      correct: number
-      unanswered: number
-    }>(
-      'SELECT count(*)::int total,count(*) FILTER(WHERE is_correct)::int correct,count(*) FILTER(WHERE answer IS NULL)::int unanswered FROM attempt_items WHERE attempt_id=$1',
-      [id],
-    )
-    const count = counts.rows[0]!
-    const topicCounts = await client.query(
-      `SELECT t.topic_id,(array_agg(t.title ORDER BY i.position))[1] title,
-       count(*)::int total,count(*) FILTER(WHERE i.is_correct)::int correct
-       FROM attempt_items i CROSS JOIN LATERAL jsonb_to_recordset(i.topic_snapshot)
-         AS t(topic_id uuid,title text,sort_order integer,code text)
-       WHERE i.attempt_id=$1 GROUP BY t.topic_id
-       ORDER BY min(t.sort_order),min(t.code),t.topic_id`,
-      [id],
-    )
-    const score = count.total
-      ? Math.round((count.correct / count.total) * 100) / 10
-      : 0
-    const summary = resultSchema.parse({
-      attempt_id: id,
-      ...count,
-      score,
-      by_topic: topicCounts.rows,
-    })
-    await client.query(
-      "UPDATE attempts SET status='submitted',submitted_at=now(),result=$2::jsonb WHERE id=$1",
-      [id, JSON.stringify(summary)],
-    )
-    await appendAudit(client, {
-      actorId: userId,
-      action: 'attempt.submitted',
-      entityType: 'attempt',
-      entityId: id,
-      details: { status: 'submitted' },
-      requestId,
-    })
-    return summary
-  }, context)
+  return transaction(
+    (client) => finalize(client, id, userId, requestId),
+    context,
+  )
 }

@@ -60,6 +60,8 @@ jobs:
       - run: pnpm test && pnpm test:integration
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm e2e
+      - name: Clear development cache before changing authentication mode
+        run: node -e "require('node:fs').rmSync('apps/web/.next/dev', {recursive:true, force:true})"
       - name: Verify guest-only login without Google credentials or admin emails
         run: pnpm e2e tests/e2e/guest.spec.ts
         env:

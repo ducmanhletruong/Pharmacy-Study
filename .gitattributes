@@ -1,0 +1,4 @@
+# Security patch checksums and pnpm patchedDependencies require stable bytes.
+*.patch text eol=lf
+# Keep PDF xref offsets intact on Windows checkouts.
+*.pdf binary

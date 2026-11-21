@@ -1,3 +1,4 @@
+import { BlueprintAdmin } from '../../components/blueprint-admin'
 import Link from 'next/link'
 import { ContentAdmin } from '../../components/content-admin'
 import { notFound } from 'next/navigation'
@@ -17,6 +18,7 @@ export default async function AdminPage() {
         </p>
         <Link href="/">Quay lại luyện tập →</Link>
       </section>
+      <BlueprintAdmin />
       <ContentAdmin />
     </main>
   )

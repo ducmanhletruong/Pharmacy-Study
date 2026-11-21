@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/grading/mcq.ts",
     "./authz": "./src/authz/index.ts",
-    "./lifecycle": "./src/lifecycle/index.ts"
+    "./lifecycle": "./src/lifecycle/index.ts",
+    "./exam": "./src/exam/index.ts"
   }
 }
