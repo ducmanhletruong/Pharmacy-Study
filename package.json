@@ -13,7 +13,7 @@
     "start": "pnpm --filter @pharmacy/web start",
     "build": "pnpm --filter @pharmacy/web build",
     "lint": "eslint . --max-warnings 0",
-    "typecheck": "tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/db/tsconfig.json && tsc --noEmit -p packages/api-contract/tsconfig.json && pnpm --filter @pharmacy/web typecheck",
+    "typecheck": "tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/db/tsconfig.json && tsc --noEmit -p packages/api-contract/tsconfig.json && tsc --noEmit -p packages/content-pipeline/tsconfig.json && pnpm --filter @pharmacy/web typecheck",
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -24,7 +24,8 @@
     "db:provision": "pnpm --filter @pharmacy/db provision",
     "security:test": "node --test scripts/audit-report.test.mjs",
     "audit:security": "node scripts/audit-security.mjs",
-    "content:validate": "tsx packages/api-contract/src/bundle/validate-cli.ts"
+    "content:validate": "tsx packages/api-contract/src/bundle/validate-cli.ts",
+    "content:generate": "tsx packages/content-pipeline/src/cli/index.ts"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
