@@ -96,7 +96,7 @@ export async function run(
       ],
       sources: sources.map((s) => ({
         ref: s.ref,
-        kind: 'manual',
+        kind: s.kind ?? 'manual',
         title: s.title,
         locator: s.locator,
         license: s.license,

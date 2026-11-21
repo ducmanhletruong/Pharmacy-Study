@@ -28,6 +28,9 @@ export class NotebookMcpSource implements KnowledgeSource {
     })
     // Tool envelopes vary by server version. The host must extract grounded
     // passages/citations; an answer string alone is never accepted as a source.
-    return validateSources(this.extract(result))
+    return validateSources(this.extract(result)).map((source) => ({
+      ...source,
+      kind: 'notebooklm' as const,
+    }))
   }
 }

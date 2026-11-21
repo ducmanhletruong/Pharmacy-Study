@@ -1,6 +1,7 @@
 import { readFile, realpath, stat } from 'node:fs/promises'
 import { resolve, relative, isAbsolute } from 'node:path'
 export type Source = {
+  kind?: 'manual' | 'notebooklm'
   ref: string
   title: string
   locator: string

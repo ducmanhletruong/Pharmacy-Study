@@ -148,7 +148,7 @@ test('NotebookLM adapter only invokes the read-only tool and rejects missing pas
     'Synthetic query',
     (r) => (r as { passages: unknown }).passages,
   )
-  expect(await adapter.read()).toEqual([source])
+  expect(await adapter.read()).toEqual([{ ...source, kind: 'notebooklm' }])
   expect(call.mock.calls[0]![0].name).toBe('notebook_query')
   await expect(
     new NotebookMcpSource(
