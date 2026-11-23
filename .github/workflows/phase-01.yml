@@ -1,0 +1,46 @@
+name: Phase 01 spikes
+
+on:
+  pull_request:
+    branches: [main, phase-00]
+    paths:
+      - 'spikes/**'
+      - '.github/workflows/phase-01.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p01-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  feasibility-tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: spikes/package-lock.json
+      - name: Install isolated spike dependency
+        run: npm --prefix spikes ci --ignore-scripts --no-audit --no-fund
+      - name: Validate evidence checker and LLM evaluator
+        run: node --test spikes/notebooklm/validate.test.mjs spikes/notebooklm/record.test.mjs spikes/llm-eval/evaluate.test.mjs
+      - name: Check MCP result classification without accounts or network
+        run: python3 -m unittest discover -s spikes/notebooklm -p 'test_probe_mcp.py'
+      - name: Render ten synthetic structures in independent processes
+        run: npm --prefix spikes run chem:render
+      - name: Check reference evaluator without model inference
+        run: node spikes/llm-eval/run.mjs
+      - name: Reject empty live-evidence template
+        run: |
+          node --input-type=module <<'JS'
+          import { spawnSync } from 'node:child_process'
+          import assert from 'node:assert/strict'
+          const result = spawnSync(process.execPath, ['spikes/notebooklm/validate.mjs', 'spikes/notebooklm/capture.template.json'], { encoding: 'utf8' })
+          assert.equal(result.status, 2)
+          assert.equal(JSON.parse(result.stdout).gate_passed, false)
+          JS

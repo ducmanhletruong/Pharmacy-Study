@@ -1,0 +1,15 @@
+diff --git a/lib/parse.js b/lib/parse.js
+index caa2b86aa5a567df33cef4bda3c7a97794f439f8..d261e5b673aa6905395ce2649dfdffab37d96b92 100644
+--- a/lib/parse.js
++++ b/lib/parse.js
+@@ -492,6 +492,10 @@ const parse = (input, options) => {
+   };
+ 
+   const extglobOpen = (type, value) => {
++    // Project hardening for GHSA-fc5q-39xc-vjpf: no repeated extglobs.
++    if (type === 'plus' || type === 'star') {
++      throw new SyntaxError('Repeated extglobs are disabled (GHSA-fc5q-39xc-vjpf)');
++    }
+     const token = { ...EXTGLOB_CHARS[value], conditions: 1, inner: '' };
+ 
+     token.prev = prev;

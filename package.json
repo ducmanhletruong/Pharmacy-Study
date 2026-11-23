@@ -1,0 +1,41 @@
+{
+  "name": "pharmacy-study",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": "11.25.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @pharmacy/web dev",
+    "start": "pnpm --filter @pharmacy/web start",
+    "build": "pnpm --filter @pharmacy/web build",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/db/tsconfig.json && tsc --noEmit -p packages/api-contract/tsconfig.json && tsc --noEmit -p packages/content-pipeline/tsconfig.json && pnpm --filter @pharmacy/web typecheck",
+    "test": "vitest run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:migrate": "pnpm --filter @pharmacy/db migrate",
+    "db:seed": "pnpm --filter @pharmacy/db seed",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "e2e": "playwright test",
+    "db:provision": "pnpm --filter @pharmacy/db provision",
+    "security:test": "node --test scripts/audit-report.test.mjs",
+    "audit:security": "node scripts/audit-security.mjs",
+    "content:validate": "tsx packages/api-contract/src/bundle/validate-cli.ts",
+    "content:generate": "tsx packages/content-pipeline/src/cli/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.6",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.10.0",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0",
+    "tsx": "4.23.15",
+    "@playwright/test": "1.65.1"
+  }
+}

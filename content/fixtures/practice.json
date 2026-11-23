@@ -1,0 +1,72 @@
+[
+  {
+    "stem": "Trong bộ dữ liệu tổng hợp, mẫu A có 2 phần và mẫu B có 3 phần. Tổng số phần là bao nhiêu?",
+    "choices": ["4", "5", "6", "7"],
+    "correct": "B",
+    "explanation": "Cộng hai số: 2 + 3 = 5. Đây là bài mẫu tổng hợp, không phải đề thi.",
+    "topic": 1
+  },
+  {
+    "stem": "Theo công thức $C = n/V$, với $n = 2$ mol và $V = 1$ L, nồng độ bằng bao nhiêu mol/L?",
+    "choices": ["1", "2", "3", "4"],
+    "correct": "B",
+    "explanation": "Thay số: $C = 2/1 = 2$ mol/L. Dữ liệu tính toán tổng hợp.",
+    "topic": 2
+  },
+  {
+    "stem": "Đổi 1000 mL sang lít.",
+    "choices": ["0,01 L", "0,1 L", "1 L", "10 L"],
+    "correct": "C",
+    "explanation": "$1000\\,\\mathrm{mL} = 1\\,\\mathrm{L}$.",
+    "topic": 2
+  },
+  {
+    "stem": "Có 4 hộp mẫu, mỗi hộp 3 nhãn. Tổng cộng có bao nhiêu nhãn?",
+    "choices": ["7", "9", "10", "12"],
+    "correct": "D",
+    "explanation": "Nhân số hộp với số nhãn: 4 × 3 = 12.",
+    "topic": 1
+  },
+  {
+    "stem": "Dãy số tổng hợp 2, 4, 6 tăng đều. Số tiếp theo là gì?",
+    "choices": ["8", "9", "10", "12"],
+    "correct": "A",
+    "explanation": "Mỗi bước tăng 2, nên 6 + 2 = 8.",
+    "topic": 1
+  },
+  {
+    "stem": "Theo công thức $n = C V$, với $C = 0{,}5$ mol/L và $V = 2$ L, số mol bằng bao nhiêu?",
+    "choices": ["0,25 mol", "0,5 mol", "1 mol", "2 mol"],
+    "correct": "C",
+    "explanation": "$n = 0{,}5 \\times 2 = 1$ mol. Ví dụ tự viết, không phải bài thi.",
+    "topic": 2
+  },
+  {
+    "stem": "Một bộ mẫu giả định có 10 thẻ. Bỏ đi 4 thẻ, còn lại bao nhiêu?",
+    "choices": ["4", "5", "6", "7"],
+    "correct": "C",
+    "explanation": "10 − 4 = 6 thẻ.",
+    "topic": 1
+  },
+  {
+    "stem": "Một nửa của 20 mL là bao nhiêu?",
+    "choices": ["5 mL", "10 mL", "15 mL", "40 mL"],
+    "correct": "B",
+    "explanation": "Chia thể tích cho 2: 20 / 2 = 10 mL.",
+    "topic": 2
+  },
+  {
+    "stem": "Trong danh sách tổng hợp M1, M2, M3, có bao nhiêu mã mẫu khác nhau?",
+    "choices": ["1", "2", "3", "4"],
+    "correct": "C",
+    "explanation": "Danh sách có ba phần tử khác nhau: M1, M2, M3.",
+    "topic": 1
+  },
+  {
+    "stem": "Tính tỉ lệ $5/10$ dưới dạng phần trăm.",
+    "choices": ["5%", "10%", "25%", "50%"],
+    "correct": "D",
+    "explanation": "$5/10 \\times 100\\% = 50\\%$.",
+    "topic": 2
+  }
+]
