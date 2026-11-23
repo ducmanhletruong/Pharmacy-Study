@@ -1,0 +1,13 @@
+{
+  "name": "@pharmacy/api-contract",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./bundle": "./src/bundle/index.ts"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  }
+}

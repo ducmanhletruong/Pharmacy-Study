@@ -1,0 +1,16 @@
+{
+  "advisory": "GHSA-fc5q-39xc-vjpf",
+  "reviewed_at": "2026-11-18",
+  "restriction": "Recognized +(...) and *(...) repeated extglobs are rejected; no arbitrary repeated-extglob support in development tooling.",
+  "upstream_fixed_version": null,
+  "patches": {
+    "2.3.2": {
+      "file": "patches/picomatch@2.3.2.patch",
+      "sha256": "e9eba03af75ba6a61313cfd270af10dec107c5663e73830103a8e30430a49daa"
+    },
+    "4.0.7": {
+      "file": "patches/picomatch@4.0.7.patch",
+      "sha256": "d4e03a571bd71acd79389e40c06ad5fd6642c874af09060270975dc3fc6dfe60"
+    }
+  }
+}

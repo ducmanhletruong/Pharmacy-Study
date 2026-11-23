@@ -1,0 +1,12 @@
+{
+  "name": "@pharmacy/core",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/grading/mcq.ts",
+    "./authz": "./src/authz/index.ts",
+    "./lifecycle": "./src/lifecycle/index.ts",
+    "./exam": "./src/exam/index.ts"
+  }
+}
