@@ -136,6 +136,7 @@ async function readAttempt(
     revision_id: string
     stem: string
     answer: AttemptAnswer | null
+    answer_version: string | null
     flagged: boolean
     choices: { label: Label; text: string }[]
     assets: { id: string; url: string; mime: string; alt_text: string }[]
@@ -143,6 +144,7 @@ async function readAttempt(
   }>(
     `WITH viewer AS MATERIALIZED (SELECT viewer_audience($3,$4) AS tier)
      SELECT i.position,r.question_id,r.id AS revision_id,r.stem,i.answer,i.flagged,
+      extract(epoch from i.answered_at)::text AS answer_version,
       COALESCE((SELECT json_agg(json_build_object('label',c.label,'text',c.text) ORDER BY c.label)
        FROM question_choices c WHERE c.revision_id=r.id),'[]'::json) AS choices,
       CASE r.payload->'visual'->>'type'
@@ -523,7 +525,8 @@ async function visibleResult(
      ) ORDER BY sort_order,code,topic_id) FROM topic_counts),'[]'::json) AS by_topic,
      COALESCE((
        SELECT json_agg(json_build_object('position',i.position,'feedback',json_build_object(
-         'is_correct',i.is_correct IS TRUE,'correct_answer',keys.answer,'explanation',r.explanation,'sources',r.payload->'sources'
+         'is_correct',i.is_correct IS TRUE,'correct_answer',keys.answer,'explanation',r.explanation,
+         'sources',COALESCE(NULLIF(r.payload->'sources','null'::jsonb),'[]'::jsonb)
        )) ORDER BY i.position)
        FROM visible i JOIN question_revisions r ON r.id=i.question_revision_id
        CROSS JOIN LATERAL (SELECT COALESCE(
@@ -622,6 +625,7 @@ export function answerItem(
   allowAdmin = true,
   context?: pg.PoolClient,
   deferFeedback = false,
+  expectedAnswerVersion?: string | null,
 ) {
   return withAccountRows(
     userId,
@@ -631,10 +635,12 @@ export function answerItem(
         id: string
         question_revision_id: string
         answer: AttemptAnswer | null
+        answer_version: string | null
         flagged: boolean
         type: QuestionType
       }>(
-        `SELECT i.*,q.type FROM attempt_items i JOIN question_revisions r ON r.id=i.question_revision_id
+        `SELECT i.*,q.type,extract(epoch from i.answered_at)::text AS answer_version
+       FROM attempt_items i JOIN question_revisions r ON r.id=i.question_revision_id
        JOIN questions q ON q.id=r.question_id WHERE i.attempt_id=$1 AND i.position=$2
        AND can_view_revision(i.question_revision_id,$3,(SELECT viewer_audience($4,$5)))`,
         [id, position, attempt.subject_id, userId, allowAdmin],
@@ -690,6 +696,13 @@ export function answerItem(
         )
         return { saved: true }
       }
+      if (
+        expectedAnswerVersion !== undefined &&
+        item.answer_version !== expectedAnswerVersion
+      ) {
+        return { saved: false, answer_version: item.answer_version }
+      }
+      let answerVersion = item.answer_version
       const grade = await gradeAnswer(
         client,
         item.question_revision_id,
@@ -698,12 +711,15 @@ export function answerItem(
       )
       if (
         attempt.status === 'in_progress' &&
-        (!isDeepStrictEqual(item.answer, answer) ||
+        (expectedAnswerVersion !== undefined ||
+          !isDeepStrictEqual(item.answer, answer) ||
           (flagged !== undefined && flagged !== item.flagged))
       ) {
-        const updated = await client.query(
-          `UPDATE attempt_items SET answer=$2::jsonb,is_correct=$3,answered_at=clock_timestamp(),flagged=COALESCE($4,flagged)
-        WHERE id=$1 AND ($5::timestamptz IS NULL OR clock_timestamp()<$5::timestamptz) RETURNING id`,
+        const updated = await client.query<{ answer_version: string }>(
+          `UPDATE attempt_items SET answer=$2::jsonb,is_correct=$3,
+          answered_at=GREATEST(clock_timestamp(),answered_at + interval '1 microsecond'),flagged=COALESCE($4,flagged)
+        WHERE id=$1 AND ($5::timestamptz IS NULL OR clock_timestamp()<$5::timestamptz)
+        RETURNING extract(epoch from answered_at)::text AS answer_version`,
           [
             item.id,
             JSON.stringify(answer),
@@ -718,6 +734,7 @@ export function answerItem(
             status: 'expired',
             result: await finalize(client, id, userId, requestId, allowAdmin),
           }
+        answerVersion = updated.rows[0]!.answer_version
         await appendAudit(client, {
           actorId: userId,
           action: 'attempt.answered',
@@ -727,7 +744,10 @@ export function answerItem(
           requestId,
         })
       }
-      if (attempt.mode === 'mock' || deferFeedback) return { saved: true }
+      if (attempt.mode === 'mock' || deferFeedback)
+        return expectedAnswerVersion === undefined
+          ? { saved: true }
+          : { saved: true, answer_version: answerVersion }
       const revision = await client.query<{
         explanation: string
         payload: { sources: unknown }
@@ -741,7 +761,7 @@ export function answerItem(
       return feedbackSchema.parse({
         ...grade,
         explanation: revision.rows[0]!.explanation,
-        sources: revision.rows[0]!.payload.sources,
+        sources: revision.rows[0]!.payload.sources ?? [],
       })
     },
     context,

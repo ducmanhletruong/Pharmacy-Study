@@ -148,7 +148,10 @@ test('learner completes timed mock, sees delayed explanations/progress and can r
     await learner
       .getByRole('button', { name: 'Câu trước', exact: true })
       .click()
-    expect(await (await saved).json()).toEqual({ saved: true })
+    expect(await (await saved).json()).toEqual({
+      saved: true,
+      answer_version: expect.any(String),
+    })
     await expect(learner.getByText('Đã làm', { exact: true })).toBeVisible()
     await learner.getByRole('button', { name: 'Đánh dấu ôn lại' }).click()
     await learner.reload()
@@ -215,7 +218,7 @@ test('learner completes timed mock, sees delayed explanations/progress and can r
   }
 })
 
-test('server deadline ends a mock without revealing answers early or requiring an open tab', async ({
+test('the mock deadline still grades saved answers when a PUT stalls during submit', async ({
   page,
 }) => {
   await signInAs(page, admin)
@@ -230,7 +233,7 @@ test('server deadline ends a mock without revealing answers early or requiring a
       name,
       status: 'active',
       spec: {
-        duration_seconds: 2,
+        duration_seconds: 4,
         slots: [{ count: 1 }],
         deadline_policy: 'expired_grade_saved',
       },
@@ -243,6 +246,14 @@ test('server deadline ends a mock without revealing answers early or requiring a
   await signInAs(page, `expiry-${crypto.randomUUID()}@example.invalid`)
   await page.goto('/study')
   await page.getByLabel('Cấu hình thi').selectOption(blueprint.id)
+  let release!: () => void
+  const stall = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route('**/api/v1/attempts/*/items/1', async (route) => {
+    await stall
+    await route.abort().catch(() => {})
+  })
   const started = page.waitForResponse(
     (r) =>
       r.url().endsWith('/api/v1/attempts') && r.request().method() === 'POST',
@@ -251,15 +262,21 @@ test('server deadline ends a mock without revealing answers early or requiring a
     .getByRole('button', { name: 'Bắt đầu thi thử', exact: true })
     .click()
   expect((await started).status()).toBe(201)
-  await expect(
-    page.getByRole('heading', { name: 'Kết quả bài làm' }),
-  ).toBeVisible({ timeout: 10000 })
-  await expect(
-    page.getByText('Đã hết giờ — chấm các đáp án đã lưu trước hạn.', {
-      exact: true,
-    }),
-  ).toBeVisible()
-  await expect(
-    page.getByText('0/1 câu đúng; 1 câu chưa trả lời.', { exact: true }),
-  ).toBeVisible()
+  try {
+    await page.getByRole('radio').first().check()
+    await page.getByRole('button', { name: 'Nộp bài', exact: true }).click()
+    await expect(
+      page.getByRole('heading', { name: 'Kết quả bài làm' }),
+    ).toBeVisible({ timeout: 18_000 })
+    await expect(
+      page.getByText('Đã hết giờ — chấm các đáp án đã lưu trước hạn.', {
+        exact: true,
+      }),
+    ).toBeVisible()
+    await expect(
+      page.getByText('0/1 câu đúng; 1 câu chưa trả lời.', { exact: true }),
+    ).toBeVisible()
+  } finally {
+    release()
+  }
 })

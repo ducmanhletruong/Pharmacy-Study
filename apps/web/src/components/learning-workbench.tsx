@@ -34,9 +34,11 @@ async function request(
   method = 'GET',
   data?: unknown,
   key?: string,
+  signal?: AbortSignal,
 ) {
   const response = await fetch('/api/v1' + path, {
     method,
+    signal,
     headers: {
       'Content-Type': 'application/json',
       ...(key ? { 'Idempotency-Key': key } : {}),
@@ -160,7 +162,10 @@ export function LearningWorkbench() {
       setError('')
       try {
         const failed = await flush(attempt.id)
-        if (failed.length && !expired) {
+        const deadlineReached =
+          attempt.deadline_at &&
+          Date.now() + offset.current >= Date.parse(attempt.deadline_at)
+        if (failed.length && !expired && !deadlineReached) {
           setPosition(
             attempt.items.findIndex((row) => row.position === failed[0]),
           )
@@ -172,7 +177,13 @@ export function LearningWorkbench() {
             'Câu ' + failed.join(', ') + ' chưa được lưu trước khi hết giờ.',
           )
         const result = resultSchema.parse(
-          await request('/attempts/' + attempt.id + '/submit', 'POST'),
+          await request(
+            '/attempts/' + attempt.id + '/submit',
+            'POST',
+            undefined,
+            undefined,
+            AbortSignal.timeout(10_000),
+          ),
         )
         if (v === version.current) setSummary(result)
       } catch (e) {
@@ -237,33 +248,43 @@ export function LearningWorkbench() {
     const item = attempt?.items[position]
     if (!attempt || !item || busy) return
     const v = version.current
-    saves.select(attempt.id, item.position, answer, async (chosen) => {
-      const response = await request(
-        `/attempts/${attempt.id}/items/${item.position}`,
-        'PUT',
-        {
-          answer: chosen,
-          defer_feedback: true,
-        },
-      )
-      if (response.result && v === version.current) {
-        setSummary(resultSchema.parse(response.result))
-        setError('Đã hết giờ trước khi lưu đáp án câu ' + item.position + '.')
-      }
-      if (response.saved !== true) throw new Error('Chưa lưu được đáp án.')
-      setAttempt((current) =>
-        current?.id === attempt.id
-          ? {
-              ...current,
-              items: current.items.map((row) =>
-                row.position === item.position
-                  ? { ...row, answer: chosen }
-                  : row,
-              ),
-            }
-          : current,
-      )
-    })
+    saves.select(
+      attempt.id,
+      item.position,
+      answer,
+      item.answer_version,
+      async (chosen, signal, answerVersion) => {
+        const response = await request(
+          `/attempts/${attempt.id}/items/${item.position}`,
+          'PUT',
+          {
+            answer: chosen,
+            defer_feedback: true,
+            expected_answer_version: answerVersion,
+          },
+          undefined,
+          signal,
+        )
+        if (response.result && v === version.current) {
+          setSummary(resultSchema.parse(response.result))
+          setError('Đã hết giờ trước khi lưu đáp án câu ' + item.position + '.')
+        }
+        if (response.saved !== true) return response
+        setAttempt((current) =>
+          current?.id === attempt.id
+            ? {
+                ...current,
+                items: current.items.map((row) =>
+                  row.position === item.position
+                    ? { ...row, answer: chosen }
+                    : row,
+                ),
+              }
+            : current,
+        )
+        return response
+      },
+    )
   }
   async function flag() {
     const item = attempt?.items[position]

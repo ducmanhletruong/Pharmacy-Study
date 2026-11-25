@@ -91,6 +91,30 @@ test('contracts API-01/02 expose subject counts and a topic tree', async () => {
   const parent = await newAttempt(randomUUID(), { topic_ids: [nodes[0].id] })
   expect(parent.response.status).toBe(201)
 })
+test('an older autosave arriving after the latest choice cannot overwrite it', async () => {
+  const { value } = await newAttempt()
+  const id = attemptSchema.parse(value).id
+  const path = `/attempts/${id}/items/1`
+  const save = async (choice: string, version: string | null) =>
+    (
+      await answer(
+        req(path, 'PUT', {
+          answer: choice,
+          defer_feedback: true,
+          expected_answer_version: version,
+        }),
+        { params: Promise.resolve({ id, position: '1' }) },
+      )
+    ).json()
+  const current = await save('D', null)
+  expect(current).toEqual({ saved: true, answer_version: expect.any(String) })
+  expect(await save('A', null)).toEqual({
+    saved: false,
+    answer_version: current.answer_version,
+  })
+  const loaded = await read(req(`/attempts/${id}`), context(id))
+  expect(attemptSchema.parse(await loaded.json()).items[0]?.answer).toBe('D')
+})
 test('API-03/04 redact answers and replay concurrent creates without duplicates', async () => {
   const key = randomUUID()
   const [first, second] = await Promise.all([newAttempt(key), newAttempt(key)])

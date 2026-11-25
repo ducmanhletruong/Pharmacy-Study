@@ -95,6 +95,38 @@ test('autosave keeps the last choice across navigation and retries before submit
     release()
   }
 })
+test('a PUT that never responds times out and can be retried', async ({
+  page,
+}) => {
+  await signInAs(page)
+  await page.getByRole('button', { name: /Môn mẫu tổng hợp/ }).click()
+  await page.getByRole('button', { name: 'Bắt đầu luyện →' }).click()
+  let release!: () => void
+  const stall = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  let saves = 0
+  await page.route('**/api/v1/attempts/*/items/1', async (route) => {
+    if (++saves === 1) {
+      await stall
+      await route.abort().catch(() => {})
+      return
+    }
+    await route.continue()
+  })
+  try {
+    await page.locator('input[value=D]').check()
+    await page.getByRole('button', { name: /^Kết thúc bài/ }).click()
+    await expect(page.getByText('Chưa lưu được đáp án ở câu 1.')).toBeVisible({
+      timeout: 15_000,
+    })
+    await expect(page.locator('input[value=D]')).toBeChecked()
+    await page.getByRole('button', { name: 'Thử lại', exact: true }).click()
+    await expect(page.getByText('Đã làm', { exact: true })).toBeVisible()
+  } finally {
+    release()
+  }
+})
 test('mobile selection and practice fit the viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await signInAs(page)

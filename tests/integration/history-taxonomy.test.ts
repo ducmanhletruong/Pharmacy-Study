@@ -345,6 +345,7 @@ test('attempt snapshots preserve all original topic names and membership across 
       { id: b, title: 'Original B', total: 1 },
     ])
     expect(result.total).toBe(1)
+    expect(result.feedback?.[0]?.feedback.sources).toEqual([])
     await c.query("UPDATE topics SET title='Renamed again' WHERE id=$1", [b])
     expect(await submitAttempt(attempt, DEV_USER_ID, randomUUID(), c)).toEqual(
       result,

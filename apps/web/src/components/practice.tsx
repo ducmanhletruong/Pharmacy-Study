@@ -72,9 +72,11 @@ async function request(
   method = 'GET',
   data?: unknown,
   key?: string,
+  signal?: AbortSignal,
 ) {
   const response = await fetch(`/api/v1${path}`, {
     method,
+    signal,
     headers: {
       ...(data ? { 'Content-Type': 'application/json' } : {}),
       ...(key ? { 'Idempotency-Key': key } : {}),
@@ -246,29 +248,39 @@ export function Practice({
   function selectAnswer(answer: AttemptAnswer | '') {
     const item = attempt?.items[position]
     if (!attempt || !item || busy) return
-    saves.select(attempt.id, item.position, answer, async (chosen) => {
-      const response = await request(
-        `/attempts/${attempt.id}/items/${item.position}`,
-        'PUT',
-        {
-          answer: chosen,
-          defer_feedback: true,
-        },
-      )
-      if (response.saved !== true) throw new Error('Chưa lưu được đáp án.')
-      setAttempt((current) =>
-        current?.id === attempt.id
-          ? {
-              ...current,
-              items: current.items.map((row) =>
-                row.position === item.position
-                  ? { ...row, answer: chosen }
-                  : row,
-              ),
-            }
-          : current,
-      )
-    })
+    saves.select(
+      attempt.id,
+      item.position,
+      answer,
+      item.answer_version,
+      async (chosen, signal, version) => {
+        const response = await request(
+          `/attempts/${attempt.id}/items/${item.position}`,
+          'PUT',
+          {
+            answer: chosen,
+            defer_feedback: true,
+            expected_answer_version: version,
+          },
+          undefined,
+          signal,
+        )
+        if (response.saved !== true) return response
+        setAttempt((current) =>
+          current?.id === attempt.id
+            ? {
+                ...current,
+                items: current.items.map((row) =>
+                  row.position === item.position
+                    ? { ...row, answer: chosen }
+                    : row,
+                ),
+              }
+            : current,
+        )
+        return response
+      },
+    )
   }
   async function finish() {
     if (!attempt) return

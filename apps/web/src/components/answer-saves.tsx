@@ -3,18 +3,25 @@
 import { useCallback, useRef, useState } from 'react'
 import type { AttemptAnswer } from '@pharmacy/api-contract'
 
+const SAVE_TIMEOUT_MS = 10_000
+
 type Entry = {
   attemptId: string
   position: number
   answer: AttemptAnswer | ''
   status: 'saving' | 'saved' | 'error'
-  send: (answer: AttemptAnswer) => Promise<void>
+  send: (
+    answer: AttemptAnswer,
+    signal: AbortSignal,
+    version: string | null | undefined,
+  ) => Promise<{ saved: boolean; answer_version?: string | null }>
 }
 
 export function useAnswerSaves() {
   const entries = useRef(new Map<string, Entry>())
   const running = useRef(new Map<string, Promise<void>>())
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
+  const versions = useRef(new Map<string, string | null>())
   const [snapshot, setSnapshot] = useState(new Map<string, Entry>())
   const update = useCallback((key: string, entry: Entry) => {
     entries.current.set(key, entry)
@@ -33,7 +40,14 @@ export function useAnswerSaves() {
           if (!entry || entry.status !== 'saving' || !entry.answer) return
           let status: 'saved' | 'error' = 'saved'
           try {
-            await entry.send(entry.answer)
+            const result = await entry.send(
+              entry.answer,
+              AbortSignal.timeout(SAVE_TIMEOUT_MS),
+              versions.current.get(key),
+            )
+            if (result.answer_version !== undefined)
+              versions.current.set(key, result.answer_version)
+            if (!result.saved) status = 'error'
           } catch {
             status = 'error'
           }
@@ -51,9 +65,12 @@ export function useAnswerSaves() {
     attemptId: string,
     position: number,
     answer: AttemptAnswer | '',
+    version: string | null | undefined,
     send: Entry['send'],
   ) {
     const key = attemptId + ':' + position
+    if (!versions.current.has(key) && version !== undefined)
+      versions.current.set(key, version)
     const valid =
       answer !== '' &&
       (typeof answer === 'string' ||

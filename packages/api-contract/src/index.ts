@@ -69,6 +69,7 @@ export const answerSchema = z
     answer: attemptAnswerValueSchema.optional(),
     flagged: z.boolean().optional(),
     defer_feedback: z.literal(true).optional(),
+    expected_answer_version: z.string().max(40).nullable().optional(),
   })
   .strict()
   .refine(
@@ -106,6 +107,7 @@ export const attemptSchema = z
             .array(z.object({ label, text: z.string() }).strict())
             .max(4),
           answer: attemptAnswerValueSchema.nullable(),
+          answer_version: z.string().nullable().optional(),
           flagged: z.boolean(),
           assets: z
             .array(
