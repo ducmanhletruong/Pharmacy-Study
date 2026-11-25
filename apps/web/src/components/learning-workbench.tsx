@@ -5,13 +5,14 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   attemptSchema,
   resultSchema,
-  feedbackSchema,
   type Attempt,
   type Result,
-  type Feedback,
+  type AttemptAnswer,
   type BlueprintSpec,
 } from '@pharmacy/api-contract'
 import { RichText } from './rich-text'
+import { VisualAnswer } from './visual-answer'
+import { AnswerSaveStatus, useAnswerSaves } from './answer-saves'
 type Blueprint = { id: string; name: string; spec: BlueprintSpec }
 type Progress = {
   topic_id: string
@@ -21,6 +22,12 @@ type Progress = {
   wrong: number
   unanswered: number
   accuracy: number | null
+}
+type SubjectData = {
+  subject: string
+  blueprints: Blueprint[]
+  blueprint: string
+  stats: Progress[]
 }
 async function request(
   path: string,
@@ -46,31 +53,34 @@ export function LearningWorkbench() {
       [],
     ),
     [subject, setSubject] = useState('synthetic')
-  const [blueprints, setBlueprints] = useState<Blueprint[]>([]),
-    [blueprint, setBlueprint] = useState('')
-  const [stats, setStats] = useState<Progress[]>([]),
-    [source, setSource] = useState<'wrong' | 'flagged'>('wrong'),
+  const [subjectData, setSubjectData] = useState<SubjectData | null>(null)
+  const [refresh, setRefresh] = useState(0)
+  const selected = subjectData?.subject === subject ? subjectData : null
+  const blueprints = selected?.blueprints ?? []
+  const blueprint = selected?.blueprint ?? ''
+  const stats = selected?.stats ?? []
+  const [source, setSource] = useState<'wrong' | 'flagged'>('wrong'),
     [count, setCount] = useState(1)
   const [attempt, setAttempt] = useState<Attempt | null>(null),
     [summary, setSummary] = useState<Result | null>(null),
-    [position, setPosition] = useState(0),
-    [answer, setAnswer] = useState('')
-  const [feedback, setFeedback] = useState<Feedback | null>(null),
-    [busy, setBusy] = useState(false),
+    [position, setPosition] = useState(0)
+  const saves = useAnswerSaves()
+  const { flush } = saves
+  const [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [remaining, setRemaining] = useState<number | null>(null)
   const version = useRef(0),
     offset = useRef(0),
     autoSubmitted = useRef(false),
+    finishing = useRef(false),
     pending = useRef<{ input: string; key: string } | null>(null)
   const invalidate = useCallback(() => {
     version.current++
   }, [])
   const install = useCallback((saved: Attempt) => {
+    setSubject(saved.subject)
     setAttempt(saved)
     setPosition(0)
-    setAnswer('')
-    setFeedback(null)
     setSummary(null)
     autoSubmitted.current = false
     offset.current = saved.server_time
@@ -82,7 +92,14 @@ export function LearningWorkbench() {
     let active = true
     request('/subjects')
       .then((d) => {
-        if (active) setSubjects(d.items)
+        if (active) {
+          setSubjects(d.items)
+          setSubject((current) =>
+            d.items.some((s: { code: string }) => s.code === current)
+              ? current
+              : (d.items[0]?.code ?? current),
+          )
+        }
       })
       .catch((e) => {
         if (active) setError(e.message)
@@ -111,6 +128,7 @@ export function LearningWorkbench() {
     }
   }, [install, invalidate])
   useEffect(() => {
+    if (!subjects.length) return
     let active = true
     Promise.all([
       request('/blueprints?limit=100&subject=' + encodeURIComponent(subject)),
@@ -118,9 +136,12 @@ export function LearningWorkbench() {
     ])
       .then(([b, p]) => {
         if (active) {
-          setBlueprints(b.items)
-          setBlueprint(b.items[0]?.id ?? '')
-          setStats(p.items)
+          setSubjectData({
+            subject,
+            blueprints: b.items,
+            blueprint: b.items[0]?.id ?? '',
+            stats: p.items,
+          })
         }
       })
       .catch((e) => {
@@ -129,23 +150,40 @@ export function LearningWorkbench() {
     return () => {
       active = false
     }
-  }, [subject])
-  const finish = useCallback(async () => {
-    if (!attempt) return
-    const v = version.current
-    setBusy(true)
-    setError('')
-    try {
-      const result = resultSchema.parse(
-        await request('/attempts/' + attempt.id + '/submit', 'POST'),
-      )
-      if (v === version.current) setSummary(result)
-    } catch (e) {
-      if (v === version.current) setError((e as Error).message)
-    } finally {
-      if (v === version.current) setBusy(false)
-    }
-  }, [attempt])
+  }, [subject, subjects.length, refresh])
+  const finish = useCallback(
+    async (expired = false) => {
+      if (!attempt || finishing.current) return
+      finishing.current = true
+      const v = version.current
+      setBusy(true)
+      setError('')
+      try {
+        const failed = await flush(attempt.id)
+        if (failed.length && !expired) {
+          setPosition(
+            attempt.items.findIndex((row) => row.position === failed[0]),
+          )
+          setError('Chưa lưu được đáp án ở câu ' + failed.join(', ') + '.')
+          return
+        }
+        if (failed.length)
+          setError(
+            'Câu ' + failed.join(', ') + ' chưa được lưu trước khi hết giờ.',
+          )
+        const result = resultSchema.parse(
+          await request('/attempts/' + attempt.id + '/submit', 'POST'),
+        )
+        if (v === version.current) setSummary(result)
+      } catch (e) {
+        if (v === version.current) setError((e as Error).message)
+      } finally {
+        finishing.current = false
+        if (v === version.current) setBusy(false)
+      }
+    },
+    [attempt, flush],
+  )
   useEffect(() => {
     if (!attempt?.deadline_at || summary) return
     const deadline = Date.parse(attempt.deadline_at)
@@ -155,9 +193,9 @@ export function LearningWorkbench() {
         Math.ceil((deadline - Date.now() - offset.current) / 1000),
       )
       setRemaining(left)
-      if (left === 0 && !autoSubmitted.current) {
+      if (left === 0 && !autoSubmitted.current && !finishing.current) {
         autoSubmitted.current = true
-        void finish()
+        void finish(true)
       }
     }
     tick()
@@ -165,6 +203,7 @@ export function LearningWorkbench() {
     return () => clearInterval(timer)
   }, [attempt, summary, finish])
   async function start(mode: 'mock' | 'review') {
+    if (!subjects.length || busy || (mode === 'mock' && !blueprint)) return
     setBusy(true)
     setError('')
     const v = ++version.current
@@ -194,7 +233,39 @@ export function LearningWorkbench() {
       if (v === version.current) setBusy(false)
     }
   }
-  async function save(flagOnly = false) {
+  function selectAnswer(answer: AttemptAnswer | '') {
+    const item = attempt?.items[position]
+    if (!attempt || !item || busy) return
+    const v = version.current
+    saves.select(attempt.id, item.position, answer, async (chosen) => {
+      const response = await request(
+        `/attempts/${attempt.id}/items/${item.position}`,
+        'PUT',
+        {
+          answer: chosen,
+          defer_feedback: true,
+        },
+      )
+      if (response.result && v === version.current) {
+        setSummary(resultSchema.parse(response.result))
+        setError('Đã hết giờ trước khi lưu đáp án câu ' + item.position + '.')
+      }
+      if (response.saved !== true) throw new Error('Chưa lưu được đáp án.')
+      setAttempt((current) =>
+        current?.id === attempt.id
+          ? {
+              ...current,
+              items: current.items.map((row) =>
+                row.position === item.position
+                  ? { ...row, answer: chosen }
+                  : row,
+              ),
+            }
+          : current,
+      )
+    })
+  }
+  async function flag() {
     const item = attempt?.items[position]
     if (!attempt || !item) return
     setBusy(true)
@@ -204,48 +275,45 @@ export function LearningWorkbench() {
       const value = await request(
         `/attempts/${attempt.id}/items/${item.position}`,
         'PUT',
-        flagOnly
-          ? { flagged: !item.flagged }
-          : { answer: answer || item.answer },
+        { flagged: !item.flagged },
       )
       if (v !== version.current) return
       if (value.result) {
         setSummary(resultSchema.parse(value.result))
         return
       }
-      if (!flagOnly && attempt.mode !== 'mock')
-        setFeedback(feedbackSchema.parse(value))
-      const fresh = attemptSchema.parse(
-        await request('/attempts/' + attempt.id),
+      setAttempt((current) =>
+        current?.id === attempt.id
+          ? {
+              ...current,
+              items: current.items.map((row) =>
+                row.position === item.position
+                  ? { ...row, flagged: !item.flagged }
+                  : row,
+              ),
+            }
+          : current,
       )
-      if (v === version.current) setAttempt(fresh)
     } catch (e) {
       if (v === version.current) setError((e as Error).message)
     } finally {
       if (v === version.current) setBusy(false)
     }
   }
-  async function reset() {
+  function reset() {
     version.current++
     setAttempt(null)
     setSummary(null)
-    setFeedback(null)
     setRemaining(null)
     setError('')
     history.replaceState(null, '', '/study')
-    try {
-      setStats(
-        (
-          await request(
-            '/me/progress?limit=100&subject=' + encodeURIComponent(subject),
-          )
-        ).items,
-      )
-    } catch (e) {
-      setError((e as Error).message)
-    }
+    setSubjectData(null)
+    setRefresh((current) => current + 1)
   }
   const item = attempt?.items[position]
+  const save =
+    attempt && item ? saves.entry(attempt.id, item.position) : undefined
+  const answer = save ? save.answer : (item?.answer ?? '')
   return (
     <main className="workspace">
       <section className="panel">
@@ -314,76 +382,81 @@ export function LearningWorkbench() {
                 key={q.position}
                 disabled={busy}
                 aria-current={position === index ? 'step' : undefined}
-                onClick={() => {
-                  setPosition(index)
-                  setAnswer('')
-                  setFeedback(null)
-                }}
+                onClick={() => setPosition(index)}
               >
                 {q.position}
-                {q.answer ? ' ✓' : ''}
+                {(saves.entry(attempt.id, q.position)?.status ??
+                  (q.answer ? 'saved' : '')) === 'saved'
+                  ? ' ✓'
+                  : ''}
                 {q.flagged ? ' ★' : ''}
               </button>
             ))}
           </nav>
           <h3>Câu {item.position}</h3>
           <RichText text={item.stem} />
-          {item.assets.map((a) => (
-            <Image
-              key={a.id}
-              unoptimized
-              src={a.url}
-              alt={a.alt_text}
-              width={600}
-              height={400}
-              style={{ maxWidth: '100%', height: 'auto' }}
+          {item.exercise ? (
+            <VisualAnswer
+              item={item}
+              answer={answer}
+              busy={busy}
+              onAnswer={selectAnswer}
             />
-          ))}
-          <fieldset
-            disabled={busy || (attempt.mode !== 'mock' && item.answer !== null)}
-          >
-            <legend>Chọn đáp án cho câu {item.position}</legend>
-            {item.choices.map((c) => (
-              <label className="choice" key={c.label}>
-                <input
-                  type="radio"
-                  name={'answer-' + item.position}
-                  value={c.label}
-                  checked={(answer || item.answer) === c.label}
-                  onChange={() => setAnswer(c.label)}
+          ) : (
+            <>
+              {item.assets.map((a) => (
+                <Image
+                  key={a.id}
+                  unoptimized
+                  src={a.url}
+                  alt={a.alt_text}
+                  width={600}
+                  height={400}
+                  style={{ maxWidth: '100%', height: 'auto' }}
                 />
-                <span>
-                  {c.label}. <RichText text={c.text} />
-                </span>
-              </label>
-            ))}
-          </fieldset>
-          <button
-            disabled={busy || !(answer || item.answer)}
-            className="primary"
-            onClick={() => void save()}
-          >
-            {attempt.mode === 'mock' ? 'Lưu đáp án' : 'Gửi đáp án ôn tập'}
-          </button>
-          <button disabled={busy} onClick={() => void save(true)}>
+              ))}
+              <fieldset disabled={busy}>
+                <legend>Chọn đáp án cho câu {item.position}</legend>
+                {item.choices.map((c) => (
+                  <label className="choice" key={c.label}>
+                    <input
+                      type="radio"
+                      name={'answer-' + item.position}
+                      value={c.label}
+                      checked={answer === c.label}
+                      onChange={() => selectAnswer(c.label)}
+                    />
+                    <span>
+                      {c.label}. <RichText text={c.text} />
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+            </>
+          )}
+          <AnswerSaveStatus
+            entry={save}
+            saved={item.answer !== null}
+            retry={() => saves.retry(attempt.id, item.position)}
+          />
+          <div className="question-actions">
+            <button
+              disabled={busy || position === 0}
+              onClick={() => setPosition(position - 1)}
+            >
+              Câu trước
+            </button>
+            <button
+              disabled={busy || position === attempt.items.length - 1}
+              onClick={() => setPosition(position + 1)}
+            >
+              Câu tiếp theo
+            </button>
+          </div>
+          <button disabled={busy} onClick={() => void flag()}>
             {item.flagged ? 'Bỏ đánh dấu' : 'Đánh dấu ôn lại'}
           </button>
-          {attempt.mode === 'mock' && (
-            <p>Đáp án đúng, lời giải và nguồn chỉ xuất hiện sau khi nộp bài.</p>
-          )}
-          {feedback && (
-            <section role="status">
-              <h3>Đáp án: {feedback.correct_answer}</h3>
-              <RichText text={feedback.explanation} />
-              <ul>
-                {feedback.sources.map((s) => (
-                  <li key={s.locator}>
-                    {s.title} — {s.locator}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          <p>Đáp án đúng, lời giải và nguồn xuất hiện sau khi nộp bài.</p>
           <button disabled={busy} onClick={() => void finish()}>
             Nộp bài
           </button>
@@ -396,7 +469,11 @@ export function LearningWorkbench() {
               <select
                 disabled={busy}
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
+                onChange={(e) => {
+                  setSubjectData(null)
+                  setError('')
+                  setSubject(e.target.value)
+                }}
               >
                 {subjects.map((s) => (
                   <option key={s.code} value={s.code}>
@@ -410,8 +487,15 @@ export function LearningWorkbench() {
               Cấu hình thi
               <select
                 value={blueprint}
-                disabled={busy}
-                onChange={(e) => setBlueprint(e.target.value)}
+                disabled={busy || !blueprint}
+                onChange={(e) => {
+                  const id = e.target.value
+                  setSubjectData((current) =>
+                    current?.subject === subject
+                      ? { ...current, blueprint: id }
+                      : current,
+                  )
+                }}
               >
                 {blueprints.map((b) => (
                   <option key={b.id} value={b.id}>
@@ -422,7 +506,9 @@ export function LearningWorkbench() {
                 ))}
               </select>
             </label>
-            {!blueprints.length && <p>Chưa có cấu hình thi đang áp dụng.</p>}
+            {selected && !blueprints.length && (
+              <p>Chưa có cấu hình thi đang áp dụng.</p>
+            )}
             <button
               className="primary"
               disabled={busy || !blueprint}
@@ -462,15 +548,15 @@ export function LearningWorkbench() {
                   ))}
                 </tbody>
               </table>
-            ) : (
-              <p>Chưa có bài đã nộp cho môn này.</p>
-            )}
+            ) : selected ? (
+              <p>Chưa có bài đã nộp hoặc hết giờ cho môn này.</p>
+            ) : null}
           </section>
           <section className="panel">
             <h2>Ôn lại câu sai và đã đánh dấu</h2>
             <p>
-              Chọn theo lần làm gần nhất của từng câu đã nộp; dùng revision hiện
-              hành còn được duyệt.
+              Ôn từ bài đã nộp, bài thi đã hết giờ hoặc câu đã đánh dấu khi
+              luyện. Hệ thống dùng phiên bản hiện hành còn được duyệt.
             </p>
             <label>
               Nguồn ôn tập
@@ -496,7 +582,10 @@ export function LearningWorkbench() {
                 onChange={(e) => setCount(Number(e.target.value))}
               />
             </label>
-            <button disabled={busy} onClick={() => void start('review')}>
+            <button
+              disabled={busy || !subjects.length}
+              onClick={() => void start('review')}
+            >
               Bắt đầu ôn lại
             </button>
           </section>

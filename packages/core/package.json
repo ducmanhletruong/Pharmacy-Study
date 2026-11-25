@@ -7,6 +7,9 @@
     ".": "./src/grading/mcq.ts",
     "./authz": "./src/authz/index.ts",
     "./lifecycle": "./src/lifecycle/index.ts",
-    "./exam": "./src/exam/index.ts"
+    "./exam": "./src/exam/index.ts",
+    "./audience": "./src/audience/index.ts",
+    "./name-grading": "./src/grading/name.ts",
+    "./hotspot-grading": "./src/grading/hotspot.ts"
   }
 }

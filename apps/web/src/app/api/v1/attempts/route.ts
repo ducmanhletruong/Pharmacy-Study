@@ -11,7 +11,14 @@ export function POST(request: Request) {
         'Cần Idempotency-Key dài tối đa 128 ký tự',
       )
     const input = createAttemptSchema.parse(await body(request))
-    const result = await createAttempt(input, key, actor.id, requestId)
+    const result = await createAttempt(
+      input,
+      key,
+      actor.id,
+      requestId,
+      undefined,
+      actor.role === 'admin',
+    )
     return Response.json(result.attempt, {
       status: result.replayed ? 200 : 201,
       headers: result.replayed ? { 'Idempotent-Replay': 'true' } : {},

@@ -7,6 +7,8 @@
     "./bundle": "./src/bundle/index.ts"
   },
   "dependencies": {
-    "@pharmacy/api-contract": "workspace:*"
+    "@pharmacy/api-contract": "workspace:*",
+    "@pharmacy/calc-engine": "workspace:*",
+    "js-yaml": "4.3.2"
   }
 }

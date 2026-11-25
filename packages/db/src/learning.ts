@@ -3,7 +3,7 @@ import {
   blueprintInputSchema,
   type BlueprintInput,
 } from '@pharmacy/api-contract'
-import { getPool } from './client'
+import { getPool, withAccountRows } from './client'
 import { appendAudit } from './audit'
 import { PracticeError } from './practice'
 
@@ -160,17 +160,23 @@ export async function progress(
   subject: string,
   cursor?: string,
   limit = 20,
+  allowAdmin = true,
 ) {
-  const result = await getPool().query(
-    `SELECT t.topic_id,(array_agg(t.title ORDER BY a.submitted_at DESC,a.id DESC))[1] title,
+  const result = await withAccountRows(userId, (db) =>
+    db.query(
+      `SELECT t.topic_id,(array_agg(t.title ORDER BY COALESCE(a.submitted_at,a.deadline_at) DESC,a.id DESC))[1] title,
     count(*)::int total,count(*) FILTER(WHERE i.is_correct IS TRUE)::int correct,
     count(*) FILTER(WHERE i.answer IS NOT NULL AND i.is_correct IS FALSE)::int wrong,
     count(*) FILTER(WHERE i.answer IS NULL)::int unanswered
     FROM attempts a JOIN subjects s ON s.id=a.subject_id JOIN attempt_items i ON i.attempt_id=a.id
     CROSS JOIN LATERAL jsonb_to_recordset(i.topic_snapshot) AS t(topic_id uuid,title text)
-    WHERE a.user_id=$1 AND s.code=$2 AND a.status IN ('submitted','expired') AND ($3::uuid IS NULL OR t.topic_id>$3)
+    WHERE a.user_id=$1 AND s.code=$2 AND ($3::uuid IS NULL OR t.topic_id>$3)
+      AND (a.status IN ('submitted','expired')
+        OR (a.status='in_progress' AND a.mode='mock' AND a.deadline_at<=statement_timestamp()))
+      AND can_view_revision(i.question_revision_id,a.subject_id,(SELECT viewer_audience($1,$5)))
     GROUP BY t.topic_id ORDER BY t.topic_id LIMIT $4`,
-    [userId, subject, cursor ?? null, limit + 1],
+      [userId, subject, cursor ?? null, limit + 1, allowAdmin],
+    ),
   )
   const items = result.rows.slice(0, limit).map((row) => ({
     ...row,

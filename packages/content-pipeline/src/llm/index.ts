@@ -4,6 +4,7 @@ export type Generated = {
   questions: unknown[]
   input_tokens: number
   output_tokens: number
+  provider_request_id?: string
 }
 export interface LlmProvider {
   readonly name: string
@@ -12,43 +13,48 @@ export interface LlmProvider {
     system: string,
     data: string,
     signal: AbortSignal,
+    clientRequestId?: string,
   ): Promise<Generated>
 }
 export type Citation = { source_ref: string; quote: string }
-export function validateGenerated(raw: unknown) {
+export function generatedItems(raw: unknown): unknown[] {
   if (!raw || typeof raw !== 'object') throw Error('Invalid generation output')
   const items = (raw as { questions?: unknown }).questions
-  if (!Array.isArray(items) || !items.length || items.length > 100)
-    throw Error('Expected 1..100 generated MCQs')
-  return items.map((item: unknown) => {
-    if (!item || typeof item !== 'object') throw Error('Invalid MCQ')
-    const { citations, ...question } = item as Record<string, unknown>
-    if (!Array.isArray(citations) || !citations.length || citations.length > 20)
-      throw Error('Missing citations')
-    const checked: Citation[] = citations.map((c: unknown) => {
-      if (!c || typeof c !== 'object') throw Error('Invalid citation')
-      const value = c as Record<string, unknown>
-      if (
-        Object.keys(value).sort().join(',') !== 'quote,source_ref' ||
-        typeof value.source_ref !== 'string' ||
-        typeof value.quote !== 'string' ||
-        !value.quote.trim() ||
-        value.quote.length > 4000
-      )
-        throw Error('Invalid citation')
-      return { source_ref: value.source_ref, quote: value.quote }
-    })
-    return {
-      question: bundleQuestionSchema.parse(question),
-      citations: checked,
-    }
+  if (!Array.isArray(items) || items.length > 100)
+    throw Error('Expected up to 100 generated MCQs')
+  return items
+}
+export function validateGeneratedItem(item: unknown) {
+  if (!item || typeof item !== 'object') throw Error('Invalid MCQ')
+  const { citations, ...question } = item as Record<string, unknown>
+  if (!Array.isArray(citations) || !citations.length || citations.length > 20)
+    throw Error('Missing citations')
+  const checked: Citation[] = citations.map((c: unknown) => {
+    if (!c || typeof c !== 'object') throw Error('Invalid citation')
+    const value = c as Record<string, unknown>
+    if (
+      Object.keys(value).sort().join(',') !== 'quote,source_ref' ||
+      typeof value.source_ref !== 'string' ||
+      typeof value.quote !== 'string' ||
+      !value.quote.trim() ||
+      value.quote.length > 4000
+    )
+      throw Error('Invalid citation')
+    return { source_ref: value.source_ref, quote: value.quote }
   })
+  const parsed = bundleQuestionSchema.parse(question)
+  const sourceLinks = new Set(
+    parsed.sources.map((link) => `${link.source_ref}\0${link.locator}`),
+  )
+  if (parsed.asset_refs?.length || sourceLinks.size !== parsed.sources.length)
+    throw Error('Generated MCQs require unique source links and no assets')
+  return { question: parsed, citations: checked }
 }
 export async function generateBounded(
   provider: LlmProvider,
   system: string,
   data: string,
-  options: { timeout_ms: number; retries: number },
+  options: { timeout_ms: number; retries: number; clientRequestId?: string },
 ) {
   if (
     !Number.isInteger(options.retries) ||
@@ -67,7 +73,12 @@ export async function generateBounded(
     let timer: ReturnType<typeof setTimeout> | undefined
     try {
       const result = await Promise.race([
-        provider.generate(system, data, controller.signal),
+        provider.generate(
+          system,
+          data,
+          controller.signal,
+          options.clientRequestId,
+        ),
         new Promise<never>((_, reject) => {
           timer = setTimeout(() => {
             controller.abort()
@@ -78,7 +89,7 @@ export async function generateBounded(
       for (const count of [result.input_tokens, result.output_tokens])
         if (!Number.isSafeInteger(count) || count < 0)
           throw Error('Missing provider usage')
-      validateGenerated({ questions: result.questions })
+      generatedItems({ questions: result.questions })
       return result
     } catch (error) {
       last = error

@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { canView, type Audience } from '@pharmacy/core/audience'
+import type { QuestionType } from '@pharmacy/api-contract'
 
 type Status =
   'draft' | 'verified' | 'approved' | 'under_review' | 'hidden' | 'retired'
@@ -16,6 +18,16 @@ type Source = {
   license: string
   review_status: 'pending' | 'approved' | 'rejected'
 }
+type ManagedSource = Source & {
+  audience: Audience
+  audience_rights_basis: string | null
+}
+type Invitation = { email: string; joined: boolean; revoked: boolean }
+const audienceLabels = {
+  owner_only: 'Chỉ chủ sở hữu',
+  class: 'Lớp được mời',
+  public: 'Công khai',
+} satisfies Record<Audience, string>
 type Report = {
   id: string
   question_id?: string
@@ -28,6 +40,7 @@ type Question = {
   subject: string
   status: Status
   version: number
+  type: QuestionType
   stem: string
 }
 type Topic = { id: string; code: string; title: string; children: Topic[] }
@@ -41,6 +54,7 @@ type Detail = Omit<Question, 'stem'> & {
     topic_codes: string[]
     sources: Source[]
     accepted_answers?: string[]
+    visual: unknown
     assets: { id: string; url: string; alt_text: string; mime: string }[]
   }
   history: { id: string; rev_no?: number; stem?: string; created_at?: string }[]
@@ -114,11 +128,76 @@ function flattenTopics(
   ])
 }
 
+function SourceAudience({
+  source,
+  busy,
+  save,
+}: {
+  source: ManagedSource
+  busy: boolean
+  save: (
+    source: ManagedSource,
+    audience: Audience,
+    basis: string,
+  ) => Promise<void>
+}) {
+  const [audience, setAudience] = useState(source.audience)
+  const [basis, setBasis] = useState('')
+  const widening = !canView(audience, source.audience)
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault()
+        void save(source, audience, basis)
+      }}
+    >
+      {source.audience_rights_basis && (
+        <p>Căn cứ hiện tại: {source.audience_rights_basis}</p>
+      )}
+      <label>
+        Phạm vi xem nguồn {source.title}
+        <select
+          value={audience}
+          onChange={(event) => setAudience(event.target.value as Audience)}
+        >
+          {Object.entries(audienceLabels).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      {widening && (
+        <label>
+          Căn cứ quyền chia sẻ
+          <input
+            value={basis}
+            required
+            maxLength={1000}
+            onChange={(event) => setBasis(event.target.value)}
+          />
+        </label>
+      )}
+      <button
+        disabled={
+          busy ||
+          audience === source.audience ||
+          (widening && (!basis.trim() || source.review_status !== 'approved'))
+        }
+      >
+        {widening ? 'Xác nhận mở phạm vi' : 'Lưu phạm vi'}
+      </button>
+    </form>
+  )
+}
+
 export function ContentAdmin() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [subjects, setSubjects] = useState<{ code: string; name: string }[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
-  const [sources, setSources] = useState<Source[]>([])
+  const [sources, setSources] = useState<ManagedSource[]>([])
+  const [invitations, setInvitations] = useState<Invitation[]>([])
+  const [inviteEmail, setInviteEmail] = useState('')
   const [reports, setReports] = useState<Report[]>([])
   const [detail, setDetail] = useState<Detail | null>(null)
   const [filters, setFilters] = useState({
@@ -161,8 +240,11 @@ export function ContentAdmin() {
   )
   const loadShared = useCallback(async () => {
     const outcomes = await Promise.allSettled([
-      api<{ items: Source[] }>('/admin/sources').then((value) => {
+      api<{ items: ManagedSource[] }>('/admin/sources').then((value) => {
         if (mounted.current) setSources(value.items)
+      }),
+      api<{ items: Invitation[] }>('/admin/invitations').then((value) => {
+        if (mounted.current) setInvitations(value.items)
       }),
       api<{ items: Report[] }>('/admin/reports?status=open').then((value) => {
         if (mounted.current) setReports(value.items)
@@ -272,6 +354,37 @@ export function ContentAdmin() {
         if (mounted.current) setDetail(value)
       }
       if (mounted.current) setMessage('Đã cập nhật đánh giá nguồn tài liệu.')
+    })
+  }
+  async function changeAudience(
+    source: ManagedSource,
+    audience: Audience,
+    rightsBasis: string,
+  ) {
+    await run(async () => {
+      await api(
+        '/admin/sources',
+        patch({
+          id: source.id,
+          audience,
+          expected_audience: source.audience,
+          ...(rightsBasis.trim() ? { rights_basis: rightsBasis.trim() } : {}),
+        }),
+      )
+      await Promise.all([loadQuestions(), loadShared()])
+      if (mounted.current) setMessage('Đã cập nhật phạm vi xem nguồn.')
+    })
+  }
+  async function changeInvitation(email: string, action: 'invite' | 'revoke') {
+    await run(async () => {
+      await api('/admin/invitations', patch({ email, action }))
+      await loadShared()
+      if (mounted.current) {
+        if (action === 'invite') setInviteEmail('')
+        setMessage(
+          action === 'invite' ? 'Đã lưu lời mời.' : 'Đã thu hồi quyền lớp.',
+        )
+      }
     })
   }
   async function resolveReport(report: Report, status: string, note: string) {
@@ -415,6 +528,8 @@ export function ContentAdmin() {
               }
             >
               <option value="mcq">Trắc nghiệm</option>
+              <option value="name_from_structure">Danh pháp từ hình</option>
+              <option value="image_hotspot">Chỉ bộ phận trên hình</option>
             </select>
           </label>
           <button className="secondary" disabled={busy}>
@@ -470,6 +585,12 @@ export function ContentAdmin() {
               <p>{source.locator}</p>
               <p>Quyền sử dụng: {source.license}</p>
               <p>{reviewLabels[source.review_status]}</p>
+              <SourceAudience
+                key={source.audience}
+                source={source}
+                busy={busy}
+                save={changeAudience}
+              />
               <div className="admin-actions">
                 <button
                   disabled={busy || source.review_status === 'approved'}
@@ -488,6 +609,51 @@ export function ContentAdmin() {
           ))}
         </ul>
         {!sources.length && <p>Chưa có nguồn tài liệu.</p>}
+      </section>
+      <section className="panel" aria-labelledby="invitations-heading">
+        <h2 id="invitations-heading">Thành viên lớp</h2>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            void changeInvitation(inviteEmail, 'invite')
+          }}
+        >
+          <label>
+            Email Google{' '}
+            <input
+              type="email"
+              required
+              maxLength={254}
+              value={inviteEmail}
+              onChange={(event) => setInviteEmail(event.target.value)}
+            />
+          </label>
+          <button disabled={busy}>Lưu lời mời</button>
+        </form>
+        <ul>
+          {invitations.map((item) => (
+            <li key={item.email}>
+              {item.email} ·{' '}
+              {item.revoked
+                ? 'Đã thu hồi'
+                : item.joined
+                  ? 'Đã tham gia'
+                  : 'Chờ đăng nhập'}
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() =>
+                  void changeInvitation(
+                    item.email,
+                    item.revoked ? 'invite' : 'revoke',
+                  )
+                }
+              >
+                {item.revoked ? 'Mời lại' : 'Thu hồi'}
+              </button>
+            </li>
+          ))}
+        </ul>
       </section>
       <section className="panel" aria-labelledby="reports-heading">
         <h2 id="reports-heading">Báo lỗi cần xử lý</h2>
@@ -519,6 +685,9 @@ function QuestionEditor({
   const [explanation, setExplanation] = useState(detail.revision.explanation)
   const [difficulty, setDifficulty] = useState(detail.revision.difficulty)
   const [choices, setChoices] = useState(detail.revision.choices)
+  const [acceptedNames, setAcceptedNames] = useState(
+    (detail.revision.accepted_answers ?? []).join('\n'),
+  )
   const [status, setStatus] = useState<Status | ''>('')
   async function edit(event: FormEvent) {
     event.preventDefault()
@@ -527,14 +696,22 @@ function QuestionEditor({
         stem,
         explanation,
         difficulty,
-        choices,
+        ...(detail.type === 'mcq'
+          ? { choices }
+          : { visual: detail.revision.visual }),
         topic_codes: detail.revision.topic_codes,
         sources: detail.revision.sources.map((source) => ({
           source_id: source.id,
           locator: source.locator,
         })),
         asset_ids: detail.revision.assets.map((asset) => asset.id),
-        accepted_answers: detail.revision.accepted_answers ?? [],
+        accepted_answers:
+          detail.type === 'name_from_structure'
+            ? acceptedNames
+                .split(/\r?\n/u)
+                .map((name) => name.trim())
+                .filter(Boolean)
+            : (detail.revision.accepted_answers ?? []),
       },
     })
   }
@@ -569,46 +746,58 @@ function QuestionEditor({
               <option value={3}>Nâng cao</option>
             </select>
           </label>
-          <fieldset>
-            <legend>Các lựa chọn và đáp án đúng</legend>
-            {choices.map((choice) => (
-              <div className="admin-choice-edit" key={choice.label}>
-                <label>
-                  Lựa chọn {choice.label}
-                  <input
-                    required
-                    maxLength={4000}
-                    value={choice.text}
-                    onChange={(event) =>
-                      setChoices(
-                        choices.map((item) =>
-                          item.label === choice.label
-                            ? { ...item, text: event.target.value }
-                            : item,
-                        ),
-                      )
-                    }
-                  />
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="correct-choice"
-                    checked={choice.is_correct}
-                    onChange={() =>
-                      setChoices(
-                        choices.map((item) => ({
-                          ...item,
-                          is_correct: item.label === choice.label,
-                        })),
-                      )
-                    }
-                  />
-                  Đáp án đúng {choice.label}
-                </label>
-              </div>
-            ))}
-          </fieldset>
+          {detail.type === 'mcq' && (
+            <fieldset>
+              <legend>Các lựa chọn và đáp án đúng</legend>
+              {choices.map((choice) => (
+                <div className="admin-choice-edit" key={choice.label}>
+                  <label>
+                    Lựa chọn {choice.label}
+                    <input
+                      required
+                      maxLength={4000}
+                      value={choice.text}
+                      onChange={(event) =>
+                        setChoices(
+                          choices.map((item) =>
+                            item.label === choice.label
+                              ? { ...item, text: event.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="correct-choice"
+                      checked={choice.is_correct}
+                      onChange={() =>
+                        setChoices(
+                          choices.map((item) => ({
+                            ...item,
+                            is_correct: item.label === choice.label,
+                          })),
+                        )
+                      }
+                    />
+                    Đáp án đúng {choice.label}
+                  </label>
+                </div>
+              ))}
+            </fieldset>
+          )}
+          {detail.type === 'name_from_structure' && (
+            <label>
+              Tên được chấp nhận, mỗi tên một dòng. Dòng đầu là tên chuẩn.
+              <textarea
+                required
+                value={acceptedNames}
+                onChange={(event) => setAcceptedNames(event.target.value)}
+              />
+            </label>
+          )}
           <label>
             Giải thích
             <textarea

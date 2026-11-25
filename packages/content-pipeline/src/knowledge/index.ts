@@ -1,7 +1,7 @@
 import { readFile, realpath, stat } from 'node:fs/promises'
 import { resolve, relative, isAbsolute } from 'node:path'
 export type Source = {
-  kind?: 'manual' | 'notebooklm'
+  kind?: 'manual' | 'notebooklm' | 'web' | 'upload'
   ref: string
   title: string
   locator: string
@@ -26,6 +26,14 @@ export function validateSources(raw: unknown): Source[] {
     const source = value as Source
     if (!id.test(source.ref) || refs.has(source.ref))
       throw Error('Invalid or duplicate source ref')
+    if (
+      source.kind !== undefined &&
+      source.kind !== 'manual' &&
+      source.kind !== 'notebooklm' &&
+      source.kind !== 'web' &&
+      source.kind !== 'upload'
+    )
+      throw Error('Invalid source kind')
     refs.add(source.ref)
     bytes += Buffer.byteLength(source.text)
     if (
@@ -41,6 +49,7 @@ export function validateSources(raw: unknown): Source[] {
       locator: source.locator,
       license: source.license,
       text: source.text,
+      ...(source.kind ? { kind: source.kind } : {}),
     }
   })
 }

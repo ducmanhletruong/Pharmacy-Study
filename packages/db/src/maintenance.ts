@@ -2,6 +2,7 @@ import pg from 'pg'
 import { loadLocalEnv } from './env'
 
 export function loadMaintenanceEnv() {
+  if (process.env.PHARMACY_SKIP_LOCAL_ENV === '1') return
   try {
     process.loadEnvFile(new URL('../../../.env.db', import.meta.url))
   } catch (error) {

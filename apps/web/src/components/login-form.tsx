@@ -8,11 +8,13 @@ export function LoginForm({
   guest,
   test,
   error,
+  next = '/',
 }: {
   google: boolean
   guest: boolean
   test: boolean
   error: boolean
+  next?: string
 }) {
   const router = useRouter()
   const [message, setMessage] = useState(
@@ -52,10 +54,10 @@ export function LoginForm({
     try {
       const response = await signIn('guest', {
         redirect: false,
-        callbackUrl: '/',
+        callbackUrl: next,
       })
       if (response?.ok && !response.error) {
-        router.replace('/')
+        router.replace(next)
         router.refresh()
       } else setMessage('Chưa thể tạo phiên ẩn danh. Vui lòng thử lại.')
     } catch {
@@ -69,8 +71,9 @@ export function LoginForm({
       <p className="eyebrow">PHARMACY STUDY</p>
       <h1>Vào học ngay.</h1>
       <p>
-        Đăng nhập Google hoặc tiếp tục ẩn danh để bắt đầu học. Bài làm được lưu
-        riêng cho bạn.
+        {google
+          ? 'Đăng nhập Google hoặc tiếp tục ẩn danh để bắt đầu học. Bài làm được lưu riêng cho bạn.'
+          : 'Tiếp tục ẩn danh để bắt đầu học. Bài làm được lưu riêng cho bạn.'}
       </p>
       {message && (
         <p role="alert" className="error">

@@ -9,6 +9,8 @@ export function GET(
   return handle(request, async (actor) => {
     const id = uuid.parse((await context.params).id)
     await assertAttemptAccess(actor, id, 'attempt:read')
-    return Response.json(await getAttempt(id, actor.id))
+    return Response.json(
+      await getAttempt(id, actor.id, undefined, actor.role === 'admin'),
+    )
   })
 }

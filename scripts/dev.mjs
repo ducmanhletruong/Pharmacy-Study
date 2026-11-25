@@ -4,10 +4,12 @@ import { assertRuntimeDatabase, closeDb } from '../packages/db/src/client.ts'
 import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
-try {
-  process.loadEnvFile(new URL('../.env', import.meta.url))
-} catch (error) {
-  if (error.code !== 'ENOENT') throw error
+if (process.env.PHARMACY_SKIP_LOCAL_ENV !== '1') {
+  try {
+    process.loadEnvFile(new URL('../.env', import.meta.url))
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error
+  }
 }
 const config = readAuthConfig()
 if (['oidc', 'test', 'guest'].includes(config.AUTH_MODE)) {

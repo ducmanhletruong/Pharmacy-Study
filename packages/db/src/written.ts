@@ -6,24 +6,10 @@ import {
   type WrittenAttempt,
   type WrittenSection,
 } from '@pharmacy/api-contract'
-import { getPool } from './client'
+import { withAccountRows } from './client'
 import { PracticeError } from './practice'
 import { appendAudit } from './audit'
 type Db = Pick<pg.PoolClient, 'query'>
-async function tx<T>(run: (db: pg.PoolClient) => Promise<T>) {
-  const db = await getPool().connect()
-  try {
-    await db.query('BEGIN')
-    const value = await run(db)
-    await db.query('COMMIT')
-    return value
-  } catch (e) {
-    await db.query('ROLLBACK')
-    throw e
-  } finally {
-    db.release()
-  }
-}
 function pdf(value: string) {
   const bytes = Buffer.from(value, 'base64')
   if (
@@ -59,7 +45,7 @@ export async function saveWrittenPaper(
     .update(exam)
     .update(reference ?? Buffer.alloc(0))
     .digest('hex')
-  return tx(async (db) => {
+  return withAccountRows(userId, async (db) => {
     const r = await db.query(
       `INSERT INTO written_papers(user_id,subject_code,name,duration_seconds,sections,exam_pdf,reference_pdf,content_hash)
  VALUES($1,$2,$3,$4,$5::jsonb,$6,$7,$8) ON CONFLICT(user_id,content_hash) DO NOTHING RETURNING id`,
@@ -96,9 +82,11 @@ export async function writtenPapers(
   cursor?: string,
   limit = 20,
 ) {
-  const r = await getPool().query(
-    'SELECT id,name,subject_code AS subject,duration_seconds,sections FROM written_papers WHERE user_id=$1 AND ($2::uuid IS NULL OR id>$2) ORDER BY id LIMIT $3',
-    [userId, cursor ?? null, limit + 1],
+  const r = await withAccountRows(userId, (db) =>
+    db.query(
+      'SELECT id,name,subject_code AS subject,duration_seconds,sections FROM written_papers WHERE user_id=$1 AND ($2::uuid IS NULL OR id>$2) ORDER BY id LIMIT $3',
+      [userId, cursor ?? null, limit + 1],
+    ),
   )
   const items = r.rows.slice(0, limit)
   return { items, next_cursor: r.rows.length > limit ? items.at(-1)!.id : null }
@@ -171,7 +159,7 @@ export function startWritten(
       400,
       'Cần Idempotency-Key tối đa128ký tự',
     )
-  return tx(async (db) => {
+  return withAccountRows(userId, async (db) => {
     await db.query('SELECT pg_advisory_xact_lock(hashtext($1),hashtext($2))', [
       userId,
       key,
@@ -229,7 +217,7 @@ export function getWritten(
   userId: string,
   requestId: string = randomUUID(),
 ) {
-  return tx(async (db) => {
+  return withAccountRows(userId, async (db) => {
     const row = await owned(db, id, userId)
     if (row.expired) await finish(db, row, userId, requestId)
     return view(db, id, userId)
@@ -242,7 +230,7 @@ export function saveWrittenAnswer(
   text: string,
   requestId: string = randomUUID(),
 ) {
-  return tx(async (db) => {
+  return withAccountRows(userId, async (db) => {
     const row = await owned(db, id, userId)
     if (row.status !== 'in_progress')
       throw new PracticeError(
@@ -272,7 +260,7 @@ export function submitWritten(
   userId: string,
   requestId: string = randomUUID(),
 ) {
-  return tx(async (db) => {
+  return withAccountRows(userId, async (db) => {
     await finish(db, await owned(db, id, userId), userId, requestId)
     return view(db, id, userId)
   })
@@ -283,7 +271,7 @@ export function gradeWritten(
   points: number[],
   requestId: string = randomUUID(),
 ) {
-  return tx(async (db) => {
+  return withAccountRows(userId, async (db) => {
     const row = await owned(db, id, userId)
     if (row.status === 'in_progress')
       throw new PracticeError(
@@ -327,9 +315,11 @@ export async function writtenPdf(
   userId: string,
   attemptId?: string,
 ) {
-  const r = await getPool().query(
-    'SELECT exam_pdf,reference_pdf FROM written_papers WHERE id=$1 AND user_id=$2',
-    [paperId, userId],
+  const r = await withAccountRows(userId, (db) =>
+    db.query(
+      'SELECT exam_pdf,reference_pdf FROM written_papers WHERE id=$1 AND user_id=$2',
+      [paperId, userId],
+    ),
   )
   if (!r.rowCount)
     throw new PracticeError('not_found', 404, 'Không tìm thấy tài liệu riêng')
@@ -353,13 +343,15 @@ export async function writtenHistory(
   cursor?: string,
   limit = 20,
 ) {
-  const result = await getPool().query(
-    `SELECT id,paper_snapshot->>'name' name,paper_id,started_at,
+  const result = await withAccountRows(userId, (db) =>
+    db.query(
+      `SELECT id,paper_snapshot->>'name' name,paper_id,started_at,
    CASE WHEN status='in_progress' AND clock_timestamp()>=deadline_at THEN 'expired' ELSE status END status,
    grading_status,score::float8 score FROM written_attempts
    WHERE user_id=$1 AND ($2::uuid IS NULL OR (started_at,id)<(SELECT started_at,id FROM written_attempts WHERE id=$2 AND user_id=$1))
    ORDER BY started_at DESC,id DESC LIMIT $3`,
-    [userId, cursor ?? null, limit + 1],
+      [userId, cursor ?? null, limit + 1],
+    ),
   )
   const items = result.rows.slice(0, limit)
   return {

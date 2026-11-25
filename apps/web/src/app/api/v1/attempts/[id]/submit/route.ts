@@ -9,6 +9,14 @@ export function POST(
   return handle(request, async (actor, requestId) => {
     const id = uuid.parse((await context.params).id)
     await assertAttemptAccess(actor, id, 'attempt:submit')
-    return Response.json(await submitAttempt(id, actor.id, requestId))
+    return Response.json(
+      await submitAttempt(
+        id,
+        actor.id,
+        requestId,
+        undefined,
+        actor.role === 'admin',
+      ),
+    )
   })
 }

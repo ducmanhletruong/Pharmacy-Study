@@ -12,12 +12,26 @@ import {
   closeMaintenance,
 } from '../packages/db/src/maintenance'
 
-process.loadEnvFile('.env.db')
-process.loadEnvFile('.env')
-const maintenance = new URL(process.env.MIGRATION_DATABASE_URL!)
-const bootstrap = new URL(process.env.BOOTSTRAP_DATABASE_URL!)
-if (!['127.0.0.1', 'localhost'].includes(bootstrap.hostname))
-  throw new Error('Only local benchmark databases are supported')
+function databaseUrl(name: string) {
+  const value = process.env[name]
+  if (!value) throw new Error(`Provide ${name} for the isolated benchmark`)
+  const url = new URL(value)
+  if (
+    !['postgresql:', 'postgres:'].includes(url.protocol) ||
+    !['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) ||
+    url.search ||
+    url.hash
+  )
+    throw new Error(`${name} must be a loopback PostgreSQL URL without options`)
+  return url
+}
+const maintenance = databaseUrl('MIGRATION_DATABASE_URL')
+const bootstrap = databaseUrl('BOOTSTRAP_DATABASE_URL')
+const runtime = databaseUrl('DATABASE_URL')
+const endpoint = (url: URL) => `${url.hostname}:${url.port || '5432'}`
+if ([maintenance, runtime].some((url) => endpoint(url) !== endpoint(bootstrap)))
+  throw new Error('All benchmark roles must use the same PostgreSQL endpoint')
+process.env.PHARMACY_SKIP_LOCAL_ENV = '1'
 const reused = process.env.P05_BENCH_REUSE_DATABASE
 if (reused && !/^pharmacy_p05_bench_[a-f0-9]{32}$/.test(reused))
   throw new Error('Invalid benchmark database name')
@@ -28,7 +42,6 @@ await owner.connect()
 if (!reused) await owner.query(`CREATE DATABASE "${database}"`)
 bootstrap.pathname = '/' + database
 maintenance.pathname = '/' + database
-const runtime = new URL(process.env.DATABASE_URL!)
 runtime.pathname = '/' + database
 process.env.BOOTSTRAP_DATABASE_URL = bootstrap.toString()
 process.env.MIGRATION_DATABASE_URL = bootstrap.toString()
@@ -104,6 +117,17 @@ try {
    'Synthetic explanation',md5(qid::text)||md5(qid::text),'00000000-0000-4000-8000-000000000001' FROM bench_map`)
         await client.query(`INSERT INTO question_choices(revision_id,label,text,is_correct)
    SELECT rid,label,label||' synthetic choice',label='A' FROM bench_map CROSS JOIN unnest(ARRAY['A','B','C','D']) label`)
+        await client.query(`WITH source AS (
+          INSERT INTO sources(subject_id,kind,title,locator,license,review_status,retrieved_at,fingerprint,audience)
+          SELECT id,'manual','Synthetic benchmark','generated','project-authored','approved',now(),'synthetic:benchmark','public'
+          FROM subjects WHERE code='synthetic' RETURNING id
+        )
+        INSERT INTO question_sources(revision_id,source_id,locator)
+        SELECT bench_map.rid,source.id,'generated' FROM bench_map CROSS JOIN source`)
+        // Seed all rows in one transaction. Refresh provenance stats before
+        // approval triggers inspect the newly populated table for each revision.
+        await client.query('ANALYZE question_sources')
+        await client.query('ANALYZE question_choices')
         await client.query(
           `UPDATE questions q SET current_revision_id=m.rid,status='approved' FROM bench_map m WHERE q.id=m.qid`,
         )
@@ -117,12 +141,23 @@ try {
         client.release()
       }
     }
+    await db.query('ANALYZE questions')
+    await db.query('ANALYZE question_topics')
     const count = await db.query(
       "SELECT count(*)::int count FROM questions WHERE status='approved' AND subject_id=(SELECT id FROM subjects WHERE code='synthetic')",
     )
     if (count.rows[0].count !== 20000)
       throw new Error('Benchmark population must be exactly 20,000')
     child('packages/db/src/migrate.ts')
+    const visible = await db.query(
+      `SELECT count(*)::int count FROM questions q JOIN subjects s ON s.id=q.subject_id
+       JOIN released_revision_audiences a ON a.revision_id=q.current_revision_id AND a.subject_id=q.subject_id
+       WHERE s.code='synthetic' AND q.status='approved' AND a.minimum_tier=1`,
+    )
+    if (visible.rows[0].count !== 20000)
+      throw new Error(
+        'Benchmark requires 20,000 public questions with reviewed provenance; use a fresh benchmark database',
+      )
     await db.query(
       `UPDATE exam_blueprints SET spec=jsonb_set(spec,'{slots}',$1::jsonb) WHERE id='00000000-0000-4000-8000-000000000505'`,
       [JSON.stringify([{ count: questionCount }])],

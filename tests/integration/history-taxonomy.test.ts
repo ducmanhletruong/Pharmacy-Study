@@ -49,7 +49,7 @@ async function questionFixture(c: Client) {
   ])
   const source = randomUUID()
   await c.query(
-    "INSERT INTO sources(id,subject_id,kind,title,locator,license,review_status,retrieved_at,fingerprint) VALUES($1,$2,'manual','history fixture','fixture','CC0','approved',now(),$3)",
+    "INSERT INTO sources(id,subject_id,kind,title,locator,license,review_status,retrieved_at,fingerprint,audience) VALUES($1,$2,'manual','history fixture','fixture','CC0','approved',now(),$3,'public')",
     [source, subject, randomUUID()],
   )
   await c.query(

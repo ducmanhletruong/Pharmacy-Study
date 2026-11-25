@@ -264,6 +264,11 @@ test('attempts remain attached to the original revision if current revision chan
         [rid, label, `temporary ${label}`, label === 'A'],
       )
     await client.query(
+      `INSERT INTO question_sources(revision_id,source_id,locator)
+       SELECT $1, source_id, locator FROM question_sources WHERE revision_id=$2`,
+      [rid, item.revision_id],
+    )
+    await client.query(
       'UPDATE questions SET current_revision_id=$1 WHERE id=$2',
       [rid, item.question_id],
     )
@@ -306,6 +311,7 @@ test('readAttempt fetches items and ordered public choices in one query for 1 an
     const client = await getPool().connect(),
       calls: string[] = []
     try {
+      await client.query('BEGIN')
       const db = {
         query: ((...args: unknown[]) => {
           calls.push(String(args[0]))
@@ -313,7 +319,9 @@ test('readAttempt fetches items and ordered public choices in one query for 1 an
         }) as typeof client.query,
       }
       const result = await getAttempt(attempt.id, DEV_USER_ID, db)
-      expect(calls).toHaveLength(3)
+      expect(
+        calls.filter((sql) => !/account_rows|pharmacy\.account_id/.test(sql)),
+      ).toHaveLength(3)
       expect(
         calls.filter((sql) => sql.includes('FROM attempt_items')),
       ).toHaveLength(1)
@@ -324,6 +332,7 @@ test('readAttempt fetches items and ordered public choices in one query for 1 an
         /is_correct|correct_answer|explanation|sources/,
       )
     } finally {
+      await client.query('ROLLBACK')
       client.release()
     }
   }

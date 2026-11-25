@@ -3,7 +3,7 @@ import { mkdir, writeFile, rename, unlink, rmdir } from 'node:fs/promises'
 import { resolve, dirname, basename, join } from 'node:path'
 import { bundleSchema } from '@pharmacy/api-contract/bundle'
 
-export const sha256 = (value: string) =>
+export const sha256 = (value: string | Uint8Array) =>
   createHash('sha256').update(value).digest('hex')
 export type ProvenanceInput = {
   model: string

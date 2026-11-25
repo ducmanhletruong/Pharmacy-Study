@@ -8,14 +8,19 @@ import { getCsrfToken } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import {
   attemptSchema,
-  feedbackSchema,
   resultSchema,
   subjectSchema,
   type Attempt,
-  type Feedback,
   type Result,
 } from '@pharmacy/api-contract'
 import { RichText } from './rich-text'
+import { VisualAnswer } from './visual-answer'
+import { AnswerSaveStatus, useAnswerSaves } from './answer-saves'
+import {
+  questionTypeSchema,
+  type AttemptAnswer,
+  type QuestionType,
+} from '@pharmacy/api-contract'
 
 type Subject = {
   id: string
@@ -24,6 +29,44 @@ type Subject = {
   question_count: number
 }
 type Topic = { id: string; title: string; children: Topic[] }
+const SUBJECT_META: Record<
+  string,
+  { icon: string; tag: string; summary: string }
+> = {
+  vsks1: {
+    icon: 'μ',
+    tag: 'VSKS1 · 08/12',
+    summary: 'Vi khuẩn · Miễn dịch · Virus · Vi nấm',
+  },
+  ktct: {
+    icon: '⚖',
+    tag: 'KTCT · 17/12',
+    summary: 'Hàng hóa · Giá trị thặng dư · Hội nhập kinh tế',
+  },
+  hpt1: {
+    icon: '⚗',
+    tag: 'HPT1 · 21/12',
+    summary: 'Cân bằng dung dịch · Chuẩn độ · Bài tính K79',
+  },
+  hhc2: {
+    icon: '⬡',
+    tag: 'HHC2 · 25/12',
+    summary: 'Danh pháp IUPAC · Dị vòng · Phân tử sinh học',
+  },
+  gpsl: {
+    icon: '♥',
+    tag: 'GPSL · 30/12',
+    summary: 'Giải phẫu · Sinh lý hệ cơ quan · Hotspot 2D',
+  },
+}
+const VISUAL_TYPE_SUBJECT: Record<string, string> = {
+  name_from_structure: 'hhc2',
+  image_hotspot: 'gpsl',
+}
+function typeAvailable(code: string, type: string) {
+  if (type === 'mcq' || !SUBJECT_META[code]) return true
+  return VISUAL_TYPE_SUBJECT[type] === code
+}
 async function request(
   path: string,
   method = 'GET',
@@ -70,19 +113,24 @@ export function Practice({
   canSignOut: boolean
 }) {
   const generation = useRef(0)
+  const setupRef = useRef<HTMLDivElement>(null)
   const invalidate = useCallback(() => {
     generation.current++
   }, [])
   const router = useRouter()
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [selected, setSelected] = useState<Subject | null>(null)
+  useEffect(() => {
+    if (selected)
+      setupRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selected])
   const [topics, setTopics] = useState<Topic[]>([])
   const [topic, setTopic] = useState('')
   const [count, setCount] = useState(10)
+  const [questionType, setQuestionType] = useState<QuestionType>('mcq')
   const [attempt, setAttempt] = useState<Attempt | null>(null)
   const [position, setPosition] = useState(0)
-  const [answer, setAnswer] = useState('')
-  const [feedback, setFeedback] = useState<Record<number, Feedback>>({})
+  const saves = useAnswerSaves()
   const [result, setResult] = useState<Result | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -117,6 +165,8 @@ export function Practice({
           )
           if (!active || generation.current !== version) return
           setAttempt(saved)
+          const firstOpen = saved.items.findIndex((it) => it.answer === null)
+          setPosition(firstOpen === -1 ? 0 : firstOpen)
           if (saved.status === 'submitted') {
             const result = resultSchema.parse(
               await request(`/attempts/${saved.id}/submit`, 'POST'),
@@ -138,6 +188,7 @@ export function Practice({
     setBusy(true)
     setError('')
     setSelected(subject)
+    setQuestionType('mcq')
     setCount(Math.max(1, Math.min(10, subject.question_count)))
     setTopics([])
     setTopic('')
@@ -161,6 +212,7 @@ export function Practice({
     const input = {
       subject: selected.code,
       mode: 'practice',
+      type: questionType,
       count,
       ...(topic ? { topic_ids: [topic] } : {}),
     }
@@ -175,41 +227,48 @@ export function Practice({
       if (generation.current !== version) return
       setAttempt(saved)
       setPosition(0)
-      setAnswer('')
-      setFeedback({})
       setResult(null)
       setPendingKey(null)
       history.replaceState(null, '', `?attempt=${saved.id}`)
     } catch (reason) {
-      if (generation.current === version) setError((reason as Error).message)
+      if (generation.current === version) {
+        const message = (reason as Error).message
+        setError(
+          message.startsWith('Chưa đủ câu hỏi')
+            ? `Chủ đề hoặc loại câu đã chọn chưa đủ ${count} câu. Hãy giảm số câu, chọn “Tất cả chủ đề” hoặc đổi loại câu.`
+            : message,
+        )
+      }
     } finally {
       if (generation.current === version) setBusy(false)
     }
   }
-  async function submitAnswer() {
+  function selectAnswer(answer: AttemptAnswer | '') {
     const item = attempt?.items[position]
-    const chosen = item?.answer ?? answer
-    if (!attempt || !item || !chosen) return
-    const version = generation.current
-    setBusy(true)
-    setError('')
-    try {
-      const value = feedbackSchema.parse(
-        await request(`/attempts/${attempt.id}/items/${item.position}`, 'PUT', {
+    if (!attempt || !item || busy) return
+    saves.select(attempt.id, item.position, answer, async (chosen) => {
+      const response = await request(
+        `/attempts/${attempt.id}/items/${item.position}`,
+        'PUT',
+        {
           answer: chosen,
-        }),
+          defer_feedback: true,
+        },
       )
-      const saved = attemptSchema.parse(
-        await request(`/attempts/${attempt.id}`),
+      if (response.saved !== true) throw new Error('Chưa lưu được đáp án.')
+      setAttempt((current) =>
+        current?.id === attempt.id
+          ? {
+              ...current,
+              items: current.items.map((row) =>
+                row.position === item.position
+                  ? { ...row, answer: chosen }
+                  : row,
+              ),
+            }
+          : current,
       )
-      if (generation.current !== version) return
-      setFeedback((previous) => ({ ...previous, [item.position]: value }))
-      setAttempt(saved)
-    } catch (reason) {
-      if (generation.current === version) setError((reason as Error).message)
-    } finally {
-      if (generation.current === version) setBusy(false)
-    }
+    })
   }
   async function finish() {
     if (!attempt) return
@@ -217,6 +276,14 @@ export function Practice({
     setBusy(true)
     setError('')
     try {
+      const failed = await saves.flush(attempt.id)
+      if (failed.length) {
+        setPosition(
+          attempt.items.findIndex((row) => row.position === failed[0]),
+        )
+        setError('Chưa lưu được đáp án ở câu ' + failed.join(', ') + '.')
+        return
+      }
       const summary = resultSchema.parse(
         await request(`/attempts/${attempt.id}/submit`, 'POST'),
       )
@@ -270,16 +337,20 @@ export function Practice({
     history.replaceState(null, '', location.pathname)
     setAttempt(null)
     setSelected(null)
-    setFeedback({})
     setResult(null)
-    setAnswer('')
     setError('')
     setPendingKey(null)
   }
   const item = attempt?.items[position]
-  const currentFeedback = item ? feedback[item.position] : undefined
+  const save =
+    attempt && item ? saves.entry(attempt.id, item.position) : undefined
+  const answer = save ? save.answer : (item?.answer ?? '')
   const completed =
-    attempt?.items.filter((item) => item.answer !== null).length ?? 0
+    attempt?.items.filter((item) => {
+      const entry = saves.entry(attempt.id, item.position)
+      return entry ? entry.status === 'saved' : item.answer !== null
+    }).length ?? 0
+  const hasCurriculumBanks = subjects.some((item) => item.code !== 'synthetic')
   return (
     <>
       <header className="site-header">
@@ -293,6 +364,7 @@ export function Practice({
         </Link>
         <div className="account">
           <Link href="/study">Thi thử · Thống kê · Ôn tập</Link>
+          <Link href="/written">Đề tự luận</Link>
           <span title={member.name}>{member.name}</span>
           {member.role === 'admin' && <Link href="/admin">Quản trị</Link>}
           {canSignOut ? (
@@ -315,13 +387,15 @@ export function Practice({
           <p>
             {attempt
               ? 'Đáp án và giải thích xuất hiện sau khi bạn trả lời.'
-              : 'Chọn bộ câu hỏi, tự kiểm tra kiến thức và xem lại lời giải ngay trong buổi học.'}
+              : 'Chọn học phần, rèn trắc nghiệm, bài tính, danh pháp cấu trúc hoặc chỉ bộ phận giải phẫu với lời giải chi tiết.'}
           </p>
         </section>
-        <p className="sample-note">
-          Bộ luyện mẫu gồm dữ liệu tổng hợp tự viết, chưa phải ngân hàng đề thi
-          Dược.
-        </p>
+        {!hasCurriculumBanks && (
+          <p className="sample-note">
+            Bộ luyện mẫu gồm dữ liệu tổng hợp tự viết, chưa phải ngân hàng đề
+            thi Dược.
+          </p>
+        )}
         {error && (
           <div role="alert" className="error">
             {error}
@@ -361,6 +435,21 @@ export function Practice({
                 </li>
               ))}
             </ul>
+            {result.feedback?.map(({ position, feedback }) => (
+              <section key={position} className="feedback">
+                <h3>
+                  Câu {position} · Đáp án: {feedback.correct_answer}
+                </h3>
+                <RichText text={feedback.explanation} />
+                <ul>
+                  {feedback.sources.map((source) => (
+                    <li key={source.locator}>
+                      {source.title} — {source.locator}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
             <button className="primary" onClick={reset}>
               Luyện một bài mới
             </button>
@@ -368,7 +457,11 @@ export function Practice({
         ) : attempt && item ? (
           <div className="practice-layout">
             <aside className="panel navigator" aria-label="Tiến độ bài luyện">
-              <p className="eyebrow">BÀI LUYỆN MẪU</p>
+              <p className="eyebrow">
+                {selected?.code === 'synthetic'
+                  ? 'BÀI LUYỆN MẪU'
+                  : 'TIẾN ĐỘ BÀI LUYỆN'}
+              </p>
               <h2>
                 {completed}/{attempt.items.length}
                 <span> câu đã trả lời</span>
@@ -384,10 +477,9 @@ export function Practice({
                     key={question.position}
                     aria-label={`Đến câu ${question.position}`}
                     aria-current={index === position ? 'step' : undefined}
-                    className={`${index === position ? 'active' : ''} ${question.answer ? 'answered' : ''}`}
+                    className={`${index === position ? 'active' : ''} ${(saves.entry(attempt.id, question.position)?.status ?? (question.answer ? 'saved' : '')) === 'saved' ? 'answered' : ''}`}
                     onClick={() => {
                       setPosition(index)
-                      setAnswer('')
                       setError('')
                     }}
                     disabled={busy}
@@ -397,8 +489,8 @@ export function Practice({
                 ))}
               </div>
               <p className="muted">
-                Bài làm được lưu tự động sau khi gửi đáp án. Bạn có thể tải lại
-                trang để tiếp tục.
+                Đáp án tự lưu khi bạn chọn. Bạn có thể tải lại trang để tiếp
+                tục.
               </p>
             </aside>
             <section className="panel question">
@@ -408,21 +500,22 @@ export function Practice({
               <h2>
                 <RichText text={item.stem} />
               </h2>
-              {(item.assets ?? []).map((asset) => (
-                <Image
-                  key={asset.id}
-                  unoptimized
-                  src={asset.url}
-                  alt={asset.alt_text}
-                  width={600}
-                  height={400}
-                  style={{
-                    maxWidth: '100%',
-                    height: 'auto',
-                    objectFit: 'contain',
-                  }}
-                />
-              ))}
+              {!item.exercise &&
+                (item.assets ?? []).map((asset) => (
+                  <Image
+                    key={asset.id}
+                    unoptimized
+                    src={asset.url}
+                    alt={asset.alt_text}
+                    width={600}
+                    height={400}
+                    style={{
+                      maxWidth: '100%',
+                      height: 'auto',
+                      objectFit: 'contain',
+                    }}
+                  />
+                ))}
               <button
                 className="secondary"
                 disabled={busy}
@@ -435,10 +528,17 @@ export function Practice({
                       'PUT',
                       { flagged: !item.flagged },
                     )
-                    setAttempt(
-                      attemptSchema.parse(
-                        await request(`/attempts/${attempt.id}`),
-                      ),
+                    setAttempt((current) =>
+                      current?.id === attempt.id
+                        ? {
+                            ...current,
+                            items: current.items.map((row) =>
+                              row.position === item.position
+                                ? { ...row, flagged: !item.flagged }
+                                : row,
+                            ),
+                          }
+                        : current,
                     )
                   } catch (reason) {
                     setError((reason as Error).message)
@@ -453,92 +553,56 @@ export function Practice({
                 questionId={item.question_id}
                 revisionId={item.revision_id}
               />
-              <fieldset disabled={busy || item.answer !== null}>
-                <legend className="sr-only">Chọn một đáp án</legend>
-                {item.choices.map((choice) => (
-                  <label
-                    key={choice.label}
-                    className={`choice ${(item.answer ?? answer) === choice.label ? 'chosen' : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name={`question-${item.position}`}
-                      value={choice.label}
-                      checked={(item.answer ?? answer) === choice.label}
-                      onChange={() => setAnswer(choice.label)}
-                    />
-                    <span className="choice-label">{choice.label}</span>
-                    <span>
-                      <RichText text={choice.text} />
-                    </span>
-                  </label>
-                ))}
-              </fieldset>
-              {currentFeedback ? (
-                <section
-                  className={`feedback ${currentFeedback.is_correct ? 'correct' : 'incorrect'}`}
-                  role="status"
-                >
-                  <h3>
-                    {currentFeedback.is_correct
-                      ? 'Chính xác!'
-                      : 'Cùng xem lại nhé.'}{' '}
-                    Đáp án: {currentFeedback.correct_answer}
-                  </h3>
-                  <p>
-                    <RichText text={currentFeedback.explanation} />
-                  </p>
-                  <ul>
-                    {currentFeedback.sources.map((source) => (
-                      <li key={source.locator}>
-                        {source.title} — {source.locator}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+              {item.exercise ? (
+                <VisualAnswer
+                  item={item}
+                  answer={answer}
+                  busy={busy}
+                  onAnswer={selectAnswer}
+                />
               ) : (
-                item.answer && (
-                  <p>
-                    Đã lưu đáp án {item.answer}. Bấm bên dưới để xem lại giải
-                    thích.
-                  </p>
-                )
+                <fieldset disabled={busy}>
+                  <legend className="sr-only">Chọn một đáp án</legend>
+                  {item.choices.map((choice) => (
+                    <label
+                      key={choice.label}
+                      className={`choice ${answer === choice.label ? 'chosen' : ''}`}
+                    >
+                      <input
+                        type="radio"
+                        name={`question-${item.position}`}
+                        value={choice.label}
+                        checked={answer === choice.label}
+                        onChange={() => selectAnswer(choice.label)}
+                      />
+                      <span className="choice-label">{choice.label}</span>
+                      <span>
+                        <RichText text={choice.text} />
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
               )}
+              <AnswerSaveStatus
+                entry={save}
+                saved={item.answer !== null}
+                retry={() => saves.retry(attempt.id, item.position)}
+              />
               <div className="question-actions">
                 <button
                   className="secondary"
                   disabled={busy || position === 0}
-                  onClick={() => {
-                    setPosition(position - 1)
-                    setAnswer('')
-                  }}
+                  onClick={() => setPosition(position - 1)}
                 >
                   Câu trước
                 </button>
-                {!currentFeedback ? (
-                  <button
-                    className="primary"
-                    disabled={busy || !(item.answer ?? answer)}
-                    onClick={submitAnswer}
-                  >
-                    {busy
-                      ? 'Đang lưu…'
-                      : item.answer
-                        ? 'Xem giải thích'
-                        : 'Gửi đáp án'}
-                  </button>
-                ) : position < attempt.items.length - 1 ? (
-                  <button
-                    className="primary"
-                    disabled={busy}
-                    onClick={() => {
-                      setPosition(position + 1)
-                      setAnswer('')
-                    }}
-                  >
-                    Câu tiếp theo →
-                  </button>
-                ) : null}
+                <button
+                  className="primary"
+                  disabled={busy || position === attempt.items.length - 1}
+                  onClick={() => setPosition(position + 1)}
+                >
+                  Câu tiếp theo
+                </button>
               </div>
               <button className="finish" disabled={busy} onClick={finish}>
                 {completed < attempt.items.length
@@ -551,26 +615,37 @@ export function Practice({
           <section className="selection" aria-labelledby="subjects-heading">
             <div className="section-heading">
               <h2 id="subjects-heading">Bắt đầu buổi luyện</h2>
-              <span>01 bộ câu hỏi mẫu</span>
+              <span>
+                {hasCurriculumBanks
+                  ? `${String(subjects.length).padStart(2, '0')} học phần ôn thi`
+                  : '01 bộ câu hỏi mẫu'}
+              </span>
             </div>
             <div className="selection-grid">
-              {subjects.map((subject) => (
-                <button
-                  key={subject.id}
-                  className={`subject-card ${selected?.id === subject.id ? 'selected' : ''}`}
-                  onClick={() => choose(subject)}
-                  disabled={busy}
-                >
-                  <span className="subject-icon">∑</span>
-                  <span className="tag">TỔNG HỢP</span>
-                  <h3>{subject.name}</h3>
-                  <p>Đọc dữ liệu · Tính toán cơ bản</p>
-                  <div className="card-footer">
-                    <span>{subject.question_count} câu trắc nghiệm</span>
-                    <span aria-hidden="true">↗</span>
-                  </div>
-                </button>
-              ))}
+              {subjects.map((subject) => {
+                const meta = SUBJECT_META[subject.code] ?? {
+                  icon: '∑',
+                  tag: 'TỔNG HỢP',
+                  summary: 'Đọc dữ liệu · Tính toán cơ bản',
+                }
+                return (
+                  <button
+                    key={subject.id}
+                    className={`subject-card ${selected?.id === subject.id ? 'selected' : ''}`}
+                    onClick={() => choose(subject)}
+                    disabled={busy}
+                  >
+                    <span className="subject-icon">{meta.icon}</span>
+                    <span className="tag">{meta.tag}</span>
+                    <h3>{subject.name}</h3>
+                    <p>{meta.summary}</p>
+                    <div className="card-footer">
+                      <span>{subject.question_count} câu đã duyệt</span>
+                      <span aria-hidden="true">↗</span>
+                    </div>
+                  </button>
+                )
+              })}
               <aside className="study-tip">
                 <span className="tip-icon">✦</span>
                 <h3>Một chút mỗi ngày.</h3>
@@ -581,12 +656,40 @@ export function Practice({
               </aside>
             </div>
             {selected && (
-              <div className="panel setup">
+              <div className="panel setup" ref={setupRef}>
+                <label>
+                  Loại câu
+                  <select
+                    value={questionType}
+                    disabled={busy}
+                    onChange={(event) => {
+                      const type = questionTypeSchema.parse(event.target.value)
+                      setQuestionType(type)
+                      setError('')
+                      if (type !== 'mcq') setCount(1)
+                    }}
+                  >
+                    <option value="mcq">Trắc nghiệm</option>
+                    {typeAvailable(selected.code, 'name_from_structure') && (
+                      <option value="name_from_structure">
+                        Danh pháp từ hình
+                      </option>
+                    )}
+                    {typeAvailable(selected.code, 'image_hotspot') && (
+                      <option value="image_hotspot">
+                        Chỉ bộ phận trên hình
+                      </option>
+                    )}
+                  </select>
+                </label>
                 <label>
                   Chủ đề
                   <select
                     value={topic}
-                    onChange={(event) => setTopic(event.target.value)}
+                    onChange={(event) => {
+                      setTopic(event.target.value)
+                      setError('')
+                    }}
                     disabled={busy}
                   >
                     <option value="">Tất cả chủ đề</option>
@@ -597,7 +700,10 @@ export function Practice({
                   Số câu
                   <select
                     value={count}
-                    onChange={(event) => setCount(Number(event.target.value))}
+                    onChange={(event) => {
+                      setCount(Number(event.target.value))
+                      setError('')
+                    }}
                     disabled={busy}
                   >
                     {Array.from({ length: 10 }, (_, index) => index + 1).map(

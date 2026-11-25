@@ -30,6 +30,9 @@ export function PUT(
         answer.flagged,
         actor.id,
         requestId,
+        actor.role === 'admin',
+        undefined,
+        answer.defer_feedback === true,
       ),
     )
   })

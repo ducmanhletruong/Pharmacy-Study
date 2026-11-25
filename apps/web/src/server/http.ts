@@ -5,7 +5,7 @@ import { errorLogFields, getPool } from '@pharmacy/db'
 import { appendAudit } from '@pharmacy/db/audit'
 import { takeRateLimit } from '@pharmacy/db/limits'
 import { authorize, type Action } from '@pharmacy/core/authz'
-import type { Member } from '@pharmacy/db/auth'
+import { recordGuestActivity, type Member } from '@pharmacy/db/auth'
 import { readAuthConfig } from '../config'
 import { currentActor } from './auth/actor'
 import { assertHost, assertOrigin } from './security/origin'
@@ -58,6 +58,13 @@ export async function handle(
         throw error
       }
     }
+    if (
+      actor.email.endsWith('@guest.invalid') &&
+      /^\/api\/v1\/(?:attempts|me\/(?:progress|review-queue|written-papers|written-attempts))(?:\/|$)/.test(
+        new URL(request.url).pathname,
+      )
+    )
+      await recordGuestActivity(actor.id)
     const response = await run(actor, requestId)
     response.headers.set('Cache-Control', 'no-store')
     response.headers.set('X-Request-Id', requestId)

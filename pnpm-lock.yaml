@@ -86,11 +86,19 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
 
+  packages/calc-engine: {}
+
   packages/content-pipeline:
     dependencies:
       '@pharmacy/api-contract':
         specifier: workspace:*
         version: link:../api-contract
+      '@pharmacy/calc-engine':
+        specifier: workspace:*
+        version: link:../calc-engine
+      js-yaml:
+        specifier: 4.3.2
+        version: 4.3.2
 
   packages/core: {}
 

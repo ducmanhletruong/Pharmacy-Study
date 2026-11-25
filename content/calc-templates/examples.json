@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "label": "Self-authored synthetic examples, not official exam rules",
+  "templates": [
+    { "family": "strong-acid", "decimals": 3, "tolerance": 1e-10 },
+    { "family": "weak-acid-concentration", "decimals": 4, "tolerance": 1e-10 },
+    { "family": "weak-acid-mass", "decimals": 3, "tolerance": 1e-10 },
+    { "family": "weak-acid-titration", "decimals": 2, "tolerance": 1e-10 },
+    { "family": "redox-titration", "decimals": 3, "tolerance": 1e-10 },
+    { "family": "redox-equivalence-volume", "decimals": 2, "tolerance": 1e-10 },
+    { "family": "edta-equivalence", "decimals": 2, "tolerance": 1e-10 },
+    {
+      "family": "edta-metal-side-reactions",
+      "decimals": 2,
+      "tolerance": 1e-10
+    },
+    { "family": "edta-active-ligand", "decimals": 3, "tolerance": 1e-10 },
+    { "family": "diprotic-salt-solubility", "decimals": 2, "tolerance": 1e-10 },
+    {
+      "family": "diprotic-2-to-1-solubility",
+      "decimals": 2,
+      "tolerance": 1e-10
+    },
+    {
+      "family": "diprotic-2-to-1-solubility-ratio",
+      "decimals": 2,
+      "tolerance": 1e-10
+    },
+    { "family": "buffer", "decimals": 3, "tolerance": 1e-10 },
+    { "family": "sample-sd", "decimals": 3, "tolerance": 1e-10 },
+    { "family": "surplus-rate", "decimals": 2, "tolerance": 1e-10 },
+    { "family": "surplus-mass", "decimals": 2, "tolerance": 1e-10 }
+  ]
+}

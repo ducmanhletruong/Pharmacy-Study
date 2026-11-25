@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type pg from 'pg'
+import type { Audience } from '@pharmacy/core/audience'
 
 export type AuditDetails = {
   position?: number
@@ -9,6 +10,9 @@ export type AuditDetails = {
   reason?: string
   role?: string
   flagged?: boolean
+  from_audience?: Audience
+  to_audience?: Audience
+  rights_basis_sha256?: string
 }
 export async function appendAudit(
   db: Pick<pg.PoolClient, 'query'>,
@@ -30,6 +34,21 @@ export async function appendAudit(
   if (typeof details.is_correct === 'boolean')
     safe.is_correct = details.is_correct
   if (typeof details.flagged === 'boolean') safe.flagged = details.flagged
+  if (
+    details.from_audience &&
+    ['owner_only', 'class', 'public'].includes(details.from_audience)
+  )
+    safe.from_audience = details.from_audience
+  if (
+    details.to_audience &&
+    ['owner_only', 'class', 'public'].includes(details.to_audience)
+  )
+    safe.to_audience = details.to_audience
+  if (
+    details.rights_basis_sha256 &&
+    /^[a-f0-9]{64}$/.test(details.rights_basis_sha256)
+  )
+    safe.rights_basis_sha256 = details.rights_basis_sha256
   if (['google', 'test', 'guest'].includes(details.provider ?? ''))
     safe.provider = details.provider
   if (['admin', 'learner'].includes(details.role ?? ''))

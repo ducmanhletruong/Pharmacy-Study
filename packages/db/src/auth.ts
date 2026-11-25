@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { uuid } from '@pharmacy/api-contract'
 import type { Actor, Role } from '@pharmacy/core/authz'
-import { getPool } from './client'
+import { getPool, withAccountRows } from './client'
 import { appendAudit } from './audit'
 
 export type Member = Actor & { email: string; name: string }
@@ -75,6 +75,10 @@ export async function registerIdentity(input: {
       'UPDATE users SET display_name=$2,role=$3,last_login_at=now() WHERE id=$1',
       [user.id, input.name.slice(0, 200), role],
     )
+    if (input.provider === 'google')
+      await client.query('SELECT bind_class_invitation($1)', [user.id])
+    if (input.provider === 'guest')
+      await client.query('SELECT touch_guest_activity($1)', [user.id])
     await client.query('COMMIT')
     return {
       id: user.id,
@@ -95,12 +99,10 @@ export async function createSession(
   provider: string,
   requestId: string,
 ) {
-  const client = await getPool().connect()
   const sid = randomUUID()
-  try {
-    await client.query('BEGIN')
+  return withAccountRows(userId, async (client) => {
     const active = await client.query(
-      "SELECT 1 FROM users WHERE id=$1 AND status='active'",
+      "SELECT 1 FROM users WHERE id=$1 AND status='active' FOR SHARE",
       [userId],
     )
     if (!active.rowCount) throw new Error('Account unavailable')
@@ -116,22 +118,21 @@ export async function createSession(
       details: { provider },
       requestId,
     })
-    await client.query('COMMIT')
     return sid
-  } catch (error) {
-    await client.query('ROLLBACK')
-    throw error
-  } finally {
-    client.release()
-  }
+  })
+}
+export async function recordGuestActivity(userId: string) {
+  await getPool().query('SELECT touch_guest_activity($1)', [userId])
 }
 export async function sessionMember(
   id: string,
   sid: string,
 ): Promise<Member | null> {
-  const result = await getPool().query<UserRow>(
-    "SELECT u.* FROM users u JOIN auth_sessions s ON s.user_id=u.id WHERE u.id=$1 AND s.id=$2 AND u.status='active' AND s.revoked_at IS NULL AND s.expires_at>now()",
-    [id, sid],
+  const result = await withAccountRows(id, (client) =>
+    client.query<UserRow>(
+      "SELECT u.* FROM users u JOIN auth_sessions s ON s.user_id=u.id WHERE u.id=$1 AND s.id=$2 AND u.status='active' AND s.revoked_at IS NULL AND s.expires_at>now()",
+      [id, sid],
+    ),
   )
   const user = result.rows[0]
   return user
@@ -149,9 +150,7 @@ export async function revokeSession(
   sid: string,
   requestId: string,
 ) {
-  const client = await getPool().connect()
-  try {
-    await client.query('BEGIN')
+  await withAccountRows(id, async (client) => {
     const changed = await client.query(
       'UPDATE auth_sessions SET revoked_at=now() WHERE id=$1 AND user_id=$2 AND revoked_at IS NULL RETURNING id',
       [sid, id],
@@ -164,11 +163,5 @@ export async function revokeSession(
         entityId: sid,
         requestId,
       })
-    await client.query('COMMIT')
-  } catch (error) {
-    await client.query('ROLLBACK')
-    throw error
-  } finally {
-    client.release()
-  }
+  })
 }

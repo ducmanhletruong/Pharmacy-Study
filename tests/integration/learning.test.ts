@@ -170,13 +170,24 @@ test('late answer is not saved, expired result grades only prior saves and GET f
     (late as { result: unknown }).result,
   )
   const second = await mock(bp.id)
+  const beforeDeadline = await progress(learner, 'synthetic')
   await db.query(
     "UPDATE attempts SET deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1",
     [second.r.attempt.id],
   )
+  const afterDeadline = await progress(learner, 'synthetic')
+  expect(afterDeadline.items).not.toEqual(beforeDeadline.items)
+  expect(
+    (
+      await db.query('SELECT status FROM attempts WHERE id=$1', [
+        second.r.attempt.id,
+      ])
+    ).rows[0].status,
+  ).toBe('in_progress')
   expect((await getAttempt(second.r.attempt.id, learner)).status).toBe(
     'expired',
   )
+  expect(await progress(learner, 'synthetic')).toEqual(afterDeadline)
 })
 test('blueprint edits do not alter existing attempt snapshot/deadline; shortage does not create attempt', async () => {
   const bp = await blueprint()

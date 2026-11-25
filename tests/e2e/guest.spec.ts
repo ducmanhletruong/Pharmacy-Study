@@ -39,12 +39,9 @@ test('guest sessions are private, resumable and revoked at logout; credentials c
   await page.goto(`/?attempt=${attempt.id}`)
   await expect(page.getByRole('radio').first()).toBeVisible()
   await page.getByRole('radio').first().check()
-  await page.getByRole('button', { name: 'Gửi đáp án', exact: true }).click()
-  await expect(page.getByRole('heading', { name: /Đáp án:/ })).toBeVisible()
+  await expect(page.getByText('Đã làm', { exact: true })).toBeVisible()
   await page.reload()
-  await expect(
-    page.getByText('Đã lưu đáp án A.', { exact: false }),
-  ).toBeVisible()
+  await expect(page.getByRole('radio').first()).toBeChecked()
 
   const other = await browser.newContext({ baseURL: 'http://127.0.0.1:3001' })
   try {
