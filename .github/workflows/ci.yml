@@ -53,7 +53,10 @@ jobs:
       - run: pnpm format:check
       - run: pnpm typecheck
       - run: pnpm test
+      - run: node --test tests/smoke/release.test.mjs
       - run: pnpm build
+        env:
+          NEXT_PUBLIC_APP_RELEASE_ID: ci-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Check production health endpoint
         shell: bash
         run: |
@@ -65,7 +68,10 @@ jobs:
           node --input-type=module -e '
             import { readFileSync } from "node:fs";
             import { deepStrictEqual } from "node:assert";
-            deepStrictEqual(JSON.parse(readFileSync(process.env.RUNNER_TEMP + "/pharmacy-health.json", "utf8")), { status: "ok" });
+            deepStrictEqual(JSON.parse(readFileSync(process.env.RUNNER_TEMP + "/pharmacy-health.json", "utf8")), {
+              status: "ok",
+              release_id: "ci-" + process.env.GITHUB_RUN_ID + "-" + process.env.GITHUB_RUN_ATTEMPT,
+            });
           '
       - name: Scan Git history for secrets
         shell: bash

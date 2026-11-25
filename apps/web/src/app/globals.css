@@ -143,7 +143,7 @@ p {
 }
 .selection-grid {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
   gap: 24px;
 }
 .subject-card {
@@ -180,7 +180,7 @@ p {
   right: 30px;
   top: 40px;
   background: #f0f2ed;
-  color: #6b756c;
+  color: #526253;
   font-size: 10px;
   letter-spacing: 1.5px;
   padding: 4px 9px;
@@ -229,7 +229,7 @@ p {
 .study-tip p {
   max-width: 300px;
   font-size: 14px;
-  color: #647158;
+  color: #4f6048;
   margin: 0;
 }
 .panel {
@@ -606,7 +606,7 @@ progress {
 .login-panel h1 {
   font-size: 38px;
 }
-.login-panel > p {
+.login-panel > p:not(.sample-note) {
   color: var(--muted);
 }
 .login-panel form {
@@ -749,4 +749,78 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 0.5rem;
   resize: vertical;
+}
+
+.workspace > .panel + .panel {
+  margin-top: 24px;
+}
+.workspace > .panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.workspace > .panel label.choice {
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  font-size: 16px;
+  margin-bottom: 11px;
+}
+.workspace > .panel select,
+.workspace
+  > .panel
+  input:not([type='radio']):not([type='checkbox']):not([type='file']) {
+  width: 100%;
+  max-width: 520px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+}
+.workspace > .panel table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 14px;
+}
+.workspace > .panel th,
+.workspace > .panel td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.workspace > .panel thead th {
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+.workspace > .panel nav[aria-label='Các câu hỏi'] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 22px;
+}
+.workspace > .panel nav[aria-label='Các câu hỏi'] button {
+  min-width: 40px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink);
+  font-size: 13px;
+}
+.workspace > .panel nav[aria-label='Các câu hỏi'] button[aria-current='step'] {
+  border: 2px solid var(--green);
+  font-weight: 700;
+}
+.workspace > .panel fieldset {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  margin: 16px 0;
+  min-width: 0;
 }

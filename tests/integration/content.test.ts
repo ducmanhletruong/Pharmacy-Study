@@ -138,8 +138,16 @@ test('import is draft with pending provenance, bundle replay is idempotent and c
     expect(replay.status).toBe('already_imported')
     expect(replay.import_id).toBe(f.result.import_id)
     f.b.manifest.label = 'Different manifest, identical question'
+    const topic = f.b.topics[0]!
+    const storedOrder = topic.sort_order
+    topic.sort_order++
     const duplicate = await importBundle(f.b, adminId, randomUUID(), c)
     expect(duplicate.counts).toEqual({ created: 0, duplicates: 1 })
+    const { rows: topics } = await c.query<{ sort_order: number }>(
+      'SELECT t.sort_order FROM topics t JOIN subjects s ON s.id=t.subject_id WHERE s.code=$1 AND t.code=$2',
+      [f.b.manifest.subject, topic.code],
+    )
+    expect(topics[0]?.sort_order).toBe(storedOrder)
     const rows = await c.query(
       'SELECT count(*)::int n FROM questions WHERE subject_id=(SELECT id FROM subjects WHERE code=$1)',
       [f.b.manifest.subject],
@@ -295,6 +303,9 @@ test('reports require an owned attempt, deduplicate open submissions, quarantine
     const f = await approved(c, adminId),
       q = f.question,
       learner = await actor(c, 'learner')
+    await c.query("UPDATE sources SET audience='public' WHERE id=$1", [
+      q.revision.sources[0].id,
+    ])
     await expect(
       createReport(q.id, { reason: 'typo' }, learner, randomUUID(), c),
     ).rejects.toMatchObject({ status: 403 })

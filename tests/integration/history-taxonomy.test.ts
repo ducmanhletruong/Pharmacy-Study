@@ -49,7 +49,7 @@ async function questionFixture(c: Client) {
   ])
   const source = randomUUID()
   await c.query(
-    "INSERT INTO sources(id,subject_id,kind,title,locator,license,review_status,retrieved_at,fingerprint) VALUES($1,$2,'manual','history fixture','fixture','CC0','approved',now(),$3)",
+    "INSERT INTO sources(id,subject_id,kind,title,locator,license,review_status,retrieved_at,fingerprint,audience) VALUES($1,$2,'manual','history fixture','fixture','CC0','approved',now(),$3,'public')",
     [source, subject, randomUUID()],
   )
   await c.query(
@@ -345,6 +345,7 @@ test('attempt snapshots preserve all original topic names and membership across 
       { id: b, title: 'Original B', total: 1 },
     ])
     expect(result.total).toBe(1)
+    expect(result.feedback?.[0]?.feedback.sources).toEqual([])
     await c.query("UPDATE topics SET title='Renamed again' WHERE id=$1", [b])
     expect(await submitAttempt(attempt, DEV_USER_ID, randomUUID(), c)).toEqual(
       result,

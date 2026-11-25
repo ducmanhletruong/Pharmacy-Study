@@ -23,6 +23,9 @@ const fixtures: Fixture[] = JSON.parse(
 )
 const id = (group: number, n: number) =>
   `${group}0000000-0000-4000-8000-${String(n).padStart(12, '0')}`
+const sourceId = id(5, 1)
+const sourceTitle = 'Fixture tổng hợp do tác giả dự án tự viết'
+const sourceFile = 'content/fixtures/practice.json'
 loadMaintenanceEnv()
 const client = await getMaintenancePool().connect()
 try {
@@ -34,6 +37,18 @@ try {
   await client.query(
     "INSERT INTO subjects(id,code,name) VALUES($1,'synthetic','Môn mẫu tổng hợp') ON CONFLICT(id) DO NOTHING",
     [id(1, 1)],
+  )
+  await client.query(
+    `INSERT INTO sources(id,subject_id,kind,title,locator,license,review_status,retrieved_at,fingerprint,audience)
+     VALUES($1,$2,'manual',$3,$4,'project-authored','approved',now(),$5,'public')
+     ON CONFLICT(id) DO NOTHING`,
+    [
+      sourceId,
+      id(1, 1),
+      sourceTitle,
+      sourceFile,
+      'synthetic:practice-fixtures',
+    ],
   )
   for (const [n, title] of [
     'Cây chủ đề mẫu',
@@ -53,8 +68,9 @@ try {
     )
   }
   for (const [index, fixture] of fixtures.entries()) {
-    const qid = id(3, index + 1),
-      rid = id(4, index + 1)
+    const qid = id(3, index + 1)
+    const originalRevisionId = id(4, index + 1)
+    const locator = `${sourceFile}, câu ${index + 1}`
     const choices = fixture.choices.map((text, i) => ({
       label: 'ABCD'[i] as Label,
       text,
@@ -68,8 +84,46 @@ try {
       "INSERT INTO questions(id,subject_id,type,difficulty,status) VALUES($1,$2,'mcq',1,'draft') ON CONFLICT(id) DO NOTHING",
       [qid, id(1, 1)],
     )
+    const {
+      rows: [existing],
+    } = await client.query<{
+      status: string
+      current_revision_id: string | null
+      original_hash: string | null
+      has_provenance: boolean
+    }>(
+      `SELECT q.status,q.current_revision_id,r.content_hash AS original_hash,
+              EXISTS(SELECT 1 FROM question_sources WHERE revision_id=r.id) AS has_provenance
+       FROM questions q LEFT JOIN question_revisions r ON r.id=$2 AND r.question_id=q.id
+       WHERE q.id=$1 AND q.subject_id=$3 FOR UPDATE OF q`,
+      [qid, originalRevisionId, id(1, 1)],
+    )
+    if (
+      !existing ||
+      (existing.original_hash !== null && existing.original_hash !== hash)
+    )
+      throw new Error(
+        'Seed revision changed; create a new revision instead of overwriting history',
+      )
+    const isNew =
+      existing.current_revision_id === null && existing.status === 'draft'
+    // Seeded attempts keep their original revision. Publish provenance on a new revision.
+    const isLegacy =
+      existing.current_revision_id === originalRevisionId &&
+      existing.status === 'approved' &&
+      !existing.has_provenance
+    if (!isNew && !isLegacy) continue
+
+    const rid = isLegacy ? id(6, index + 1) : originalRevisionId
+    const revisionHash = isLegacy
+      ? createHash('sha256')
+          .update(JSON.stringify({ fixture, sourceId, locator }))
+          .digest('hex')
+      : hash
     await client.query(
-      'INSERT INTO question_revisions(id,question_id,rev_no,stem,payload,explanation,content_hash,created_by) VALUES($1,$2,1,$3,$4,$5,$6,$7) ON CONFLICT(id) DO NOTHING',
+      `INSERT INTO question_revisions(id,question_id,rev_no,stem,payload,explanation,content_hash,created_by)
+       SELECT $1,$2,COALESCE(max(rev_no),0)+1,$3,$4,$5,$6,$7 FROM question_revisions WHERE question_id=$2
+       ON CONFLICT(id) DO NOTHING`,
       [
         rid,
         qid,
@@ -78,13 +132,13 @@ try {
           synthetic: true,
           sources: [
             {
-              title: 'Fixture tổng hợp do tác giả dự án tự viết',
-              locator: `content/fixtures/practice.json, câu ${index + 1}`,
+              title: sourceTitle,
+              locator,
             },
           ],
         }),
         fixture.explanation,
-        hash,
+        revisionHash,
         DEV_USER_ID,
       ],
     )
@@ -92,7 +146,7 @@ try {
       'SELECT content_hash FROM question_revisions WHERE id=$1',
       [rid],
     )
-    if (saved.rows[0]?.content_hash !== hash)
+    if (saved.rows[0]?.content_hash !== revisionHash)
       throw new Error(
         'Seed revision changed; create a new revision instead of overwriting history',
       )
@@ -102,8 +156,21 @@ try {
         [rid, choice.label, choice.text, choice.is_correct],
       )
     await client.query(
-      "UPDATE questions SET current_revision_id=$2,status='approved' WHERE id=$1 AND current_revision_id IS NULL AND status='draft'",
-      [qid, rid],
+      `INSERT INTO question_sources(revision_id,source_id,locator)
+       SELECT $1,$2,$3 WHERE NOT EXISTS
+       (SELECT 1 FROM question_sources WHERE revision_id=$1 AND source_id=$2 AND locator=$3)`,
+      [rid, sourceId, locator],
+    )
+    if (isNew)
+      await client.query(
+        "UPDATE questions SET current_revision_id=$2,status='verified' WHERE id=$1",
+        [qid, rid],
+      )
+    await client.query(
+      `UPDATE questions
+       SET current_revision_id=$2,status='approved',version=version+$3,updated_at=now()
+       WHERE id=$1`,
+      [qid, rid, isLegacy ? 1 : 0],
     )
     await client.query(
       'INSERT INTO question_topics(question_id,topic_id,subject_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING',

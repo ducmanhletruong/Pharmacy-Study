@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { visualPayloadSchema } from '../visual'
 
 const normalized = (value: string) => value.trim().normalize('NFC')
 const folded = (value: string) => normalized(value).toLocaleLowerCase('vi')
@@ -55,14 +56,43 @@ const answersSchema = z
     (values) => new Set(values.map(folded)).size === values.length,
     'Accepted answers must be distinct',
   )
-const revisionFields = {
+const commonFields = {
   difficulty: z.number().int().min(1).max(3),
   stem: text(20000),
-  choices: choicesSchema,
   explanation: text(50000),
   topic_codes: topicCodesSchema,
+}
+const revisionFields = {
+  ...commonFields,
+  choices: choicesSchema,
   accepted_answers: answersSchema.optional(),
 }
+const visualFields = {
+  ...commonFields,
+  visual: visualPayloadSchema,
+  accepted_answers: answersSchema.optional(),
+}
+const visualQuestionSchema = z
+  .object({
+    external_id: reference,
+    ...visualFields,
+    type: z.enum(['name_from_structure', 'image_hotspot']),
+    sources: z.array(sourceLinkSchema).min(1).max(100),
+    asset_refs: z.array(reference).length(1),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (
+      value.type !== value.visual.type ||
+      (value.type === 'name_from_structure'
+        ? !value.accepted_answers?.length
+        : Boolean(value.accepted_answers?.length))
+    )
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Visual exercise kind and answer key must match',
+      })
+  })
 export const bundleQuestionSchema = z
   .object({
     external_id: reference,
@@ -76,12 +106,13 @@ export const bundleQuestionSchema = z
       .optional(),
   })
   .strict()
-export const patchQuestionRevisionSchema = z
+const revisionSources = z
+  .array(z.object({ source_id: z.uuid(), locator: text(2000) }).strict())
+  .max(100)
+const mcqPatchRevisionSchema = z
   .object({
     ...revisionFields,
-    sources: z
-      .array(z.object({ source_id: z.uuid(), locator: text(2000) }).strict())
-      .max(100),
+    sources: revisionSources,
     asset_ids: z
       .array(z.uuid())
       .max(100)
@@ -92,6 +123,26 @@ export const patchQuestionRevisionSchema = z
       .optional(),
   })
   .strict()
+const visualPatchRevisionSchema = z
+  .object({
+    ...visualFields,
+    sources: revisionSources.min(1),
+    asset_ids: z.array(z.uuid()).length(1),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (
+      value.visual.type === 'name_from_structure'
+        ? !value.accepted_answers?.length
+        : Boolean(value.accepted_answers?.length)
+    )
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Visual exercise answer key is invalid',
+      })
+  })
+export const patchQuestionRevisionSchema = z
+  .union([mcqPatchRevisionSchema, visualPatchRevisionSchema])
   .superRefine((revision, context) => {
     const links = revision.sources.map(
       (source) => `${source.source_id.toLowerCase()}\0${source.locator}`,
@@ -104,6 +155,53 @@ export const patchQuestionRevisionSchema = z
       })
   })
 export type PatchQuestionRevision = z.infer<typeof patchQuestionRevisionSchema>
+export const bundleTopicLimit = 2000
+const bundleTopicsSchema = z
+  .array(
+    z
+      .object({
+        code: topicCode,
+        parent_code: topicCode.nullable(),
+        title: text(500),
+        sort_order: z.number().int().min(0).max(1000000).default(0),
+      })
+      .strict(),
+  )
+  .min(1)
+  .max(bundleTopicLimit)
+  .superRefine((topics, context) => {
+    const parents = new Map(
+      topics.map((topic) => [topic.code, topic.parent_code]),
+    )
+    if (parents.size !== topics.length)
+      context.addIssue({
+        code: 'custom',
+        message: 'Topic codes must be unique',
+      })
+
+    for (const [index, topic] of topics.entries()) {
+      if (topic.parent_code !== null && !parents.has(topic.parent_code))
+        context.addIssue({
+          code: 'custom',
+          path: [index, 'parent_code'],
+          message: 'Parent topic is not in this bundle',
+        })
+      const seen = new Set<string>()
+      let current: string | null | undefined = topic.code
+      while (current !== null && current !== undefined) {
+        if (seen.has(current)) {
+          context.addIssue({
+            code: 'custom',
+            path: [index, 'parent_code'],
+            message: 'Topic graph must not contain cycles',
+          })
+          break
+        }
+        seen.add(current)
+        current = parents.get(current)
+      }
+    }
+  })
 export const bundleSchema = z
   .object({
     schema_version: z.literal(1),
@@ -115,19 +213,7 @@ export const bundleSchema = z
         created_at: z.iso.datetime({ offset: true }),
       })
       .strict(),
-    topics: z
-      .array(
-        z
-          .object({
-            code: topicCode,
-            parent_code: topicCode.nullable(),
-            title: text(500),
-            sort_order: z.number().int().min(0).max(1000000).default(0),
-          })
-          .strict(),
-      )
-      .min(1)
-      .max(2000),
+    topics: bundleTopicsSchema,
     sources: z
       .array(
         z
@@ -166,7 +252,10 @@ export const bundleSchema = z
           .strict(),
       )
       .max(200),
-    questions: z.array(bundleQuestionSchema).min(1).max(1000),
+    questions: z
+      .array(z.union([bundleQuestionSchema, visualQuestionSchema]))
+      .min(1)
+      .max(1000),
   })
   .strict()
   .superRefine((bundle, context) => {
@@ -183,11 +272,6 @@ export const bundleSchema = z
         })
     }
     duplicate(
-      bundle.topics.map((topic) => topic.code),
-      ['topics'],
-      'Topic codes',
-    )
-    duplicate(
       bundle.sources.map((source) => source.ref),
       ['sources'],
       'Source refs',
@@ -202,33 +286,9 @@ export const bundleSchema = z
       ['questions'],
       'Question external IDs',
     )
-    const topics = new Map(
-      bundle.topics.map((topic) => [topic.code, topic.parent_code]),
-    )
+    const topics = new Set(bundle.topics.map((topic) => topic.code))
     const sources = new Set(bundle.sources.map((source) => source.ref))
-    const assets = new Set(bundle.assets.map((asset) => asset.ref))
-    for (const [index, topic] of bundle.topics.entries()) {
-      if (topic.parent_code !== null && !topics.has(topic.parent_code))
-        context.addIssue({
-          code: 'custom',
-          path: ['topics', index, 'parent_code'],
-          message: 'Parent topic is not in this bundle',
-        })
-      const seen = new Set<string>()
-      let current: string | null | undefined = topic.code
-      while (current !== null && current !== undefined) {
-        if (seen.has(current)) {
-          context.addIssue({
-            code: 'custom',
-            path: ['topics', index, 'parent_code'],
-            message: 'Topic graph must not contain cycles',
-          })
-          break
-        }
-        seen.add(current)
-        current = topics.get(current)
-      }
-    }
+    const assets = new Map(bundle.assets.map((asset) => [asset.ref, asset]))
     for (const [index, asset] of bundle.assets.entries())
       if (asset.source_ref !== undefined && !sources.has(asset.source_ref))
         context.addIssue({
@@ -263,6 +323,25 @@ export const bundleSchema = z
             path: ['questions', index, 'asset_refs'],
             message: 'Question asset is not in this bundle',
           })
+      if (question.type !== 'mcq') {
+        const asset = assets.get(question.asset_refs[0]!)
+        if (
+          !asset?.source_ref ||
+          !question.sources.some((link) => link.source_ref === asset.source_ref)
+        )
+          context.addIssue({
+            code: 'custom',
+            path: ['questions', index, 'asset_refs'],
+            message:
+              'Visual exercises require a licensed asset and linked provenance',
+          })
+        if (question.type === 'name_from_structure' && asset?.kind !== 'svg')
+          context.addIssue({
+            code: 'custom',
+            path: ['questions', index, 'asset_refs'],
+            message: 'Structure image must be a validated SVG',
+          })
+      }
     }
   })
 export type Bundle = z.infer<typeof bundleSchema>

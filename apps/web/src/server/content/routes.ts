@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { questionTypeSchema } from '@pharmacy/api-contract'
 import { handle, body } from '../http'
 import { readBody } from '../security/body'
 import { readAuthConfig } from '../../config'
@@ -20,7 +21,7 @@ const filters = z
   .object({
     subject: z.string().min(1).max(80).optional(),
     topic: z.uuid().optional(),
-    type: z.literal('mcq').optional(),
+    type: questionTypeSchema.optional(),
     status: z.enum(questionStatuses).optional(),
     cursor: z.uuid().optional(),
     limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -193,6 +194,8 @@ export function reportPOST(request: Request, context: Context) {
         reportSchema.parse(await body(request)),
         actor.id,
         requestId,
+        undefined,
+        actor.role === 'admin',
       ),
       { status: 201 },
     ),
@@ -208,20 +211,57 @@ export function sourcesGET(request: Request) {
 export function sourcesPATCH(request: Request) {
   return handle(
     request,
-    async (actor, requestId) =>
-      Response.json(
-        await content.reviewSource(
+    async (actor, requestId) => {
+      const audience = z.enum(['owner_only', 'class', 'public'])
+      const input = z
+        .union([
           z
             .object({
               id: z.uuid(),
               review_status: z.enum(['pending', 'approved', 'rejected']),
             })
-            .strict()
-            .parse(await body(request)),
-          actor.id,
-          requestId,
-        ),
-      ),
+            .strict(),
+          z
+            .object({
+              id: z.uuid(),
+              audience,
+              expected_audience: audience,
+              rights_basis: z.string().trim().min(1).max(1000).optional(),
+            })
+            .strict(),
+        ])
+        .parse(await body(request))
+      return Response.json(
+        'audience' in input
+          ? await content.changeSourceAudience(input, actor.id, requestId)
+          : await content.reviewSource(input, actor.id, requestId),
+      )
+    },
+    'content:manage',
+  )
+}
+export function invitationsGET(request: Request) {
+  return handle(
+    request,
+    async (actor) => Response.json(await content.listInvitations(actor.id)),
+    'content:manage',
+  )
+}
+export function invitationsPATCH(request: Request) {
+  return handle(
+    request,
+    async (actor, requestId) => {
+      const input = z
+        .object({
+          email: z.string().trim().max(254).pipe(z.email()),
+          action: z.enum(['invite', 'revoke']),
+        })
+        .strict()
+        .parse(await body(request))
+      return Response.json(
+        await content.setInvitation(input, actor.id, requestId),
+      )
+    },
     'content:manage',
   )
 }

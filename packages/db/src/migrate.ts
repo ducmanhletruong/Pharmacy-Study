@@ -3,8 +3,8 @@ import {
   getMaintenancePool,
   closeMaintenance,
 } from './maintenance'
-import { createHash } from 'node:crypto'
 import { readFile, readdir } from 'node:fs/promises'
+import { migrationIdentity } from './migration-checksum'
 
 loadMaintenanceEnv()
 const client = await getMaintenancePool().connect()
@@ -20,15 +20,17 @@ try {
   for (const name of (await readdir(directory))
     .filter((name) => name.endsWith('.sql'))
     .sort()) {
-    const sql = await readFile(new URL(name, directory), 'utf8')
-    const hash = createHash('sha256').update(sql).digest('hex')
+    const { sql, hash, matches } = migrationIdentity(
+      name,
+      await readFile(new URL(name, directory), 'utf8'),
+    )
     const previous = await client.query<{ hash: string }>(
       'SELECT hash FROM _migrations WHERE name=$1',
       [name],
     )
     if (previous.rows[0]) {
-      if (previous.rows[0].hash !== hash)
-        throw new Error('Applied migration was modified')
+      if (!matches(previous.rows[0].hash))
+        throw new Error(`Applied migration was modified: ${name}`)
       continue
     }
     await client.query(sql)

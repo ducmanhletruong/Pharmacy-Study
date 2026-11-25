@@ -472,9 +472,9 @@ export function WrittenWorkbench() {
                       }
                     }}
                   >
-                    <option value="hpt1">Hóa phân tích1</option>
-                    <option value="hhc2">Hóa hữu cơ2</option>
-                    <option value="vsks1">Vi sinh ký sinh1</option>
+                    <option value="hpt1">Hóa phân tích 1</option>
+                    <option value="hhc2">Hóa hữu cơ 2</option>
+                    <option value="vsks1">Vi sinh – Ký sinh trùng 1</option>
                   </select>
                 </label>
                 <label>

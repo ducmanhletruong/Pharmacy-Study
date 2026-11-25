@@ -4,14 +4,20 @@ import {
   bundleSchema,
   patchQuestionRevisionSchema,
   type PatchQuestionRevision,
+  type Bundle,
 } from '@pharmacy/api-contract/bundle'
-import { uuid } from '@pharmacy/api-contract'
+import { uuid, type QuestionType } from '@pharmacy/api-contract'
+import {
+  chemicalNameGradingKey,
+  normalizeChemicalName,
+} from '@pharmacy/core/name-grading'
+import { canView, type Audience } from '@pharmacy/core/audience'
 import {
   assertTransition,
   statusAfterReport,
   type QuestionStatus,
 } from '@pharmacy/core/lifecycle'
-import { getPool } from './client'
+import { getPool, withAccountRows } from './client'
 import { appendAudit } from './audit'
 import { PracticeError } from './practice'
 import { validateAsset } from './asset-safety'
@@ -22,6 +28,7 @@ type QuestionRow = {
   id: string
   subject_id: string
   subject: string
+  type: QuestionType
   status: QuestionStatus
   version: number
   difficulty: number
@@ -108,7 +115,7 @@ async function detail(db: Db, id: string) {
   const q = await question(db, id)
   const revision = (
     await db.query(
-      'SELECT id,stem,explanation FROM question_revisions WHERE id=$1',
+      "SELECT id,stem,explanation,payload->'visual' AS visual FROM question_revisions WHERE id=$1",
       [q.current_revision_id],
     )
   ).rows[0]
@@ -157,6 +164,7 @@ async function detail(db: Db, id: string) {
   return {
     id: q.id,
     subject: q.subject,
+    type: q.type,
     status: q.status,
     version: q.version,
     revision: {
@@ -207,7 +215,7 @@ export async function listQuestions(
   values.push(limit + 1)
   const rows = (
     await getPool().query(
-      `SELECT q.id,s.code subject,q.status,q.version,r.stem FROM questions q JOIN subjects s ON s.id=q.subject_id LEFT JOIN question_revisions r ON r.id=q.current_revision_id ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY q.id LIMIT $${values.length}`,
+      `SELECT q.id,s.code subject,q.type,q.status,q.version,r.stem FROM questions q JOIN subjects s ON s.id=q.subject_id LEFT JOIN question_revisions r ON r.id=q.current_revision_id ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY q.id LIMIT $${values.length}`,
       values,
     )
   ).rows
@@ -221,6 +229,14 @@ async function revisionInput(
   q: QuestionRow,
   input: PatchQuestionRevision,
 ) {
+  const visual = 'visual' in input ? input.visual : undefined
+  if ((visual?.type ?? 'mcq') !== q.type)
+    fail('validation_failed', 422, 'Loại câu hỏi phải giữ nguyên')
+  if (visual?.type === 'name_from_structure') {
+    const answers = input.accepted_answers ?? []
+    if (new Set(answers.map(chemicalNameGradingKey)).size !== answers.length)
+      fail('validation_failed', 422, 'Tên đáp án trùng sau khi chuẩn hóa')
+  }
   const sourceIds = [...new Set(input.sources.map((s) => s.source_id))]
   const sources = (
     await db.query<{ id: string; title: string; fingerprint: string }>(
@@ -231,13 +247,30 @@ async function revisionInput(
   if (sources.length !== sourceIds.length)
     fail('validation_failed', 422, 'Nguồn không thuộc môn học')
   const assets = (
-    await db.query<{ id: string; sha256: string }>(
-      'SELECT id,sha256 FROM assets WHERE id=ANY($1::uuid[]) ORDER BY id',
+    await db.query<{
+      id: string
+      sha256: string
+      source_id: string | null
+      kind: string
+    }>(
+      'SELECT id,sha256,source_id,kind FROM assets WHERE id=ANY($1::uuid[]) ORDER BY id',
       [input.asset_ids ?? []],
     )
   ).rows
   if (assets.length !== new Set(input.asset_ids ?? []).size)
     fail('validation_failed', 422, 'Tài sản không tồn tại')
+  if (
+    visual &&
+    (assets.length !== 1 ||
+      !assets[0]?.source_id ||
+      !sourceIds.includes(assets[0].source_id) ||
+      (visual.type === 'name_from_structure' && assets[0].kind !== 'svg'))
+  )
+    fail(
+      'validation_failed',
+      422,
+      'Hình cần nguồn, giấy phép và định dạng phù hợp',
+    )
   const topics = (
     await db.query<{ id: string; code: string }>(
       'SELECT id,code FROM topics WHERE subject_id=$1 AND code=ANY($2::text[]) ORDER BY code',
@@ -248,11 +281,15 @@ async function revisionInput(
     fail('validation_failed', 422, 'Chủ đề không thuộc môn học')
   const bySource = new Map(sources.map((s) => [s.id, s]))
   const contentHash = hash({
-    type: 'mcq',
+    type: q.type,
     difficulty: input.difficulty,
     stem: input.stem,
     explanation: input.explanation,
-    choices: [...input.choices].sort((a, b) => a.label.localeCompare(b.label)),
+    choices:
+      'choices' in input
+        ? [...input.choices].sort((a, b) => a.label.localeCompare(b.label))
+        : [],
+    ...(visual ? { visual } : {}),
     topics: [...input.topic_codes].sort(),
     sources: input.sources
       .map((s) => ({
@@ -261,7 +298,13 @@ async function revisionInput(
       }))
       .sort((a, b) => canonical(a).localeCompare(canonical(b))),
     assets: assets.map((a) => a.sha256).sort(),
-    accepted_answers: (input.accepted_answers ?? []).map(normalized).sort(),
+    accepted_answers: (input.accepted_answers ?? [])
+      .map(
+        visual?.type === 'name_from_structure'
+          ? normalizeChemicalName
+          : normalized,
+      )
+      .sort(),
   })
   return { sources: bySource, topics, contentHash }
 }
@@ -274,13 +317,49 @@ async function storeRevision(
 ) {
   const ready = prepared ?? (await revisionInput(db, q, input))
   const duplicate = (
-    await db.query(
+    await db.query<{ question_id: string }>(
       'SELECT question_id FROM question_content_hashes WHERE subject_id=$1 AND content_hash=$2',
       [q.subject_id, ready.contentHash],
     )
   ).rows[0]
-  if (duplicate)
-    fail('duplicate_content', 409, 'Nội dung đã có trong ngân hàng')
+  let revisionHash = ready.contentHash
+  if (duplicate) {
+    if (duplicate.question_id !== q.id || q.type !== 'name_from_structure')
+      fail('duplicate_content', 409, 'Nội dung đã có trong ngân hàng')
+    const current = (
+      await db.query<{
+        base_hash: string
+        primary_answer: string
+        answers: string[]
+      }>(
+        `SELECT COALESCE(r.payload->>'base_content_hash',r.content_hash) AS base_hash,
+                a.display AS primary_answer,
+                ARRAY(SELECT k.display FROM accepted_answers k WHERE k.revision_id=r.id) AS answers
+         FROM question_revisions r JOIN accepted_answers a ON a.revision_id=r.id AND a.is_primary
+         WHERE r.id=$1 AND r.question_id=$2`,
+        [q.current_revision_id, q.id],
+      )
+    ).rows[0]
+    const answers = input.accepted_answers ?? []
+    const primary = answers[0]
+    const gradingKeys = [...new Set(answers.map(chemicalNameGradingKey))].sort()
+    if (
+      !primary ||
+      current?.base_hash !== ready.contentHash ||
+      (current.primary_answer === primary &&
+        canonical(
+          [...new Set(current.answers.map(chemicalNameGradingKey))].sort(),
+        ) === canonical(gradingKeys))
+    )
+      fail('duplicate_content', 409, 'Nội dung đã có trong ngân hàng')
+    // Keep legacy import deduplication and give grading changes their own revision.
+    revisionHash = hash([
+      ready.contentHash,
+      q.current_revision_id,
+      primary,
+      gradingKeys,
+    ])
+  }
   const rid = randomUUID(),
     number = (
       await db.query<{ n: number }>(
@@ -294,6 +373,8 @@ async function storeRevision(
       locator: s.locator,
     })),
     asset_ids: input.asset_ids ?? [],
+    ...('visual' in input ? { visual: input.visual } : {}),
+    ...(duplicate ? { base_content_hash: ready.contentHash } : {}),
   }
   await db.query(
     'INSERT INTO question_revisions(id,question_id,rev_no,stem,payload,explanation,content_hash,created_by) VALUES($1,$2,$3,$4,$5::jsonb,$6,$7,$8)',
@@ -304,11 +385,11 @@ async function storeRevision(
       input.stem,
       JSON.stringify(payload),
       input.explanation,
-      ready.contentHash,
+      revisionHash,
       actorId,
     ],
   )
-  for (const choice of input.choices)
+  for (const choice of 'choices' in input ? input.choices : [])
     await db.query(
       'INSERT INTO question_choices(revision_id,label,text,is_correct) VALUES($1,$2,$3,$4)',
       [rid, choice.label, choice.text, choice.is_correct],
@@ -323,12 +404,15 @@ async function storeRevision(
       'INSERT INTO question_assets(revision_id,asset_id) VALUES($1,$2)',
       [rid, asset],
     )
-  for (const [index, answer] of [
-    ...new Set(input.accepted_answers ?? []),
-  ].entries())
+  const normalize =
+    q.type === 'name_from_structure' ? chemicalNameGradingKey : normalized
+  const unique = new Map<string, string>()
+  for (const answer of input.accepted_answers ?? [])
+    if (!unique.has(normalize(answer))) unique.set(normalize(answer), answer)
+  for (const [index, [key, answer]] of [...unique].entries())
     await db.query(
       'INSERT INTO accepted_answers(revision_id,answer_normalized,display,is_primary) VALUES($1,$2,$3,$4)',
-      [rid, normalized(answer), answer, index === 0],
+      [rid, key, answer, index === 0],
     )
   await db.query('DELETE FROM question_topics WHERE question_id=$1', [q.id])
   for (const topic of ready.topics)
@@ -338,13 +422,61 @@ async function storeRevision(
     )
   await db.query(
     'INSERT INTO question_content_hashes(subject_id,content_hash,question_id,revision_id) VALUES($1,$2,$3,$4)',
-    [q.subject_id, ready.contentHash, q.id, rid],
+    [q.subject_id, revisionHash, q.id, rid],
   )
   await db.query(
     "UPDATE questions SET current_revision_id=$2,status='draft',difficulty=$3,version=version+1,updated_at=now() WHERE id=$1",
     [q.id, rid, input.difficulty],
   )
   return rid
+}
+export async function storeTaxonomy(
+  db: Db,
+  subjectId: string,
+  topics: Bundle['topics'],
+  options: { matchSortOrder?: boolean } = {},
+) {
+  if (new Set(topics.map((topic) => topic.code)).size !== topics.length)
+    return fail('validation_failed', 422, 'Mã chủ đề bị trùng')
+  const topicIds = new Map<string, string>(),
+    pending = [...topics]
+  while (pending.length) {
+    let progress = false
+    for (let index = pending.length - 1; index >= 0; index--) {
+      const topic = pending[index]!
+      if (topic.parent_code && !topicIds.has(topic.parent_code)) continue
+      const existing = (
+        await db.query<{
+          id: string
+          parent_id: string | null
+          title: string
+          sort_order: number
+        }>(
+          'SELECT id,parent_id,title,sort_order FROM topics WHERE subject_id=$1 AND code=$2',
+          [subjectId, topic.code],
+        )
+      ).rows[0]
+      const parent = topic.parent_code ? topicIds.get(topic.parent_code)! : null
+      const sortOrder = topic.sort_order ?? 0
+      if (existing) {
+        if (existing.parent_id !== parent || existing.title !== topic.title)
+          fail('topic_conflict', 409, 'Chủ đề hiện có khác nội dung bundle')
+        if (options.matchSortOrder && existing.sort_order !== sortOrder)
+          fail('topic_conflict', 409, 'Thứ tự chủ đề hiện có khác taxonomy')
+        topicIds.set(topic.code, existing.id)
+      } else {
+        const id = randomUUID()
+        await db.query(
+          'INSERT INTO topics(id,subject_id,parent_id,code,title,sort_order) VALUES($1,$2,$3,$4,$5,$6)',
+          [id, subjectId, parent, topic.code, topic.title, sortOrder],
+        )
+        topicIds.set(topic.code, id)
+      }
+      pending.splice(index, 1)
+      progress = true
+    }
+    if (!progress) fail('validation_failed', 422, 'Cây chủ đề không hợp lệ')
+  }
 }
 export async function importBundle(
   raw: unknown,
@@ -399,46 +531,7 @@ export async function importBundle(
       "INSERT INTO imports(id,uploaded_by,bundle_hash,status,counts,report) VALUES($1,$2,$3,'imported','{}','{}')",
       [importId, actorId, bundleHash],
     )
-    const topicIds = new Map<string, string>(),
-      pending = [...bundle.topics]
-    while (pending.length) {
-      let progress = false
-      for (let index = pending.length - 1; index >= 0; index--) {
-        const topic = pending[index]!
-        if (topic.parent_code && !topicIds.has(topic.parent_code)) continue
-        const existing = (
-          await db.query(
-            'SELECT id,parent_id,title FROM topics WHERE subject_id=$1 AND code=$2',
-            [subject.id, topic.code],
-          )
-        ).rows[0]
-        const parent = topic.parent_code
-          ? topicIds.get(topic.parent_code)!
-          : null
-        if (existing) {
-          if (existing.parent_id !== parent || existing.title !== topic.title)
-            fail('topic_conflict', 409, 'Chủ đề hiện có khác nội dung bundle')
-          topicIds.set(topic.code, existing.id as string)
-        } else {
-          const id = randomUUID()
-          await db.query(
-            'INSERT INTO topics(id,subject_id,parent_id,code,title,sort_order) VALUES($1,$2,$3,$4,$5,$6)',
-            [
-              id,
-              subject.id,
-              parent,
-              topic.code,
-              topic.title,
-              topic.sort_order ?? 0,
-            ],
-          )
-          topicIds.set(topic.code, id)
-        }
-        pending.splice(index, 1)
-        progress = true
-      }
-      if (!progress) fail('validation_failed', 422, 'Cây chủ đề không hợp lệ')
-    }
+    await storeTaxonomy(db, subject.id, bundle.topics)
     const sourceIds = new Map<string, string>()
     for (const source of bundle.sources) {
       const fingerprint = hash({
@@ -525,7 +618,9 @@ export async function importBundle(
         stem: item.stem,
         explanation: item.explanation,
         difficulty: item.difficulty,
-        choices: item.choices,
+        ...(item.type === 'mcq'
+          ? { choices: item.choices }
+          : { visual: item.visual }),
         topic_codes: item.topic_codes,
         accepted_answers: item.accepted_answers,
         sources: item.sources.map((s) => ({
@@ -538,6 +633,7 @@ export async function importBundle(
         id: randomUUID(),
         subject_id: subject.id,
         subject: bundle.manifest.subject,
+        type: item.type,
         status: 'draft' as const,
         version: 0,
         difficulty: input.difficulty,
@@ -567,8 +663,8 @@ export async function importBundle(
           })),
         )
         await db.query(
-          "INSERT INTO questions(id,subject_id,type,difficulty,status,import_id,version) VALUES($1,$2,'mcq',$3,'draft',$4,0)",
-          [q.id, subject.id, input.difficulty, importId],
+          "INSERT INTO questions(id,subject_id,type,difficulty,status,import_id,version) VALUES($1,$2,$3,$4,'draft',$5,0)",
+          [q.id, subject.id, item.type, input.difficulty, importId],
         )
         await storeRevision(db, q, input, actorId, ready)
         questionId = q.id
@@ -674,11 +770,14 @@ export async function patchQuestion(
     return detail(db, id)
   }, context)
 }
+const sourceFields =
+  'id,title,locator,review_status,license,audience,audience_rights_basis'
+
 export async function listSources() {
   return {
     items: (
       await getPool().query(
-        'SELECT id,title,locator,review_status,license FROM sources ORDER BY created_at DESC,id',
+        `SELECT ${sourceFields} FROM sources ORDER BY created_at DESC,id`,
       )
     ).rows,
   }
@@ -698,7 +797,7 @@ export async function reviewSource(
     await bankLock(db, source.subject_id as string)
     const row = (
       await db.query(
-        'UPDATE sources SET review_status=$2 WHERE id=$1 RETURNING id,title,locator,review_status,license',
+        `UPDATE sources SET review_status=$2 WHERE id=$1 RETURNING ${sourceFields}`,
         [input.id, input.review_status],
       )
     ).rows[0]
@@ -713,12 +812,125 @@ export async function reviewSource(
     return row
   }, context)
 }
+export async function changeSourceAudience(
+  input: {
+    id: string
+    audience: Audience
+    expected_audience: Audience
+    rights_basis?: string
+  },
+  actorId: string,
+  requestId: string,
+  context?: Client,
+) {
+  return tx(async (db) => {
+    await admin(db, actorId)
+    const source = (
+      await db.query<{ subject_id: string }>(
+        'SELECT subject_id FROM sources WHERE id=$1',
+        [input.id],
+      )
+    ).rows[0]
+    if (!source) return fail('not_found', 404, 'Không tìm thấy nguồn')
+    await bankLock(db, source.subject_id)
+    const current = (
+      await db.query<{
+        audience: Audience
+        license: string
+        review_status: string
+      }>(`SELECT ${sourceFields} FROM sources WHERE id=$1 FOR UPDATE`, [
+        input.id,
+      ])
+    ).rows[0]
+    if (!current) return fail('not_found', 404, 'Không tìm thấy nguồn')
+    if (current.audience !== input.expected_audience)
+      return fail(
+        'version_conflict',
+        409,
+        'Phạm vi đã thay đổi. Hãy tải lại nguồn.',
+      )
+    if (current.audience === input.audience) return current
+    const widening = canView(input.audience, current.audience) === false
+    const basis = input.rights_basis?.trim()
+    if (
+      widening &&
+      (current.review_status !== 'approved' ||
+        !current.license.trim() ||
+        !basis ||
+        basis.length > 1000)
+    )
+      return fail(
+        'rights_confirmation_required',
+        422,
+        'Cần duyệt nguồn và ghi căn cứ quyền chia sẻ cho phạm vi mới',
+      )
+    const saved = (
+      await db.query(
+        `UPDATE sources SET audience=$2,audience_rights_basis=$3 WHERE id=$1 RETURNING ${sourceFields}`,
+        [input.id, input.audience, widening ? basis : null],
+      )
+    ).rows[0]
+    await appendAudit(db, {
+      actorId,
+      requestId,
+      action: 'source.audience_changed',
+      entityType: 'source',
+      entityId: input.id,
+      details: {
+        from_audience: current.audience,
+        to_audience: input.audience,
+        ...(widening && basis ? { rights_basis_sha256: hash(basis) } : {}),
+      },
+    })
+    return saved
+  }, context)
+}
+
+export async function listInvitations(actorId: string) {
+  await admin(getPool(), actorId)
+  return {
+    items: (
+      await getPool().query('SELECT * FROM list_class_invitations($1)', [
+        actorId,
+      ])
+    ).rows,
+  }
+}
+
+export async function setInvitation(
+  input: { email: string; action: 'invite' | 'revoke' },
+  actorId: string,
+  requestId: string,
+  context?: Client,
+) {
+  return tx(async (db) => {
+    await admin(db, actorId)
+    const email = input.email.trim().toLowerCase()
+    const invite = input.action === 'invite'
+    const { changed } = (
+      await db.query<{ changed: boolean }>(
+        'SELECT set_class_invitation($1,$2,$3) AS changed',
+        [actorId, email, invite],
+      )
+    ).rows[0]!
+    if (changed)
+      await appendAudit(db, {
+        actorId,
+        requestId,
+        action: invite ? 'class.invited' : 'class.revoked',
+        entityType: 'class_invitation',
+        entityId: hash(email),
+      })
+    return { changed }
+  }, context)
+}
 export async function createReport(
   questionId: string,
   input: { reason: string; note?: string; revision_id?: string },
   actorId: string,
   requestId: string,
   context?: Client,
+  allowAdmin = true,
 ) {
   return tx(async (db) => {
     const active = (
@@ -729,9 +941,24 @@ export async function createReport(
     if (!active) fail('forbidden', 403, 'Tài khoản không khả dụng')
     const q = await lockedQuestion(db, questionId)
     const seen = (
-      await db.query(
-        'SELECT i.question_revision_id FROM attempt_items i JOIN attempts a ON a.id=i.attempt_id JOIN question_revisions r ON r.id=i.question_revision_id WHERE a.user_id=$1 AND r.question_id=$2 AND ($3::uuid IS NULL OR i.question_revision_id=$3) ORDER BY a.started_at DESC LIMIT 1',
-        [actorId, questionId, input.revision_id ?? null],
+      await withAccountRows(
+        actorId,
+        (scoped) =>
+          scoped.query(
+            `SELECT i.question_revision_id FROM attempt_items i JOIN attempts a ON a.id=i.attempt_id
+         JOIN question_revisions r ON r.id=i.question_revision_id
+         WHERE a.user_id=$1 AND r.question_id=$2 AND ($3::uuid IS NULL OR i.question_revision_id=$3)
+           AND can_view_revision(r.id,$4,(SELECT viewer_audience($1,$5)))
+         ORDER BY a.started_at DESC LIMIT 1`,
+            [
+              actorId,
+              questionId,
+              input.revision_id ?? null,
+              q.subject_id,
+              allowAdmin,
+            ],
+          ),
+        db,
       )
     ).rows[0]
     if (!seen)
@@ -827,32 +1054,36 @@ export async function resolveReport(
 export async function getAsset(
   id: string,
   actor: { id: string; role: string; status: string },
+  context?: Client,
 ) {
-  const user = (
-    await getPool().query(
-      "SELECT role FROM users WHERE id=$1 AND status='active'",
-      [actor.id],
-    )
-  ).rows[0]
-  if (!user || actor.status !== 'active')
+  if (actor.status !== 'active')
     fail('forbidden', 403, 'Tài khoản không khả dụng')
-  const allowed =
-    (actor.role === 'admin' && user.role === 'admin') ||
-    (
-      await getPool().query(
-        "SELECT 1 FROM question_assets qa JOIN question_revisions r ON r.id=qa.revision_id JOIN questions q ON q.id=r.question_id WHERE qa.asset_id=$1 AND ((q.status='approved' AND q.current_revision_id=r.id) OR EXISTS(SELECT 1 FROM attempt_items i JOIN attempts a ON a.id=i.attempt_id WHERE i.question_revision_id=r.id AND a.user_id=$2)) LIMIT 1",
-        [id, actor.id],
-      )
-    ).rowCount
-  if (!allowed) fail('not_found', 404, 'Không tìm thấy tài sản')
   const row = (
-    await getPool().query<{
-      data: Buffer
-      mime: string
-      alt_text: string
-      width: number
-      height: number
-    }>('SELECT data,mime,alt_text,width,height FROM assets WHERE id=$1', [id])
+    await withAccountRows(
+      actor.id,
+      (db) =>
+        db.query<{
+          data: Buffer
+          mime: string
+          alt_text: string
+          width: number
+          height: number
+        }>(
+          `WITH viewer AS (SELECT viewer_audience($2,$3) AS tier)
+       SELECT data,mime,alt_text,width,height FROM assets JOIN viewer ON true WHERE id=$1
+         AND (viewer.tier=3 OR EXISTS(
+           SELECT 1 FROM question_assets qa JOIN question_revisions r ON r.id=qa.revision_id
+           JOIN questions q ON q.id=r.question_id WHERE qa.asset_id=$1
+             AND can_view_revision(r.id,q.subject_id,viewer.tier)
+             AND ((q.status='approved' AND q.current_revision_id=r.id) OR EXISTS(
+               SELECT 1 FROM attempt_items i JOIN attempts a ON a.id=i.attempt_id
+               WHERE i.question_revision_id=r.id AND a.user_id=$2
+             ))
+         ))`,
+          [id, actor.id, actor.role === 'admin'],
+        ),
+      context,
+    )
   ).rows[0]
   if (!row) fail('not_found', 404, 'Không tìm thấy tài sản')
   return row!

@@ -49,6 +49,15 @@ test('CLI mock output passes validator and imports only as draft with P04', asyn
     )
     await writeFile(join(root, 'source.txt'), 'The fixture answer is 5.')
     await writeFile(join(root, 'mock.json'), JSON.stringify({ questions: [q] }))
+    const taxonomy = join(root, 'taxonomy.yaml')
+    await writeFile(
+      taxonomy,
+      `- code: p04-addition
+  title: Synthetic addition fixture
+  parent_code: null
+  sort_order: 3
+`,
+    )
     const tsx = createRequire(import.meta.url).resolve('tsx/cli')
     const out = join(root, 'output'),
       subject = 'p06-' + randomUUID()
@@ -65,6 +74,8 @@ test('CLI mock output passes validator and imports only as draft with P04', asyn
         subject,
         '--topic',
         'p04-addition',
+        '--taxonomy',
+        taxonomy,
         '--max-cost',
         '0',
         '--mock-output',
@@ -73,6 +84,7 @@ test('CLI mock output passes validator and imports only as draft with P04', asyn
       { encoding: 'utf8', timeout: 15000 },
     )
     expect(result.status, result.stderr).toBe(0)
+    expect(JSON.parse(result.stdout).taxonomy_warning).toBeUndefined()
     const file = join(out, 'bundle', 'bundle.json')
     const valid = spawnSync(
       process.execPath,
@@ -80,18 +92,22 @@ test('CLI mock output passes validator and imports only as draft with P04', asyn
       { encoding: 'utf8', timeout: 15000 },
     )
     expect(valid.status, valid.stderr).toBe(0)
+    const generated = JSON.parse(await readFile(file, 'utf8'))
+    expect(generated.topics).toEqual([
+      {
+        code: 'p04-addition',
+        title: 'Synthetic addition fixture',
+        parent_code: null,
+        sort_order: 3,
+      },
+    ])
     await c.query('BEGIN')
     const actor = randomUUID()
     await c.query(
       "INSERT INTO users(id,email,display_name,role) VALUES($1,$2,'Synthetic pipeline actor','admin')",
       [actor, actor + '@example.invalid'],
     )
-    const imported = await importBundle(
-      JSON.parse(await readFile(file, 'utf8')),
-      actor,
-      randomUUID(),
-      c,
-    )
+    const imported = await importBundle(generated, actor, randomUUID(), c)
     expect(imported.import_id).toBeTruthy()
     const states = await c.query(
       'SELECT q.status FROM import_questions i JOIN questions q ON q.id=i.question_id WHERE i.import_id=$1',

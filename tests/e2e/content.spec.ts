@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
-import { admin, learnerB } from './fixtures'
+import { contentAdmin, learnerB } from './fixtures'
 import { signInAs } from './sign-in'
 
 test('an imported question is reviewed, used by a learner, then removed from new practice after a report', async ({
@@ -31,7 +31,7 @@ test('an imported question is reviewed, used by a learner, then removed from new
   const learnerContext = await browser.newContext()
   try {
     const manager = await adminContext.newPage()
-    await signInAs(manager, admin)
+    await signInAs(manager, contentAdmin)
     await manager.goto('/admin')
     await expect(
       manager.getByRole('heading', { name: 'Ngân hàng câu hỏi', exact: true }),
@@ -64,6 +64,21 @@ test('an imported question is reviewed, used by a learner, then removed from new
       .click()
     await expect(manager.locator('.admin-message')).toHaveText(
       'Đã cập nhật đánh giá nguồn tài liệu.',
+    )
+    const sourcePanel = manager.locator('.admin-source-list li').filter({
+      has: manager.getByRole('heading', { name: sourceTitle, exact: true }),
+    })
+    await sourcePanel
+      .getByLabel('Phạm vi xem nguồn ' + sourceTitle)
+      .selectOption('public')
+    await sourcePanel
+      .getByLabel('Căn cứ quyền chia sẻ')
+      .fill('Project-authored synthetic test fixture')
+    await sourcePanel
+      .getByRole('button', { name: 'Xác nhận mở phạm vi' })
+      .click()
+    await expect(manager.locator('.admin-message')).toHaveText(
+      'Đã cập nhật phạm vi xem nguồn.',
     )
     await nextStatus.selectOption('verified')
     await manager

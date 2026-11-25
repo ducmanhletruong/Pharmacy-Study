@@ -1,4 +1,12 @@
-import { admin, testPassword, sessionSecret } from './tests/e2e/fixtures'
+import {
+  admin,
+  calcAdmin,
+  visualAdmin,
+  audienceAdmin,
+  contentAdmin,
+  testPassword,
+  sessionSecret,
+} from './tests/e2e/fixtures'
 import { defineConfig, devices } from '@playwright/test'
 const guestOnly = process.env.E2E_GUEST_ONLY === '1'
 export default defineConfig({
@@ -17,17 +25,24 @@ export default defineConfig({
   },
   webServer: {
     command: 'pnpm dev',
-    url: 'http://127.0.0.1:3001/api/v1/health',
+    // Wait for Next to compile the shared browser entry point before timing tests.
+    url: 'http://127.0.0.1:3001/login',
     reuseExistingServer: false,
     timeout: 120000,
     env: {
       AUTH_MODE: guestOnly ? 'guest' : 'test',
       PORT: '3001',
+      DEV_HOST: '127.0.0.1',
+      PHARMACY_SKIP_LOCAL_ENV: '1',
       NEXTAUTH_URL: 'http://127.0.0.1:3001',
       APP_ORIGIN: 'http://127.0.0.1:3001',
       NEXTAUTH_SECRET: sessionSecret,
       AUTH_TEST_SECRET: testPassword,
-      ADMIN_EMAILS: guestOnly ? '' : admin,
+      ADMIN_EMAILS: guestOnly
+        ? ''
+        : [admin, calcAdmin, visualAdmin, audienceAdmin, contentAdmin].join(
+            ',',
+          ),
       GOOGLE_CLIENT_ID: '',
       GOOGLE_CLIENT_SECRET: '',
       RATE_LIMIT_ATTEMPT_CREATE: '8',

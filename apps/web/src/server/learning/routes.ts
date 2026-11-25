@@ -76,7 +76,15 @@ export function progressGET(request: Request) {
     const q = query(request)
     if (!q.subject)
       throw new PracticeError('validation_failed', 400, 'Cần chọn môn học')
-    return Response.json(await progress(actor.id, q.subject, q.cursor, q.limit))
+    return Response.json(
+      await progress(
+        actor.id,
+        q.subject,
+        q.cursor,
+        q.limit,
+        actor.role === 'admin',
+      ),
+    )
   })
 }
 export function reviewPOST(request: Request) {
@@ -94,6 +102,8 @@ export function reviewPOST(request: Request) {
       key,
       actor.id,
       requestId,
+      undefined,
+      actor.role === 'admin',
     )
     return Response.json(result.attempt, {
       status: result.replayed ? 200 : 201,

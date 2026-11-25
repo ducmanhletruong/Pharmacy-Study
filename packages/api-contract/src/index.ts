@@ -1,5 +1,21 @@
 import { z } from 'zod'
+import {
+  attemptAnswerValueSchema,
+  questionTypeSchema,
+  visualPromptSchema,
+} from './visual'
+export { attemptAnswerValueSchema, questionTypeSchema } from './visual'
+export type { AttemptAnswer, QuestionType } from './visual'
 export { ZodError } from 'zod'
+export {
+  reportCode,
+  reportAudience,
+  reportCodes,
+  chunkAssignments,
+  auditDecisions,
+  reviewedQuestionIndex,
+  sourceChunkLedger,
+} from './content-report'
 
 export const label = z.enum(['A', 'B', 'C', 'D'])
 export const uuid = z.uuid()
@@ -25,7 +41,7 @@ export const createAttemptSchema = z
     subject: z.string().min(1).max(80),
     mode: z.enum(['practice', 'mock', 'review']),
     topic_ids: z.array(uuid).max(100).optional(),
-    type: z.literal('mcq').default('mcq'),
+    type: questionTypeSchema.default('mcq'),
     difficulty: z.number().int().min(1).max(3).optional(),
     count: z.number().int().min(1).max(10).default(10),
     blueprint_id: uuid.optional(),
@@ -41,9 +57,20 @@ export const createAttemptSchema = z
         code: 'custom',
         message: 'Mode requires its matching blueprint or review source',
       })
+    if (value.type !== 'mcq' && value.mode !== 'practice')
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Visual questions use practice mode',
+        path: ['mode'],
+      })
   })
 export const answerSchema = z
-  .object({ answer: label.optional(), flagged: z.boolean().optional() })
+  .object({
+    answer: attemptAnswerValueSchema.optional(),
+    flagged: z.boolean().optional(),
+    defer_feedback: z.literal(true).optional(),
+    expected_answer_version: z.string().max(40).nullable().optional(),
+  })
   .strict()
   .refine(
     (value) => value.answer !== undefined || value.flagged !== undefined,
@@ -55,7 +82,7 @@ export const sourceSchema = z
 export const feedbackSchema = z
   .object({
     is_correct: z.boolean(),
-    correct_answer: label,
+    correct_answer: z.string().min(1).max(500),
     explanation: z.string(),
     sources: z.array(sourceSchema),
   })
@@ -75,10 +102,12 @@ export const attemptSchema = z
           question_id: uuid,
           revision_id: uuid,
           stem: z.string(),
+          exercise: visualPromptSchema.optional(),
           choices: z
             .array(z.object({ label, text: z.string() }).strict())
-            .length(4),
-          answer: label.nullable(),
+            .max(4),
+          answer: attemptAnswerValueSchema.nullable(),
+          answer_version: z.string().nullable().optional(),
           flagged: z.boolean(),
           assets: z
             .array(
@@ -98,7 +127,11 @@ export const attemptSchema = z
             )
             .default([]),
         })
-        .strict(),
+        .strict()
+        .refine(
+          (item) => item.choices.length === (item.exercise ? 0 : 4),
+          'Invalid choice count',
+        ),
     ),
   })
   .strict()

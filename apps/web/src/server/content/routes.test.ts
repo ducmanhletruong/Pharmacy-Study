@@ -3,14 +3,24 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 const state = vi.hoisted(() => ({
   actor: {
     id: '00000000-0000-4000-8000-000000000001',
+    email: 'fixture@example.invalid',
     role: 'admin',
     status: 'active',
-  } as { id: string; role: 'admin' | 'learner'; status: 'active' } | null,
+  } as {
+    id: string
+    email: string
+    role: 'admin' | 'learner'
+    status: 'active'
+  } | null,
   importBundle: vi.fn(),
   patchQuestion: vi.fn(),
 }))
 vi.mock('../auth/actor', () => ({ currentActor: async () => state.actor }))
-vi.mock('@pharmacy/db', () => ({ getPool: () => ({}), getDb: vi.fn() }))
+vi.mock('@pharmacy/db', async (load) => ({
+  ...(await load<typeof import('@pharmacy/db')>()),
+  getPool: () => ({}),
+  getDb: vi.fn(),
+}))
 vi.mock('@pharmacy/db/audit', () => ({ appendAudit: async () => {} }))
 vi.mock('@pharmacy/db/limits', () => ({
   takeRateLimit: async () => ({ allowed: true, retryAfter: 0 }),
@@ -64,6 +74,7 @@ beforeEach(() => {
   vi.stubEnv('APP_ORIGIN', origin)
   state.actor = {
     id: '00000000-0000-4000-8000-000000000001',
+    email: 'fixture@example.invalid',
     role: 'admin',
     status: 'active',
   }

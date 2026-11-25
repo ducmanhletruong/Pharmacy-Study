@@ -91,6 +91,31 @@ test('contracts API-01/02 expose subject counts and a topic tree', async () => {
   const parent = await newAttempt(randomUUID(), { topic_ids: [nodes[0].id] })
   expect(parent.response.status).toBe(201)
 })
+test('an older autosave arriving after the latest choice cannot overwrite it', async () => {
+  const { value } = await newAttempt()
+  const id = attemptSchema.parse(value).id
+  const path = `/attempts/${id}/items/1`
+  const save = async (choice: string, version: string | null) =>
+    (
+      await answer(
+        req(path, 'PUT', {
+          answer: choice,
+          defer_feedback: true,
+          expected_answer_version: version,
+        }),
+        { params: Promise.resolve({ id, position: '1' }) },
+      )
+    ).json()
+  const current = await save('D', null)
+  expect(current).toEqual({ saved: true, answer_version: expect.any(String) })
+  expect(await save('A', null)).toEqual({
+    saved: false,
+    answer_version: current.answer_version,
+  })
+  expect(await save('D', null)).toEqual(current)
+  const loaded = await read(req(`/attempts/${id}`), context(id))
+  expect(attemptSchema.parse(await loaded.json()).items[0]?.answer).toBe('D')
+})
 test('API-03/04 redact answers and replay concurrent creates without duplicates', async () => {
   const key = randomUUID()
   const [first, second] = await Promise.all([newAttempt(key), newAttempt(key)])
@@ -264,6 +289,11 @@ test('attempts remain attached to the original revision if current revision chan
         [rid, label, `temporary ${label}`, label === 'A'],
       )
     await client.query(
+      `INSERT INTO question_sources(revision_id,source_id,locator)
+       SELECT $1, source_id, locator FROM question_sources WHERE revision_id=$2`,
+      [rid, item.revision_id],
+    )
+    await client.query(
       'UPDATE questions SET current_revision_id=$1 WHERE id=$2',
       [rid, item.question_id],
     )
@@ -306,6 +336,7 @@ test('readAttempt fetches items and ordered public choices in one query for 1 an
     const client = await getPool().connect(),
       calls: string[] = []
     try {
+      await client.query('BEGIN')
       const db = {
         query: ((...args: unknown[]) => {
           calls.push(String(args[0]))
@@ -313,7 +344,9 @@ test('readAttempt fetches items and ordered public choices in one query for 1 an
         }) as typeof client.query,
       }
       const result = await getAttempt(attempt.id, DEV_USER_ID, db)
-      expect(calls).toHaveLength(3)
+      expect(
+        calls.filter((sql) => !/account_rows|pharmacy\.account_id/.test(sql)),
+      ).toHaveLength(3)
       expect(
         calls.filter((sql) => sql.includes('FROM attempt_items')),
       ).toHaveLength(1)
@@ -324,6 +357,7 @@ test('readAttempt fetches items and ordered public choices in one query for 1 an
         /is_correct|correct_answer|explanation|sources/,
       )
     } finally {
+      await client.query('ROLLBACK')
       client.release()
     }
   }

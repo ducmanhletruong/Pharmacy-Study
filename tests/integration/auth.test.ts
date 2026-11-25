@@ -101,7 +101,13 @@ test('revoked, expired and disabled sessions cannot resolve a member', async () 
     rid = randomUUID()
   requests.push(rid)
   const sid = await createSession(user.id, 'test', rid)
+  const other = await member()
   expect((await sessionMember(user.id, sid))?.id).toBe(user.id)
+  expect(await sessionMember(other.id, sid)).toBeNull()
+  expect(
+    (await getPool().query('SELECT id FROM auth_sessions WHERE id=$1', [sid]))
+      .rowCount,
+  ).toBe(0)
   await revokeSession(user.id, sid, rid)
   expect(await sessionMember(user.id, sid)).toBeNull()
   const expired = await createSession(user.id, 'test', rid)

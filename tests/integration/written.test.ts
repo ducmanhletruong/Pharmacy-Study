@@ -6,7 +6,7 @@ import {
   getMaintenancePool,
   closeMaintenance,
 } from '../../packages/db/src/maintenance'
-import { closeDb } from '../../packages/db/src/client'
+import { closeDb, getPool, withAccountRows } from '../../packages/db/src/client'
 import {
   saveWrittenPaper,
   startWritten,
@@ -68,6 +68,51 @@ test('private paper, PDF and attempts deny even another admin; create is repeata
   })
   const key = randomUUID(),
     r = await startWritten(p.id, a, key)
+  const privateRows = (client: Pick<typeof db, 'query'>) =>
+    client.query(
+      `SELECT
+       (SELECT count(*)::int FROM written_papers WHERE id=$1) AS papers,
+       (SELECT count(*)::int FROM written_attempts WHERE id=$2) AS attempts,
+       (SELECT count(*)::int FROM written_answers WHERE attempt_id=$2) AS answers`,
+      [p.id, r.attempt.id],
+    )
+  const connection = await getPool().connect()
+  try {
+    await connection.query('BEGIN')
+    expect((await withAccountRows(a, privateRows, connection)).rows[0]).toEqual(
+      {
+        papers: 1,
+        attempts: 1,
+        answers: 2,
+      },
+    )
+    expect((await privateRows(connection)).rows[0]).toEqual({
+      papers: 0,
+      attempts: 0,
+      answers: 0,
+    })
+    expect((await withAccountRows(b, privateRows, connection)).rows[0]).toEqual(
+      {
+        papers: 0,
+        attempts: 0,
+        answers: 0,
+      },
+    )
+    await expect(
+      withAccountRows(
+        b,
+        (client) =>
+          client.query(
+            'UPDATE written_answers SET text=$2 WHERE attempt_id=$1',
+            [r.attempt.id, 'unauthorized edit'],
+          ),
+        connection,
+      ),
+    ).resolves.toMatchObject({ rowCount: 0 })
+  } finally {
+    await connection.query('ROLLBACK')
+    connection.release()
+  }
   expect((await startWritten(p.id, a, key)).replayed).toBe(true)
   await expect(getWritten(r.attempt.id, b)).rejects.toMatchObject({
     status: 404,

@@ -58,10 +58,22 @@ export function readPoolMax(
 // Lazy: importing a route or building must not create a connection.
 let pool: pg.Pool | undefined
 export function getPool() {
-  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required')
+  const { DATABASE_URL: connectionString, DATABASE_CA_CERT: ca } = process.env
+  if (!connectionString) throw new Error('DATABASE_URL is required')
+  if (ca) {
+    // node-postgres lets SSL parameters in the URL replace the explicit CA.
+    const url = new URL(connectionString)
+    for (const key of url.searchParams.keys()) {
+      if (key.toLowerCase().startsWith('ssl'))
+        throw new Error(
+          'Remove SSL parameters from DATABASE_URL when DATABASE_CA_CERT is set',
+        )
+    }
+  }
   pool ??= new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
     max: readPoolMax(),
+    ...(ca ? { ssl: { ca, rejectUnauthorized: true } } : {}),
   }).on('error', (error) => {
     console.error(
       JSON.stringify({ event: 'db.pool.error', ...errorLogFields(error) }),
@@ -71,6 +83,47 @@ export function getPool() {
 }
 export function getDb() {
   return drizzle(getPool())
+}
+
+export async function withAccountRows<T>(
+  userId: string,
+  run: (client: pg.PoolClient) => Promise<T>,
+  existing?: pg.PoolClient,
+): Promise<T> {
+  const client = existing ?? (await getPool().connect())
+  try {
+    await client.query(existing ? 'SAVEPOINT account_rows' : 'BEGIN')
+    const previous = existing
+      ? (
+          await client.query<{ account: string | null }>(
+            "SELECT current_setting('pharmacy.account_id', true) AS account",
+          )
+        ).rows[0]?.account
+      : null
+    await client.query("SELECT set_config('pharmacy.account_id', $1, true)", [
+      userId.toLowerCase(),
+    ])
+    const result = await run(client)
+    if (existing) {
+      await client.query("SELECT set_config('pharmacy.account_id', $1, true)", [
+        previous ?? '',
+      ])
+      await client.query('RELEASE SAVEPOINT account_rows')
+    } else {
+      await client.query('COMMIT')
+    }
+    return result
+  } catch (error) {
+    if (existing) {
+      await client.query('ROLLBACK TO SAVEPOINT account_rows')
+      await client.query('RELEASE SAVEPOINT account_rows')
+    } else {
+      await client.query('ROLLBACK')
+    }
+    throw error
+  } finally {
+    if (!existing) client.release()
+  }
 }
 export async function closeDb() {
   await pool?.end()
