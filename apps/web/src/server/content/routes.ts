@@ -216,6 +216,9 @@ export function sourcesPATCH(request: Request) {
       const input = z
         .union([
           z
+            .object({ approve_pending_ids: z.array(z.uuid()).min(1).max(200) })
+            .strict(),
+          z
             .object({
               id: z.uuid(),
               review_status: z.enum(['pending', 'approved', 'rejected']),
@@ -231,6 +234,15 @@ export function sourcesPATCH(request: Request) {
             .strict(),
         ])
         .parse(await body(request))
+      if ('approve_pending_ids' in input) {
+        return Response.json(
+          await content.approvePendingSources(
+            input.approve_pending_ids,
+            actor.id,
+            requestId,
+          ),
+        )
+      }
       return Response.json(
         'audience' in input
           ? await content.changeSourceAudience(input, actor.id, requestId)

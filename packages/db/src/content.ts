@@ -782,6 +782,41 @@ export async function listSources() {
     ).rows,
   }
 }
+export async function approvePendingSources(
+  ids: string[],
+  actorId: string,
+  requestId: string,
+  context?: Client,
+) {
+  return tx(async (db) => {
+    await admin(db, actorId)
+    const { rows: subjects } = await db.query<{ subject_id: string }>(
+      'SELECT DISTINCT subject_id FROM sources WHERE id=ANY($1::uuid[]) ORDER BY subject_id',
+      [ids],
+    )
+    for (const { subject_id } of subjects) await bankLock(db, subject_id)
+    const { rows } = await db.query<{ id: string }>(
+      `UPDATE sources SET review_status='approved'
+       WHERE id=ANY($1::uuid[]) AND review_status='pending' AND btrim(license)<>''
+       RETURNING id`,
+      [ids],
+    )
+    for (const { id } of rows) {
+      await appendAudit(db, {
+        actorId,
+        action: 'source.reviewed',
+        entityType: 'source',
+        entityId: id,
+        details: { status: 'approved' },
+        requestId,
+      })
+    }
+    return {
+      approved_count: rows.length,
+      skipped_count: new Set(ids).size - rows.length,
+    }
+  }, context)
+}
 export async function reviewSource(
   input: { id: string; review_status: 'approved' | 'rejected' | 'pending' },
   actorId: string,
