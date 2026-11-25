@@ -115,11 +115,15 @@ test('bulk source review only approves selected pending sources and preserves au
     )
     const requestId = randomUUID()
     const ids = [pending.id, pending.id, rejected.id, randomUUID()]
-    await expect(approvePendingSources(ids, adminId, requestId, c)).resolves.toEqual({
+    await expect(
+      approvePendingSources(ids, adminId, requestId, c),
+    ).resolves.toEqual({
       approved_count: 1,
       skipped_count: 2,
     })
-    await expect(approvePendingSources(ids, adminId, randomUUID(), c)).resolves.toEqual({
+    await expect(
+      approvePendingSources(ids, adminId, randomUUID(), c),
+    ).resolves.toEqual({
       approved_count: 0,
       skipped_count: 3,
     })
@@ -127,11 +131,13 @@ test('bulk source review only approves selected pending sources and preserves au
       'SELECT id, review_status, audience FROM sources WHERE id=ANY($1::uuid[])',
       [[pending.id, rejected.id, unselected.id]],
     )
-    expect(rows).toEqual(expect.arrayContaining([
-      { id: pending.id, review_status: 'approved', audience: 'owner_only' },
-      { id: rejected.id, review_status: 'rejected', audience: 'owner_only' },
-      { id: unselected.id, review_status: 'pending', audience: 'owner_only' },
-    ]))
+    expect(rows).toEqual(
+      expect.arrayContaining([
+        { id: pending.id, review_status: 'approved', audience: 'owner_only' },
+        { id: rejected.id, review_status: 'rejected', audience: 'owner_only' },
+        { id: unselected.id, review_status: 'pending', audience: 'owner_only' },
+      ]),
+    )
     const audit = await c.query(
       "SELECT entity_id FROM audit_logs WHERE request_id=$1 AND action='source.reviewed'",
       [requestId],
