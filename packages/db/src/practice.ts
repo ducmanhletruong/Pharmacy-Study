@@ -700,7 +700,12 @@ export function answerItem(
         expectedAnswerVersion !== undefined &&
         item.answer_version !== expectedAnswerVersion
       ) {
-        return { saved: false, answer_version: item.answer_version }
+        return {
+          saved:
+            isDeepStrictEqual(item.answer, answer) &&
+            (flagged === undefined || flagged === item.flagged),
+          answer_version: item.answer_version,
+        }
       }
       let answerVersion = item.answer_version
       const grade = await gradeAnswer(

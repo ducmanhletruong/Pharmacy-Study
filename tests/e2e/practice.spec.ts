@@ -95,7 +95,7 @@ test('autosave keeps the last choice across navigation and retries before submit
     release()
   }
 })
-test('a PUT that never responds times out and can be retried', async ({
+test('a committed PUT with no response is confirmed by one retry', async ({
   page,
 }) => {
   await signInAs(page)
@@ -108,6 +108,11 @@ test('a PUT that never responds times out and can be retried', async ({
   let saves = 0
   await page.route('**/api/v1/attempts/*/items/1', async (route) => {
     if (++saves === 1) {
+      const committed = await route.fetch()
+      expect(await committed.json()).toEqual({
+        saved: true,
+        answer_version: expect.any(String),
+      })
       await stall
       await route.abort().catch(() => {})
       return

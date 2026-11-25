@@ -112,6 +112,7 @@ test('an older autosave arriving after the latest choice cannot overwrite it', a
     saved: false,
     answer_version: current.answer_version,
   })
+  expect(await save('D', null)).toEqual(current)
   const loaded = await read(req(`/attempts/${id}`), context(id))
   expect(attemptSchema.parse(await loaded.json()).items[0]?.answer).toBe('D')
 })
