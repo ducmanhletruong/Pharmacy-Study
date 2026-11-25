@@ -196,6 +196,20 @@ export function ContentAdmin() {
   const [subjects, setSubjects] = useState<{ code: string; name: string }[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
   const [sources, setSources] = useState<ManagedSource[]>([])
+  const [selectedSourceIds, setSelectedSourceIds] = useState<string[]>([])
+  const [pendingSourcesOnly, setPendingSourcesOnly] = useState(false)
+  const pendingSources = sources.filter(
+    (source) => source.review_status === 'pending',
+  )
+  const eligibleSourceIds = pendingSources
+    .filter((source) => source.license.trim())
+    .map((source) => source.id)
+  const selectedIds = eligibleSourceIds.filter((id) =>
+    selectedSourceIds.includes(id),
+  )
+  const allSourcesSelected =
+    eligibleSourceIds.length > 0 &&
+    selectedIds.length === eligibleSourceIds.length
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [inviteEmail, setInviteEmail] = useState('')
   const [reports, setReports] = useState<Report[]>([])
@@ -241,7 +255,19 @@ export function ContentAdmin() {
   const loadShared = useCallback(async () => {
     const outcomes = await Promise.allSettled([
       api<{ items: ManagedSource[] }>('/admin/sources').then((value) => {
-        if (mounted.current) setSources(value.items)
+        if (mounted.current) {
+          setSources(value.items)
+          setSelectedSourceIds((previous) =>
+            previous.filter((id) =>
+              value.items.some(
+                (source) =>
+                  source.id === id &&
+                  source.review_status === 'pending' &&
+                  source.license.trim(),
+              ),
+            ),
+          )
+        }
       }),
       api<{ items: Invitation[] }>('/admin/invitations').then((value) => {
         if (mounted.current) setInvitations(value.items)
@@ -354,6 +380,45 @@ export function ContentAdmin() {
         if (mounted.current) setDetail(value)
       }
       if (mounted.current) setMessage('Đã cập nhật đánh giá nguồn tài liệu.')
+    })
+  }
+  async function reviewSelectedSources() {
+    await run(async () => {
+      let approved = 0
+      let skipped = 0
+      let processed = 0
+      try {
+        for (let offset = 0; offset < selectedIds.length; offset += 200) {
+          const ids = selectedIds.slice(offset, offset + 200)
+          const result = await api<{
+            approved_count: number
+            skipped_count: number
+          }>('/admin/sources', patch({ approve_pending_ids: ids }))
+          approved += result.approved_count
+          skipped += result.skipped_count
+          processed += ids.length
+          if (mounted.current)
+            setSelectedSourceIds((previous) =>
+              previous.filter((id) => !ids.includes(id)),
+            )
+        }
+      } finally {
+        if (processed > 0 && mounted.current)
+          setMessage(
+            `Đã duyệt ${approved} nguồn.` +
+              (skipped
+                ? ` Bỏ qua ${skipped} nguồn đã đổi trạng thái hoặc thiếu thông tin quyền sử dụng.`
+                : ''),
+          )
+        await Promise.all([
+          loadShared(),
+          detail
+            ? api<Detail>(`/admin/questions/${detail.id}`).then((value) => {
+                if (mounted.current) setDetail(value)
+              })
+            : undefined,
+        ])
+      }
     })
   }
   async function changeAudience(
@@ -578,13 +643,67 @@ export function ContentAdmin() {
           Đối chiếu nguồn, vị trí trích dẫn và quyền sử dụng trước khi duyệt câu
           hỏi.
         </p>
+        {sources.length > 0 && (
+          <div className="admin-actions">
+            <label>
+              <input
+                type="checkbox"
+                checked={pendingSourcesOnly}
+                disabled={busy}
+                onChange={(event) =>
+                  setPendingSourcesOnly(event.target.checked)
+                }
+              />{' '}
+              Chỉ hiện nguồn chờ duyệt ({pendingSources.length})
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={allSourcesSelected}
+                disabled={busy || !eligibleSourceIds.length}
+                onChange={(event) =>
+                  setSelectedSourceIds(
+                    event.target.checked ? eligibleSourceIds : [],
+                  )
+                }
+              />{' '}
+              Chọn tất cả nguồn đủ điều kiện ({eligibleSourceIds.length})
+            </label>
+            <button
+              type="button"
+              className="secondary"
+              disabled={busy || !selectedIds.length}
+              onClick={() => void reviewSelectedSources()}
+            >
+              Duyệt {selectedIds.length} nguồn đã chọn
+            </button>
+          </div>
+        )}
         <ul className="admin-source-list">
-          {sources.map((source) => (
+          {(pendingSourcesOnly ? pendingSources : sources).map((source) => (
             <li key={source.id}>
               <h3>{source.title}</h3>
               <p>{source.locator}</p>
               <p>Quyền sử dụng: {source.license}</p>
               <p>{reviewLabels[source.review_status]}</p>
+              {source.review_status === 'pending' && source.license.trim() && (
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selectedSourceIds.includes(source.id)}
+                    disabled={busy}
+                    onChange={(event) => {
+                      const checked = event.target.checked
+                      setSelectedSourceIds((previous) =>
+                        checked
+                          ? [...previous, source.id]
+                          : previous.filter((id) => id !== source.id),
+                      )
+                    }}
+                  />{' '}
+                  Chọn nguồn này để duyệt
+                </label>
+              )}
               <SourceAudience
                 key={source.audience}
                 source={source}
@@ -609,6 +728,9 @@ export function ContentAdmin() {
           ))}
         </ul>
         {!sources.length && <p>Chưa có nguồn tài liệu.</p>}
+        {sources.length > 0 && pendingSourcesOnly && !pendingSources.length && (
+          <p>Không có nguồn nào đang chờ duyệt.</p>
+        )}
       </section>
       <section className="panel" aria-labelledby="invitations-heading">
         <h2 id="invitations-heading">Thành viên lớp</h2>
